@@ -19,4 +19,7 @@ var welcome = `
 	journey into these caverns.
 
 
-	    Good Luck!  You're going to need it!`
+	    Good Luck!  You're going to need it!
+		
+
+Press enter to continue`

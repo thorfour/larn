@@ -17,13 +17,13 @@ type Data struct {
 	userID   uint64 // unique userID
 
 	// input channel from keyboard
-	input chan termbox.Key
+	input chan termbox.Event
 }
 
 // New initializes a game state
 func New() *Data {
 	d := new(Data)
-	d.input = make(chan termbox.Key, internalKeyBufferSize)
+	d.input = make(chan termbox.Event, internalKeyBufferSize)
 	return d
 }
 
@@ -46,7 +46,11 @@ func (d *Data) run() error {
 	for {
 		select {
 		case e := <-d.input:
-			fmt.Println(e)
+			if e.Ch == 'S' {
+				fmt.Println(e.Ch)
+				return nil
+			}
+			fmt.Println(string(e.Ch))
 		}
 	}
 

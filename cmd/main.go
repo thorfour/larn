@@ -1,7 +1,18 @@
 package main
 
-import "fmt"
+import (
+	"flag"
+
+	"github.com/golang/glog"
+	"github.com/thorfour/larn/pkg/game"
+)
+
+func init() {
+	flag.Parse()
+}
 
 func main() {
-	fmt.Println("TODO: LARN!")
+	if err := game.New().Start(); err != nil {
+		glog.Fatalf("game exited with error: %v", err)
+	}
 }

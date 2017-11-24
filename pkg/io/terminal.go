@@ -21,7 +21,13 @@ func RenderWelcome(msg string) error {
 	y := 0
 	for _, c := range msg {
 		termbox.SetCell(x, y, c, defaultColor, defaultColor)
-		x += runewidth.RuneWidth(c)
+		switch c {
+		case '\n':
+			y++
+			x = 0
+		default:
+			x += runewidth.RuneWidth(c)
+		}
 	}
 
 	return termbox.Flush()

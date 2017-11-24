@@ -44,13 +44,45 @@ func (d *Data) Start() error {
 // run is the main game handler loop
 func (d *Data) run() error {
 	for {
-		select {
-		case e := <-d.input:
-			if e.Ch == 'S' {
-				fmt.Println(e.Ch)
-				return nil
-			}
-			fmt.Println(string(e.Ch))
+		switch e := <-d.input; e.Ch {
+		case 'H': // run left
+		case 'J': // run down
+		case 'K': // run up
+		case 'L': // run right
+		case 'Y': // run northwest
+		case 'U': // run northeast
+		case 'B': // run southwest
+		case 'N': // run southeast
+		case 'h': // move left
+		case 'j': // move down
+		case 'k': // move up
+		case 'l': // move right
+		case 'y': // move northwest
+		case 'u': // move northeast
+		case 'b': // move southwest
+		case 'n': // move southeast
+		case '^': // identify a trap
+		case 'd': // drop an item
+		case 'v': // print program version
+		case '?': // help screen
+		case 'g': // give present pack weight
+		case 'i': // inventory your pockets
+		case 'A': // create diagnostic file
+		case '.': // stay here
+		case 'Z': // teleport yourself
+		case 'c': // cast a spell
+		case 'r': // read a scroll
+		case 'q': // quaff a potion
+		case 'W': // wear armor
+		case 'T': // take off armor
+		case 'w': // wield a weapon
+		case 'P': // give tax status
+		case 'D': // list all items found
+		case 'e': // eat something
+		case 'S': // save the game and quit
+			fallthrough
+		case 'Q': // quit the game
+			return nil
 		}
 	}
 

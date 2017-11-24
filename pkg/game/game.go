@@ -13,8 +13,9 @@ const (
 
 // data holds all current game stat information
 type Data struct {
-	saveFile string // path to the save file for this game
-	userID   uint64 // unique userID
+	saveFile   string // path to the save file for this game
+	userID     uint64 // unique userID
+	difficulty uint32 // current game difficulty
 
 	// input channel from keyboard
 	input chan termbox.Event
@@ -33,6 +34,8 @@ func (d *Data) Start() error {
 		return fmt.Errorf("termbox failed to initialize: %v", err)
 	}
 	defer termbox.Close()
+
+	io.RenderWelcome("Hello World!") // TODO THOR
 
 	// Start a listener for user input
 	go io.KeyboardListener(d.input)

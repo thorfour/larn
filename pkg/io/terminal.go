@@ -26,3 +26,18 @@ func RenderWelcome(msg string) error {
 
 	return termbox.Flush()
 }
+
+func RenderBorder(ch rune, width, height int) error {
+
+	termbox.Clear(defaultColor, defaultColor)
+
+	for i := 0; i < width; i++ {
+		for j := 0; j < height; j++ {
+			if i == 0 || j == 0 || i == width-1 || j == height-1 {
+				termbox.SetCell(i, j, ch, defaultColor, defaultColor)
+			}
+		}
+	}
+
+	return termbox.Flush()
+}

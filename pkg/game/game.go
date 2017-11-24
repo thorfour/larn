@@ -9,6 +9,9 @@ import (
 
 const (
 	internalKeyBufferSize = 10
+	borderRune            = rune('#')
+	borderWidth           = 100
+	borderHeight          = 25
 )
 
 // data holds all current game stat information
@@ -39,6 +42,11 @@ func (d *Data) Start() error {
 
 	// Start a listener for user input
 	go io.KeyboardListener(d.input)
+
+	// Wait for first key stroke to bypass welcome
+	<-d.input
+
+	io.RenderBorder(borderRune, borderWidth, borderHeight)
 
 	// Game logic
 	return d.run()

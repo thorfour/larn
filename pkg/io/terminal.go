@@ -76,7 +76,14 @@ func RenderGridOffset(x, y int, grid [][]rune) error {
 	return termbox.Flush()
 }
 
+// RenderNewGridOffset clears the screen before calling render grid offset
 func RenderNewGridOffset(x, y int, grid [][]rune) error {
 	termbox.Clear(defaultColor, defaultColor)
 	return RenderGridOffset(x, y, grid)
+}
+
+// RenderCell renders a sincgle cell
+func RenderCell(x, y int, c rune, fg, bg termbox.Attribute) error {
+	termbox.SetCell(x, y, c, fg, bg)
+	return termbox.Flush()
 }

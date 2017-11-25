@@ -1,14 +1,20 @@
 package game
 
-import "fmt"
+import (
+	"fmt"
 
-// world returns a string representation of the world
-func world(d *Data) [][]rune {
+	"github.com/thorfour/larn/pkg/game/state"
+)
+
+// world returns a 2d slice representation of the world
+func world(s *state.State) [][]rune {
+	// TODO this function needs to handle generating world from saved games
+
 	// Generate start zone
 	grid := startZone()
 
 	// Generate info bar
-	bar := infoBarGrid(d)
+	bar := infoBarGrid(s)
 	for i := range bar { // Append the info bar
 		grid = append(grid, bar[i])
 	}
@@ -17,10 +23,10 @@ func world(d *Data) [][]rune {
 }
 
 // infoBarGrid returns the info bar in display grid format
-func infoBarGrid(d *Data) [][]rune {
+func infoBarGrid(s *state.State) [][]rune {
 	r := make([][]rune, 2)
-	r[0] = []rune(fmt.Sprintf("Spells: %v( %v) AC: %v WC: %v Level %v Exp: %v %s", d.spells, d.maxSpells, d.ac, d.wc, d.level, d.exp, d.title))
-	r[1] = []rune(fmt.Sprintf("HP: %v( %v) STR=%v INT=%v WIS=%v CON=%v DEX=%v CHA=%v LV: %v Gold: %v", d.hp, d.maxHP, d.str, d.intelligence, d.wisdom, d.con, d.dex, d.cha, d.loc, d.gold))
+	r[0] = []rune(fmt.Sprintf("Spells: %v( %v) AC: %v WC: %v Level %v Exp: %v %s", s.Spells, s.MaxSpells, s.Ac, s.Wc, s.Level, s.Exp, s.Title))
+	r[1] = []rune(fmt.Sprintf("HP: %v( %v) STR=%v INT=%v WIS=%v CON=%v DEX=%v CHA=%v LV: %v Gold: %v", s.Hp, s.MaxHP, s.Str, s.Intelligence, s.Wisdom, s.Con, s.Dex, s.Cha, s.Loc, s.Gold))
 
 	return r
 }

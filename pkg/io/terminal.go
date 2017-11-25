@@ -75,3 +75,8 @@ func RenderGridOffset(x, y int, grid [][]rune) error {
 	}
 	return termbox.Flush()
 }
+
+func RenderNewGridOffset(x, y int, grid [][]rune) error {
+	termbox.Clear(defaultColor, defaultColor)
+	return RenderGridOffset(x, y, grid)
+}

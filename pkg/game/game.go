@@ -48,7 +48,7 @@ func (d *Data) Start() error {
 	<-d.input
 
 	// Render the starting world
-	io.RenderNew(d.world())
+	io.RenderNewGrid(d.world())
 
 	// Game logic
 	return d.run()

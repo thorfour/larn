@@ -1,7 +1,7 @@
 package game
 
 const (
-	DEFAULT_DIFFICULTY = -1
+	defaultDifficulty = -1
 )
 
 // SetDifficulty sets the games difficulty

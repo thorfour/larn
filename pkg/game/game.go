@@ -14,11 +14,12 @@ const (
 	borderHeight          = 17
 )
 
-// data holds all current game stat information
+// Data holds all current game stat information
 type Data struct {
 	saveFile   string // path to the save file for this game
 	userID     uint64 // unique userID
 	difficulty uint32 // current game difficulty
+	character         // Current character information
 
 	// input channel from keyboard
 	input chan termbox.Event
@@ -45,6 +46,9 @@ func (d *Data) Start() error {
 
 	// Wait for first key stroke to bypass welcome
 	<-d.input
+
+	// Render the starting world
+	io.RenderNew(d.world())
 
 	// Game logic
 	return d.run()

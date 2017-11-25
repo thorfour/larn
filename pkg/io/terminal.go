@@ -1,7 +1,6 @@
 package io
 
 import (
-	"github.com/golang/glog"
 	runewidth "github.com/mattn/go-runewidth"
 	termbox "github.com/nsf/termbox-go"
 )
@@ -10,15 +9,12 @@ const (
 	defaultColor = termbox.ColorDefault
 )
 
+// RenderWelcome renders a welcome string
 func RenderWelcome(msg string) error {
 
 	termbox.Clear(defaultColor, defaultColor)
-	w, h := termbox.Size()
 
-	glog.V(4).Info("current width %v height: %v", w, h)
-
-	x := 0
-	y := 0
+	x, y := 0, 0
 	for _, c := range msg {
 		termbox.SetCell(x, y, c, defaultColor, defaultColor)
 		switch c {
@@ -33,15 +29,21 @@ func RenderWelcome(msg string) error {
 	return termbox.Flush()
 }
 
-func RenderBorder(ch rune, width, height int) error {
+// RenderNew will clear the terminal and render a whole new string
+func RenderNew(s string) error {
 
 	termbox.Clear(defaultColor, defaultColor)
 
-	for i := 0; i < width; i++ {
-		for j := 0; j < height; j++ {
-			if i == 0 || j == 0 || i == width-1 || j == height-1 {
-				termbox.SetCell(i, j, ch, defaultColor, defaultColor)
-			}
+	// Render from left to right, top to bottom
+	x, y := 0, 0
+	for _, c := range s {
+		termbox.SetCell(x, y, c, defaultColor, defaultColor)
+		switch c {
+		case '\n': // Newline; reset to next line
+			y++
+			x = 0
+		default:
+			x += runewidth.RuneWidth(c)
 		}
 	}
 

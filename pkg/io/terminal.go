@@ -49,3 +49,29 @@ func RenderNew(s string) error {
 
 	return termbox.Flush()
 }
+
+// RenderNewGrid clears the terminal before rendering the grid
+func RenderNewGrid(grid [][]rune) error {
+	termbox.Clear(defaultColor, defaultColor)
+	return RenderGrid(grid)
+}
+
+// RenderGrid renders a 2d grid. where (0,0) is in the top left
+// each slice is treated as a row. This is a wrapper around RenderGridOffset
+func RenderGrid(grid [][]rune) error {
+	return RenderGridOffset(0, 0, grid)
+}
+
+// RenderGridOffset renders a 2d grid starting at (x,y)
+func RenderGridOffset(x, y int, grid [][]rune) error {
+	xo := x // Set the x offset
+	for _, row := range grid {
+		for _, c := range row {
+			termbox.SetCell(xo, y, c, defaultColor, defaultColor)
+			xo += runewidth.RuneWidth(c)
+		}
+		xo = x // reset xoffest for next row
+		y++    // go to next line
+	}
+	return termbox.Flush()
+}

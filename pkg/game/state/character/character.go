@@ -17,6 +17,7 @@ const (
 	UpRight
 	DownLeft
 	DownRight
+	Here
 )
 
 const (
@@ -34,10 +35,37 @@ type Character struct {
 }
 
 type Coordinate struct {
-	x int
-	y int
+	X int
+	Y int
 }
 
 // Move the character in the given direction 1 space
-func (c *Character) Move(d Direction) {}
-func (c *Character) Teleport()        {}
+func (c *Character) Move(d Direction) Coordinate {
+	switch d {
+	case Up:
+		c.loc.Y--
+	case Down:
+		c.loc.Y++
+	case Left:
+		c.loc.X--
+	case Right:
+		c.loc.X++
+	case UpLeft:
+		c.loc.Y--
+		c.loc.X--
+	case UpRight:
+		c.loc.Y--
+		c.loc.X++
+	case DownLeft:
+		c.loc.Y++
+		c.loc.X--
+	case DownRight:
+		c.loc.Y++
+		c.loc.X++
+	case Here:
+	}
+
+	return c.loc
+}
+
+func (c *Character) Teleport() {}

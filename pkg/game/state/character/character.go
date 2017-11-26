@@ -45,8 +45,15 @@ func (c *Character) Init() {
 	c.Title = titles[c.Level-1]
 	c.MaxSpells = 1
 	c.Spells = 1
-	c.MaxHP = 3
-	c.Hp = 3
+	c.MaxHP = 5
+	c.Hp = 5
+	c.Cha = 12
+	c.Str = 12
+	c.Intelligence = 12
+	c.Wisdom = 12
+	c.Con = 12
+	c.Dex = 12
+	c.Cha = 12
 }
 
 func (c *Character) Rune() rune {

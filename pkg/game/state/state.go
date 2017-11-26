@@ -19,6 +19,7 @@ type State struct {
 func New() *State {
 	s := new(State)
 	s.C = new(character.Character)
+	s.C.Init()
 	s.rng = rand.New(rand.NewSource(time.Now().UnixNano()))
 	s.maps = maps.New(s.C)
 	return s

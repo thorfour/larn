@@ -40,6 +40,15 @@ type Coordinate struct {
 	Y int
 }
 
+func (c *Character) Init() {
+	c.Level = 1
+	c.Title = titles[c.Level-1]
+	c.MaxSpells = 1
+	c.Spells = 1
+	c.MaxHP = 3
+	c.Hp = 3
+}
+
 func (c *Character) Rune() rune {
 	return characterRune
 }

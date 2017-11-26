@@ -50,11 +50,11 @@ func New(c *character.Character) *Maps {
 func homeLevel() [][]io.Runeable {
 	home := make([][]io.Runeable, height)
 	for i := range home {
-		col := make([]io.Runeable, width)
-		for j := range col {
-			col[j] = Empty{}
+		row := make([]io.Runeable, width)
+		for j := range row {
+			row[j] = Empty{}
 		}
-		home[i] = col
+		home[i] = row
 	}
 	return home
 }
@@ -80,10 +80,10 @@ func (m *Maps) SpawnCharacter(c *character.Character) {
 	y := c.Location().Y
 
 	// Save what the character is standing on top of
-	m.displaced = m.home[x][y]
+	m.displaced = m.home[y][x]
 
 	// Set the character to the location
-	m.home[x][y] = c
+	m.home[y][x] = c
 }
 
 type cell struct {
@@ -106,13 +106,13 @@ func (m *Maps) Move(d character.Direction, c *character.Character) []io.Cell {
 	new := c.MoveCharacter(d)
 
 	// Reset the displaced
-	m.home[old.X][old.Y] = m.displaced
+	m.home[old.Y][old.X] = m.displaced
 
 	// Save the newly displaced item
-	m.displaced = m.home[new.X][new.Y]
+	m.displaced = m.home[new.Y][new.X]
 
 	// Set the character to the location
-	m.home[new.X][new.Y] = c
+	m.home[new.Y][new.X] = c
 
 	return []io.Cell{&cell{old.X, old.Y, m.displaced}, &cell{new.X, new.Y, c}}
 }

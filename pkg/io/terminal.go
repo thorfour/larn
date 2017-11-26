@@ -23,6 +23,12 @@ type Runeable interface {
 	Bg() termbox.Attribute
 }
 
+type Cell interface {
+	Runeable
+	X() int
+	Y() int
+}
+
 // RenderWelcome renders a welcome string
 func RenderWelcome(msg string) error {
 
@@ -99,5 +105,12 @@ func RenderNewGridOffset(x, y int, grid [][]Runeable) error {
 // RenderCell renders a sincgle cell
 func RenderCell(x, y int, c rune, fg, bg termbox.Attribute) error {
 	termbox.SetCell(x, y, c, fg, bg)
+	return termbox.Flush()
+}
+
+func RenderCells(c []Cell) error {
+	for _, ci := range c {
+		termbox.SetCell(ci.X(), ci.Y(), ci.Rune(), ci.Fg(), ci.Bg())
+	}
 	return termbox.Flush()
 }

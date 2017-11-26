@@ -11,13 +11,14 @@ import (
 
 // State holds all current game state
 type State struct {
-	character.Character
+	C    *character.Character
 	maps *maps.Maps
 	rng  *rand.Rand
 }
 
 func New() *State {
 	s := new(State)
+	s.C = new(character.Character)
 	s.rng = rand.New(rand.NewSource(time.Now().UnixNano()))
 	s.maps = maps.New()
 	return s
@@ -25,4 +26,8 @@ func New() *State {
 
 func (s *State) CurrentMap() [][]io.Runeable {
 	return s.maps.CurrentMap()
+}
+
+func (s *State) Move(d character.Direction) []io.Cell {
+	return s.maps.Move(d, s.C)
 }

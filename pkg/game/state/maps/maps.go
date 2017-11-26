@@ -83,3 +83,29 @@ func (m *Maps) SpawnCharacter(c *character.Character) {
 	// Set the character to the location
 	m.home[x][y] = c
 }
+
+type cell struct {
+	x int
+	y int
+	io.Runeable
+}
+
+func (c *cell) X() int { return c.y }
+func (c *cell) Y() int { return c.x }
+
+func (m *Maps) Move(d character.Direction, c *character.Character) []io.Cell {
+
+	old := c.Location()
+	new := c.MoveCharacter(d)
+
+	// Reset the displaced
+	m.home[old.X][old.Y] = m.displaced
+
+	// Save the newly displaced item
+	m.displaced = m.home[new.X][new.Y]
+
+	// Set the character to the location
+	m.home[new.X][new.Y] = c
+
+	return []io.Cell{&cell{old.X, old.Y, m.displaced}, &cell{new.X, new.Y, c}}
+}

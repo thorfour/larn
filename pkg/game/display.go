@@ -32,12 +32,12 @@ func display(s *state.State) [][]io.Runeable {
 func infoBarGrid(s *state.State) [][]io.Runeable {
 	r := make([][]io.Runeable, 2)
 
-	info := fmt.Sprintf("Spells: %v( %v) AC: %v WC: %v Level %v Exp: %v %s", s.Spells, s.MaxSpells, s.Ac, s.Wc, s.Level, s.Exp, s.Title)
+	info := fmt.Sprintf("Spells: %v( %v) AC: %v WC: %v Level %v Exp: %v %s", s.C.Spells, s.C.MaxSpells, s.C.Ac, s.C.Wc, s.C.Level, s.C.Exp, s.C.Title)
 	for _, c := range info {
 		r[0] = append(r[0], Simple(c))
 	}
 
-	info = fmt.Sprintf("HP: %v( %v) STR=%v INT=%v WIS=%v CON=%v DEX=%v CHA=%v LV: %v Gold: %v", s.Hp, s.MaxHP, s.Str, s.Intelligence, s.Wisdom, s.Con, s.Dex, s.Cha, s.Loc, s.Gold)
+	info = fmt.Sprintf("HP: %v( %v) STR=%v INT=%v WIS=%v CON=%v DEX=%v CHA=%v LV: %v Gold: %v", s.C.Hp, s.C.MaxHP, s.C.Str, s.C.Intelligence, s.C.Wisdom, s.C.Con, s.C.Dex, s.C.Cha, s.C.Loc, s.C.Gold)
 	for _, c := range info {
 		r[1] = append(r[1], Simple(c))
 	}

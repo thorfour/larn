@@ -21,8 +21,8 @@ const (
 )
 
 const (
-	characterFG   = termbox.ColorGreen
-	characterBG   = termbox.ColorGreen
+	characterFG   = termbox.ColorRed
+	characterBG   = termbox.ColorRed
 	characterRune = '&'
 )
 
@@ -52,8 +52,8 @@ func (c *Character) Bg() termbox.Attribute {
 	return characterBG
 }
 
-// Move the character in the given direction 1 space
-func (c *Character) Move(d Direction) Coordinate {
+// MoveCharacter the character in the given direction 1 space
+func (c *Character) MoveCharacter(d Direction) Coordinate {
 	switch d {
 	case Up:
 		c.loc.Y--

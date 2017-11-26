@@ -97,21 +97,21 @@ func (g *Game) run() error {
 		case 'B': // run southwest
 		case 'N': // run southeast
 		case 'h': // move left
-			g.renderCharacter(g.currentState.Move(character.Left))
+			g.renderCells(g.currentState.Move(character.Left))
 		case 'j': // move down
-			g.renderCharacter(g.currentState.Move(character.Down))
+			g.renderCells(g.currentState.Move(character.Down))
 		case 'k': // move up
-			g.renderCharacter(g.currentState.Move(character.Up))
+			g.renderCells(g.currentState.Move(character.Up))
 		case 'l': // move right
-			g.renderCharacter(g.currentState.Move(character.Right))
+			g.renderCells(g.currentState.Move(character.Right))
 		case 'y': // move northwest
-			g.renderCharacter(g.currentState.Move(character.UpLeft))
+			g.renderCells(g.currentState.Move(character.UpLeft))
 		case 'u': // move northeast
-			g.renderCharacter(g.currentState.Move(character.UpRight))
+			g.renderCells(g.currentState.Move(character.UpRight))
 		case 'b': // move southwest
-			g.renderCharacter(g.currentState.Move(character.DownLeft))
+			g.renderCells(g.currentState.Move(character.DownLeft))
 		case 'n': // move southeast
-			g.renderCharacter(g.currentState.Move(character.DownRight))
+			g.renderCells(g.currentState.Move(character.DownRight))
 		case '^': // identify a trap
 		case 'd': // drop an item
 		case 'v': // print program version
@@ -157,5 +157,17 @@ func (g *Game) render(display [][]io.Runeable) {
 }
 
 func (g *Game) renderCharacter(c character.Coordinate) {
-	io.RenderCell(c.X, c.Y, '&', termbox.ColorGreen, termbox.ColorGreen)
+	if g.err != nil {
+		return
+	}
+
+	g.err = io.RenderCell(c.X, c.Y, '&', termbox.ColorGreen, termbox.ColorGreen)
+}
+
+func (g *Game) renderCells(c []io.Cell) {
+	if g.err != nil {
+		return
+	}
+
+	g.err = io.RenderCells(c)
 }

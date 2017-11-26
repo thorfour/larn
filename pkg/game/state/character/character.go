@@ -54,30 +54,7 @@ func (c *Character) Bg() termbox.Attribute {
 
 // MoveCharacter the character in the given direction 1 space
 func (c *Character) MoveCharacter(d Direction) Coordinate {
-	switch d {
-	case Up:
-		c.loc.Y--
-	case Down:
-		c.loc.Y++
-	case Left:
-		c.loc.X--
-	case Right:
-		c.loc.X++
-	case UpLeft:
-		c.loc.Y--
-		c.loc.X--
-	case UpRight:
-		c.loc.Y--
-		c.loc.X++
-	case DownLeft:
-		c.loc.Y++
-		c.loc.X--
-	case DownRight:
-		c.loc.Y++
-		c.loc.X++
-	case Here:
-	}
-
+	c.loc.Move(d)
 	return c.loc
 }
 
@@ -86,3 +63,29 @@ func (c *Character) Location() Coordinate {
 }
 
 func (c *Character) Teleport() {}
+
+func (c *Coordinate) Move(d Direction) {
+	switch d {
+	case Up:
+		c.Y--
+	case Down:
+		c.Y++
+	case Left:
+		c.X--
+	case Right:
+		c.X++
+	case UpLeft:
+		c.Y--
+		c.X--
+	case UpRight:
+		c.Y--
+		c.X++
+	case DownLeft:
+		c.Y++
+		c.X--
+	case DownRight:
+		c.Y++
+		c.X++
+	case Here:
+	}
+}

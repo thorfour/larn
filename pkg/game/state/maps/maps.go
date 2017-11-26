@@ -1,6 +1,7 @@
 package maps
 
 import (
+	"github.com/golang/glog"
 	termbox "github.com/nsf/termbox-go"
 	"github.com/thorfour/larn/pkg/game/state/character"
 	"github.com/thorfour/larn/pkg/io"
@@ -37,11 +38,12 @@ type Maps struct {
 }
 
 // New returns a set of maps to represent the game
-func New() *Maps {
+func New(c *character.Character) *Maps {
 	m := new(Maps)
 	m.dungeon = dungeon()
 	m.volcano = volcano()
 	m.home = homeLevel()
+	m.SpawnCharacter(c)
 	return m
 }
 
@@ -95,6 +97,11 @@ func (c *cell) Y() int { return c.y }
 
 func (m *Maps) Move(d character.Direction, c *character.Character) []io.Cell {
 
+	// Validate the move
+	if !validMove(d, c) {
+		return nil
+	}
+
 	old := c.Location()
 	new := c.MoveCharacter(d)
 
@@ -107,6 +114,17 @@ func (m *Maps) Move(d character.Direction, c *character.Character) []io.Cell {
 	// Set the character to the location
 	m.home[new.X][new.Y] = c
 
-	// TODO THOR the grid needs to be swapped so that coordinates can be in the form of (x,y)
 	return []io.Cell{&cell{old.X, old.Y, m.displaced}, &cell{new.X, new.Y, c}}
+}
+
+// validMove returns true if the move is allowed (i.e not off the edge, not into a wall
+func validMove(d character.Direction, c *character.Character) bool {
+
+	// Make the move and check its validity
+	current := c.Location()
+	current.Move(d)
+
+	glog.V(6).Infof("ValidMove: (%v,%v)", current.X, current.Y)
+
+	return current.X >= 0 && current.X < width && current.Y >= 0 && current.Y < height
 }

@@ -165,7 +165,7 @@ func (g *Game) renderCharacter(c character.Coordinate) {
 }
 
 func (g *Game) renderCells(c []io.Cell) {
-	if g.err != nil {
+	if g.err != nil || c == nil {
 		return
 	}
 

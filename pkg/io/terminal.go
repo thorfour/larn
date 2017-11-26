@@ -6,21 +6,31 @@ import (
 )
 
 const (
-	defaultColor = termbox.ColorDefault
+	DefaultColor = termbox.ColorDefault
+	ColorBlack   = termbox.ColorBlack
+	ColorRed     = termbox.ColorRed
+	ColorGreen   = termbox.ColorGreen
+	ColorYellow  = termbox.ColorYellow
+	ColorBlue    = termbox.ColorBlue
+	ColorMagenta = termbox.ColorMagenta
+	ColorCyan    = termbox.ColorCyan
+	ColorWhite   = termbox.ColorWhite
 )
 
 type Runeable interface {
 	Rune() rune
+	Fg() uint16
+	Bg() uint16
 }
 
 // RenderWelcome renders a welcome string
 func RenderWelcome(msg string) error {
 
-	termbox.Clear(defaultColor, defaultColor)
+	termbox.Clear(DefaultColor, DefaultColor)
 
 	x, y := 0, 0
 	for _, c := range msg {
-		termbox.SetCell(x, y, c, defaultColor, defaultColor)
+		termbox.SetCell(x, y, c, DefaultColor, DefaultColor)
 		switch c {
 		case '\n':
 			y++
@@ -36,12 +46,12 @@ func RenderWelcome(msg string) error {
 // RenderNew will clear the terminal and render a whole new string
 func RenderNew(s string) error {
 
-	termbox.Clear(defaultColor, defaultColor)
+	termbox.Clear(DefaultColor, DefaultColor)
 
 	// Render from left to right, top to bottom
 	x, y := 0, 0
 	for _, c := range s {
-		termbox.SetCell(x, y, c, defaultColor, defaultColor)
+		termbox.SetCell(x, y, c, DefaultColor, DefaultColor)
 		switch c {
 		case '\n': // Newline; reset to next line
 			y++
@@ -56,7 +66,7 @@ func RenderNew(s string) error {
 
 // RenderNewGrid clears the terminal before rendering the grid
 func RenderNewGrid(grid [][]Runeable) error {
-	termbox.Clear(defaultColor, defaultColor)
+	termbox.Clear(DefaultColor, DefaultColor)
 	return RenderGrid(grid)
 }
 
@@ -71,7 +81,7 @@ func RenderGridOffset(x, y int, grid [][]Runeable) error {
 	xo := x // Set the x offset
 	for _, row := range grid {
 		for _, c := range row {
-			termbox.SetCell(xo, y, c.Rune(), defaultColor, defaultColor)
+			termbox.SetCell(xo, y, c.Rune(), termbox.Attribute(c.Fg()), termbox.Attribute(c.Bg()))
 			xo += runewidth.RuneWidth(c.Rune())
 		}
 		xo = x // reset xoffest for next row
@@ -82,7 +92,7 @@ func RenderGridOffset(x, y int, grid [][]Runeable) error {
 
 // RenderNewGridOffset clears the screen before calling render grid offset
 func RenderNewGridOffset(x, y int, grid [][]Runeable) error {
-	termbox.Clear(defaultColor, defaultColor)
+	termbox.Clear(DefaultColor, DefaultColor)
 	return RenderGridOffset(x, y, grid)
 }
 

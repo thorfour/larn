@@ -9,9 +9,9 @@ import (
 
 type Simple rune
 
-func (s Simple) Rune() rune {
-	return rune(s)
-}
+func (s Simple) Rune() rune { return rune(s) }
+func (s Simple) Fg() uint16 { return 0 }
+func (s Simple) Bg() uint16 { return 0 }
 
 // display returns a 2d slice representation of the game
 func display(s *state.State) [][]io.Runeable {

@@ -15,9 +15,9 @@ const (
 type Empty struct{}
 
 // Rune implements the io.runeable interface
-func (e Empty) Rune() rune {
-	return emptyRune
-}
+func (e Empty) Rune() rune { return emptyRune }
+func (e Empty) Fg() uint16 { return 0 }
+func (e Empty) Bg() uint16 { return 0 }
 
 type Coordinate struct {
 	X uint

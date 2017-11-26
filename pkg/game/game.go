@@ -73,8 +73,8 @@ func (g *Game) Start() error {
 		<-g.input
 	}
 
-	// Render the world
-	g.render(world(g.currentState))
+	// Render the game
+	g.render(display(g.currentState))
 
 	// Game logic
 	return g.run()

@@ -13,8 +13,8 @@ func (s Simple) Rune() rune {
 	return rune(s)
 }
 
-// world returns a 2d slice representation of the world
-func world(s *state.State) [][]io.Runeable {
+// display returns a 2d slice representation of the game
+func display(s *state.State) [][]io.Runeable {
 	// Generate start zone
 	grid := s.CurrentMap()
 

@@ -48,11 +48,11 @@ func New() *Maps {
 func homeLevel() [][]io.Runeable {
 	home := make([][]io.Runeable, height)
 	for i := range home {
-		row := make([]io.Runeable, width)
-		for j := range row {
-			row[j] = Empty{}
+		col := make([]io.Runeable, width)
+		for j := range col {
+			col[j] = Empty{}
 		}
-		home[i] = row
+		home[i] = col
 	}
 	return home
 }
@@ -90,8 +90,8 @@ type cell struct {
 	io.Runeable
 }
 
-func (c *cell) X() int { return c.y }
-func (c *cell) Y() int { return c.x }
+func (c *cell) X() int { return c.x }
+func (c *cell) Y() int { return c.y }
 
 func (m *Maps) Move(d character.Direction, c *character.Character) []io.Cell {
 
@@ -99,14 +99,14 @@ func (m *Maps) Move(d character.Direction, c *character.Character) []io.Cell {
 	new := c.MoveCharacter(d)
 
 	// Reset the displaced
-	m.home[old.Y][old.X] = m.displaced
+	m.home[old.X][old.Y] = m.displaced
 
 	// Save the newly displaced item
-	m.displaced = m.home[new.Y][new.X]
+	m.displaced = m.home[new.X][new.Y]
 
 	// Set the character to the location
-	m.home[new.Y][new.X] = c
+	m.home[new.X][new.Y] = c
 
 	// TODO THOR the grid needs to be swapped so that coordinates can be in the form of (x,y)
-	return []io.Cell{&cell{old.Y, old.X, m.displaced}, &cell{new.Y, new.X, c}}
+	return []io.Cell{&cell{old.X, old.Y, m.displaced}, &cell{new.X, new.Y, c}}
 }

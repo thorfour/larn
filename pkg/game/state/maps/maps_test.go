@@ -7,7 +7,7 @@ func TestMapsSmoke(t *testing.T) {
 
 	for i, row := range m.home {
 		for j, r := range row {
-			if ru := r.Rune(); ru != '.' {
+			if ru := r.(Empty).Rune(); ru != '.' {
 				t.Error("(%v,%v): not an empty rune: %v", i, j, ru)
 			}
 		}

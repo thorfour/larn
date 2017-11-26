@@ -9,6 +9,10 @@ const (
 	defaultColor = termbox.ColorDefault
 )
 
+type Runeable interface {
+	Rune() rune
+}
+
 // RenderWelcome renders a welcome string
 func RenderWelcome(msg string) error {
 
@@ -51,24 +55,24 @@ func RenderNew(s string) error {
 }
 
 // RenderNewGrid clears the terminal before rendering the grid
-func RenderNewGrid(grid [][]rune) error {
+func RenderNewGrid(grid [][]Runeable) error {
 	termbox.Clear(defaultColor, defaultColor)
 	return RenderGrid(grid)
 }
 
 // RenderGrid renders a 2d grid. where (0,0) is in the top left
 // each slice is treated as a row. This is a wrapper around RenderGridOffset
-func RenderGrid(grid [][]rune) error {
+func RenderGrid(grid [][]Runeable) error {
 	return RenderGridOffset(0, 0, grid)
 }
 
 // RenderGridOffset renders a 2d grid starting at (x,y)
-func RenderGridOffset(x, y int, grid [][]rune) error {
+func RenderGridOffset(x, y int, grid [][]Runeable) error {
 	xo := x // Set the x offset
 	for _, row := range grid {
 		for _, c := range row {
-			termbox.SetCell(xo, y, c, defaultColor, defaultColor)
-			xo += runewidth.RuneWidth(c)
+			termbox.SetCell(xo, y, c.Rune(), defaultColor, defaultColor)
+			xo += runewidth.RuneWidth(c.Rune())
 		}
 		xo = x // reset xoffest for next row
 		y++    // go to next line
@@ -77,7 +81,7 @@ func RenderGridOffset(x, y int, grid [][]rune) error {
 }
 
 // RenderNewGridOffset clears the screen before calling render grid offset
-func RenderNewGridOffset(x, y int, grid [][]rune) error {
+func RenderNewGridOffset(x, y int, grid [][]Runeable) error {
 	termbox.Clear(defaultColor, defaultColor)
 	return RenderGridOffset(x, y, grid)
 }

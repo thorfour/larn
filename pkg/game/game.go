@@ -148,12 +148,12 @@ func (g *Game) renderWelcome() {
 	g.err = io.RenderWelcome(welcome)
 }
 
-func (g *Game) render(grid [][]rune) {
+func (g *Game) render(display [][]io.Runeable) {
 	if g.err != nil {
 		return
 	}
 
-	g.err = io.RenderNewGrid(grid)
+	g.err = io.RenderNewGrid(display)
 }
 
 func (g *Game) renderCharacter(c character.Coordinate) {

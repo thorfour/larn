@@ -1,5 +1,7 @@
 package maps
 
+import "github.com/thorfour/larn/pkg/io"
+
 const (
 	height = 17
 	width  = 67
@@ -12,25 +14,22 @@ const (
 // Empty represents an empty map location
 type Empty struct{}
 
-// Rune implements the runeable interface
+// Rune implements the io.runeable interface
 func (e Empty) Rune() rune {
 	return emptyRune
 }
 
-// Runeable is an interface that can return a rune representation of itself
-type Runeable interface {
-	Rune() rune
+type Coordinate struct {
+	X uint
+	Y uint
 }
 
 // Maps is the collection of all the levels in the game
 type Maps struct {
-	volcano []Level
-	dungeon []Level
-	home    Level
+	volcano [][][]io.Runeable // Gross type alias?
+	dungeon [][][]io.Runeable
+	home    [][]io.Runeable
 }
-
-// Level is a representation of a single level and all that it contains at the time
-type Level [][]Runeable
 
 // New returns a set of maps to represent the game
 func New() *Maps {
@@ -41,10 +40,10 @@ func New() *Maps {
 	return m
 }
 
-func homeLevel() Level {
-	home := make([][]Runeable, height)
+func homeLevel() [][]io.Runeable {
+	home := make([][]io.Runeable, height)
 	for i := range home {
-		row := make([]Runeable, width)
+		row := make([]io.Runeable, width)
 		for j := range row {
 			row[j] = Empty{}
 		}
@@ -54,11 +53,16 @@ func homeLevel() Level {
 }
 
 // TODO
-func dungeon() []Level {
+func dungeon() [][][]io.Runeable {
 	return nil
 }
 
 // TODO
-func volcano() []Level {
+func volcano() [][][]io.Runeable {
 	return nil
+}
+
+// TODO
+func (m *Maps) CurrentMap() [][]io.Runeable {
+	return m.home
 }

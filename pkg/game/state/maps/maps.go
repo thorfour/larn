@@ -99,13 +99,14 @@ func (m *Maps) Move(d character.Direction, c *character.Character) []io.Cell {
 	new := c.MoveCharacter(d)
 
 	// Reset the displaced
-	m.home[old.X][old.Y] = m.displaced
+	m.home[old.Y][old.X] = m.displaced
 
 	// Save the newly displaced item
-	m.displaced = m.home[new.X][new.Y]
+	m.displaced = m.home[new.Y][new.X]
 
 	// Set the character to the location
-	m.home[new.X][new.Y] = c
+	m.home[new.Y][new.X] = c
 
-	return []io.Cell{&cell{old.X, old.Y, m.displaced}, &cell{new.X, new.Y, c}}
+	// TODO THOR the grid needs to be swapped so that coordinates can be in the form of (x,y)
+	return []io.Cell{&cell{old.Y, old.X, m.displaced}, &cell{new.Y, new.X, c}}
 }

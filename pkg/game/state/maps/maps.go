@@ -1,6 +1,10 @@
 package maps
 
-import "github.com/thorfour/larn/pkg/io"
+import (
+	termbox "github.com/nsf/termbox-go"
+	"github.com/thorfour/larn/pkg/game/state/character"
+	"github.com/thorfour/larn/pkg/io"
+)
 
 const (
 	height = 17
@@ -15,9 +19,9 @@ const (
 type Empty struct{}
 
 // Rune implements the io.runeable interface
-func (e Empty) Rune() rune { return emptyRune }
-func (e Empty) Fg() uint16 { return 0 }
-func (e Empty) Bg() uint16 { return 0 }
+func (e Empty) Rune() rune            { return emptyRune }
+func (e Empty) Fg() termbox.Attribute { return termbox.ColorDefault }
+func (e Empty) Bg() termbox.Attribute { return termbox.ColorDefault }
 
 type Coordinate struct {
 	X uint
@@ -26,9 +30,10 @@ type Coordinate struct {
 
 // Maps is the collection of all the levels in the game
 type Maps struct {
-	volcano [][][]io.Runeable // Gross type alias?
-	dungeon [][][]io.Runeable
-	home    [][]io.Runeable
+	volcano   [][][]io.Runeable // Gross type alias?
+	dungeon   [][][]io.Runeable
+	home      [][]io.Runeable
+	displaced io.Runeable
 }
 
 // New returns a set of maps to represent the game
@@ -65,4 +70,16 @@ func volcano() [][][]io.Runeable {
 // TODO
 func (m *Maps) CurrentMap() [][]io.Runeable {
 	return m.home
+}
+
+func (m *Maps) SpawnCharacter(c *character.Character) {
+
+	x := c.Location().X
+	y := c.Location().Y
+
+	// Save what the character is standing on top of
+	m.displaced = m.home[x][y]
+
+	// Set the character to the location
+	m.home[x][y] = c
 }

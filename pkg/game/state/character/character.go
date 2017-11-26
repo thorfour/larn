@@ -21,8 +21,9 @@ const (
 )
 
 const (
-	characterFG = termbox.ColorGreen
-	characterBG = termbox.ColorGreen
+	characterFG   = termbox.ColorGreen
+	characterBG   = termbox.ColorGreen
+	characterRune = '&'
 )
 
 type Character struct {
@@ -37,6 +38,18 @@ type Character struct {
 type Coordinate struct {
 	X int
 	Y int
+}
+
+func (c *Character) Rune() rune {
+	return characterRune
+}
+
+func (c *Character) Fg() termbox.Attribute {
+	return characterFG
+}
+
+func (c *Character) Bg() termbox.Attribute {
+	return characterBG
 }
 
 // Move the character in the given direction 1 space
@@ -65,6 +78,10 @@ func (c *Character) Move(d Direction) Coordinate {
 	case Here:
 	}
 
+	return c.loc
+}
+
+func (c *Character) Location() Coordinate {
 	return c.loc
 }
 

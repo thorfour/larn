@@ -19,8 +19,8 @@ const (
 
 type Runeable interface {
 	Rune() rune
-	Fg() uint16
-	Bg() uint16
+	Fg() termbox.Attribute
+	Bg() termbox.Attribute
 }
 
 // RenderWelcome renders a welcome string
@@ -81,7 +81,7 @@ func RenderGridOffset(x, y int, grid [][]Runeable) error {
 	xo := x // Set the x offset
 	for _, row := range grid {
 		for _, c := range row {
-			termbox.SetCell(xo, y, c.Rune(), termbox.Attribute(c.Fg()), termbox.Attribute(c.Bg()))
+			termbox.SetCell(xo, y, c.Rune(), c.Fg(), c.Bg())
 			xo += runewidth.RuneWidth(c.Rune())
 		}
 		xo = x // reset xoffest for next row

@@ -3,15 +3,16 @@ package game
 import (
 	"fmt"
 
+	termbox "github.com/nsf/termbox-go"
 	"github.com/thorfour/larn/pkg/game/state"
 	"github.com/thorfour/larn/pkg/io"
 )
 
 type Simple rune
 
-func (s Simple) Rune() rune { return rune(s) }
-func (s Simple) Fg() uint16 { return 0 }
-func (s Simple) Bg() uint16 { return 0 }
+func (s Simple) Rune() rune            { return rune(s) }
+func (s Simple) Fg() termbox.Attribute { return termbox.ColorDefault }
+func (s Simple) Bg() termbox.Attribute { return termbox.ColorDefault }
 
 // display returns a 2d slice representation of the game
 func display(s *state.State) [][]io.Runeable {

@@ -25,7 +25,7 @@ func New(c *character.Character) *Maps {
 	m := new(Maps)
 	m.dungeon = dungeon()
 	m.volcano = volcano()
-	m.home = newLevel(homeLevel)
+	m.home = newLevel(homeLevel + 1)
 	m.SpawnCharacter(c)
 	return m
 }

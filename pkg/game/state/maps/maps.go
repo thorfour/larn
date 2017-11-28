@@ -2,32 +2,15 @@ package maps
 
 import (
 	"github.com/golang/glog"
-	termbox "github.com/nsf/termbox-go"
 	"github.com/thorfour/larn/pkg/game/state/character"
 	"github.com/thorfour/larn/pkg/io"
 )
 
+// Standard height and width of maps
 const (
 	height = 17
 	width  = 67
 )
-
-const (
-	emptyRune = '.'
-)
-
-// Empty represents an empty map location
-type Empty struct{}
-
-// Rune implements the io.runeable interface
-func (e Empty) Rune() rune            { return emptyRune }
-func (e Empty) Fg() termbox.Attribute { return termbox.ColorDefault }
-func (e Empty) Bg() termbox.Attribute { return termbox.ColorDefault }
-
-type Coordinate struct {
-	X uint
-	Y uint
-}
 
 // Maps is the collection of all the levels in the game
 type Maps struct {
@@ -42,21 +25,9 @@ func New(c *character.Character) *Maps {
 	m := new(Maps)
 	m.dungeon = dungeon()
 	m.volcano = volcano()
-	m.home = homeLevel()
+	m.home = newLevel(homeLevel)
 	m.SpawnCharacter(c)
 	return m
-}
-
-func homeLevel() [][]io.Runeable {
-	home := make([][]io.Runeable, height)
-	for i := range home {
-		row := make([]io.Runeable, width)
-		for j := range row {
-			row[j] = Empty{}
-		}
-		home[i] = row
-	}
-	return home
 }
 
 // TODO

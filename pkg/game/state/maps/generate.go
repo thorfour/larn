@@ -36,25 +36,53 @@ func newLevel(lvl uint) [][]io.Runeable {
 
 	// Carve out the passageways
 	if lvl != homeLevel {
-		carve(level)
+		//carve(level)
+		eat(randMapCoord(), level) // original larn
 	}
 
 	return level
 }
 
 // eat is the way orginal larn ate through the map of walls to create a maze
-func eat(lvl [][]io.Runeable) { // TODO
+func eat(c Coordinate, lvl [][]io.Runeable) {
 	dir := rand.Intn(4) + 1 // pick a random direction
 	try := 2
-	//c := randMapCoord()
-	for try > 0 {
+	for try > 0 { // try all directions twice
 		switch dir {
 		case 1: // West
+			if c.X <= 2 || lvl[c.Y][c.X-1] != (Wall{}) || lvl[c.Y][c.X-2] != (Wall{}) { // Only eat if at least the next 2 are walls
+				break
+			}
+			lvl[c.Y][c.X-1] = Empty{}
+			lvl[c.Y][c.X-2] = Empty{}
+			eat(Coordinate{c.X - 2, c.Y}, lvl)
 		case 2: // East
+			if c.X >= width-3 || lvl[c.Y][c.X+1] != (Wall{}) || lvl[c.Y][c.X+2] != (Wall{}) { // Only eat if at least the next 2 are walls
+				break
+			}
+			lvl[c.Y][c.X+1] = Empty{}
+			lvl[c.Y][c.X+2] = Empty{}
+			eat(Coordinate{c.X + 2, c.Y}, lvl)
 		case 3: // South
+			if c.Y <= 2 || lvl[c.Y-1][c.X] != (Wall{}) || lvl[c.Y-2][c.X] != (Wall{}) { // Only eat if at least the next 2 are walls
+				break
+			}
+			lvl[c.Y-1][c.X] = Empty{}
+			lvl[c.Y-2][c.X] = Empty{}
+			eat(Coordinate{c.X, c.Y - 2}, lvl)
 		case 4: // North
+			if c.Y >= height-3 || lvl[c.Y+1][c.X] != (Wall{}) || lvl[c.Y+2][c.X] != (Wall{}) { // Only eat if at least the next 2 are walls
+				break
+			}
+			lvl[c.Y+1][c.X] = Empty{}
+			lvl[c.Y+2][c.X] = Empty{}
+			eat(Coordinate{c.X, c.Y + 2}, lvl)
 		default:
 			panic("Unknown direction")
+		}
+		if dir++; dir > 4 { // Pick a different direction
+			dir = 1
+			try--
 		}
 	}
 }

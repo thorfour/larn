@@ -37,7 +37,7 @@ func newLevel(lvl uint) [][]io.Runeable {
 	// Carve out the passageways
 	if lvl != homeLevel {
 		//carve(level)
-		eat(randMapCoord(), level) // original larn
+		eat(Coordinate{1, 1}, level) // original larn
 	}
 
 	return level

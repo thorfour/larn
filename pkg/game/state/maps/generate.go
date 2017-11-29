@@ -45,7 +45,7 @@ func newLevel(lvl uint) [][]io.Runeable {
 
 // eat is the way orginal larn ate through the map of walls to create a maze
 func eat(c Coordinate, lvl [][]io.Runeable) {
-	dir := rand.Intn(4) + 1 // pick a random direction
+	dir := rand.Intn(4) + 1 // pick a random direction // TODO THOR use a time seed
 	try := 2
 	for try > 0 { // try all directions twice
 		switch dir {
@@ -165,4 +165,30 @@ func randMapCoord() Coordinate {
 	x := uint(rand.Intn(width) + 1)
 	y := uint(rand.Intn(height) + 1)
 	return Coordinate{x, y}
+}
+
+// placeObject places an object in a maze at arandom open location
+func placeObject(o io.Runeable, lvl [][]io.Runeable) {
+
+	c := randMapCoord()
+
+	// Random walk till and empty room is found
+	for lvl[c.Y][c.X] != (Empty{}) {
+		c.X += uint(rand.Intn(3) - 2) // [-1,1]
+		c.Y += uint(rand.Intn(3) - 2) // [-1,1]
+		if c.X > width-2 {
+			c.X = 1
+		}
+		if c.X < 1 {
+			c.X = width - 2
+		}
+		if c.Y > height-2 {
+			c.Y = 1
+		}
+		if c.Y < 1 {
+			c.Y = height - 2
+		}
+	}
+
+	lvl[c.Y][c.X] = o
 }

@@ -3,8 +3,10 @@ package maps
 import termbox "github.com/nsf/termbox-go"
 
 const (
-	emptyRune = '.'
-	wallRune  = '#'
+	emptyRune     = '.'
+	wallRune      = '#'
+	stairUpRune   = '>'
+	stairDownRune = '<'
 )
 
 // Coordinate is a map coordinate. (0,0) is the top left corner
@@ -36,3 +38,22 @@ func (w Wall) Fg() termbox.Attribute { return termbox.ColorDefault }
 
 // Bg implements the io.Runeable interface
 func (w Wall) Bg() termbox.Attribute { return termbox.ColorDefault }
+
+// Stairs is a staircase
+type Stairs struct {
+	up bool // indicates if these stairs go up
+}
+
+// Rune implements the io.Runeable interface
+func (s Stairs) Rune() rune {
+	if s.up {
+		return stairUpRune
+	}
+	return stairDownRune
+}
+
+// Fg implements the io.Runeable interface
+func (s Stairs) Fg() termbox.Attribute { return termbox.ColorDefault }
+
+// Bg implements the io.Runeable interface
+func (s Stairs) Bg() termbox.Attribute { return termbox.ColorDefault }

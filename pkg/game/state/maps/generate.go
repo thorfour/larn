@@ -190,5 +190,6 @@ func placeObject(o io.Runeable, lvl [][]io.Runeable) {
 		}
 	}
 
+	// Add the object
 	lvl[c.Y][c.X] = o
 }

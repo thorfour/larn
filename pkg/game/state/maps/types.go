@@ -7,6 +7,12 @@ const (
 	wallRune      = '#'
 	stairUpRune   = '>'
 	stairDownRune = '<'
+	dungeonERune  = 'E'
+)
+
+const (
+	Up   = true
+	Down = false
 )
 
 // Coordinate is a map coordinate. (0,0) is the top left corner
@@ -57,3 +63,15 @@ func (s Stairs) Fg() termbox.Attribute { return termbox.ColorDefault }
 
 // Bg implements the io.Runeable interface
 func (s Stairs) Bg() termbox.Attribute { return termbox.ColorDefault }
+
+// DungeonEntrance home level to dungeon level 1
+type DungeonEntrance struct{}
+
+// Rune implements the io.Runeable interface
+func (d DungeonEntrance) Rune() rune { return dungeonERune }
+
+// Fg implements the io.Runeable interface
+func (d DungeonEntrance) Fg() termbox.Attribute { return termbox.ColorBlack }
+
+// Bg implements the io.Runeable interface
+func (d DungeonEntrance) Bg() termbox.Attribute { return termbox.ColorGreen }

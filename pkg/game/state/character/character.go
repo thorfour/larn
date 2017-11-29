@@ -78,7 +78,11 @@ func (c *Character) Location() Coordinate {
 	return c.loc
 }
 
-func (c *Character) Teleport() {}
+// Teleport places a character at location l
+func (c *Character) Teleport(x, y int) {
+	c.loc.X = x
+	c.loc.Y = y
+}
 
 func (c *Coordinate) Move(d Direction) {
 	switch d {

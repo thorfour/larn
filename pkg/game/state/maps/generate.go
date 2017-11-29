@@ -2,6 +2,7 @@ package maps
 
 import (
 	"math/rand"
+	"time"
 
 	"github.com/golang/glog"
 	"github.com/thorfour/larn/pkg/io"
@@ -12,6 +13,20 @@ const (
 	maxDungeon = 10
 	maxVolcano = 13
 )
+
+// newMap is a wrapper of newLevel, it creates the level and places objects in the level.
+func newMap(lvl uint) [][]io.Runeable {
+	m := newLevel(lvl) // Create the level
+
+	seed := time.Now().UnixNano()
+	glog.V(1).Infof("Map Seed: %v", seed)
+
+	// Seed the global rand // FIXME maps shouldn't use global rand
+	rand.Seed(seed)
+
+	placeObjects(lvl, m) // Add objects to the level
+	return m
+}
 
 // newLevel creates a new map for a given level
 // It creates a map full of walls and then carves out the pathways
@@ -162,20 +177,32 @@ func emptyAdjacent(c Coordinate, lvl [][]io.Runeable) int {
 }
 
 func randMapCoord() Coordinate {
-	x := uint(rand.Intn(width) + 1)
-	y := uint(rand.Intn(height) + 1)
+	x := uint(rand.Intn(width-1) + 1)
+	y := uint(rand.Intn(height-1) + 1)
 	return Coordinate{x, y}
 }
 
 // placeObject places an object in a maze at arandom open location
-func placeObject(o io.Runeable, lvl [][]io.Runeable) {
+func placeObject(c Coordinate, o io.Runeable, lvl [][]io.Runeable) {
 
-	c := randMapCoord()
+	glog.Infof("Coord: (%v,%v) = %s", c.X, c.Y, string(o.Rune()))
 
 	// Random walk till and empty room is found
 	for lvl[c.Y][c.X] != (Empty{}) {
-		c.X += uint(rand.Intn(3) - 2) // [-1,1]
-		c.Y += uint(rand.Intn(3) - 2) // [-1,1]
+		xadj := uint(rand.Intn(3) - 2) // [-1,1]
+		yadj := uint(rand.Intn(3) - 2) // [-1,1]
+		if xadj > 0 {
+			c.X += xadj
+		} else {
+			c.X -= xadj
+		}
+
+		if yadj > 0 {
+			c.Y += yadj
+		} else {
+			c.Y -= yadj
+		}
+
 		if c.X > width-2 {
 			c.X = 1
 		}
@@ -192,4 +219,16 @@ func placeObject(o io.Runeable, lvl [][]io.Runeable) {
 
 	// Add the object
 	lvl[c.Y][c.X] = o
+}
+
+// placeObjects places the required objects for a level
+// it calls placeObject many times
+func placeObjects(lvl uint, m [][]io.Runeable) {
+
+	if lvl == homeLevel {
+		placeObject(randMapCoord(), DungeonEntrance{}, m)
+	} else {
+		placeObject(randMapCoord(), Stairs{Up}, m)
+		placeObject(randMapCoord(), Stairs{Down}, m)
+	}
 }

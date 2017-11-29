@@ -25,19 +25,27 @@ func New(c *character.Character) *Maps {
 	m := new(Maps)
 	m.dungeon = dungeon()
 	m.volcano = volcano()
-	m.home = newLevel(homeLevel + 1)
+	m.home = newMap(homeLevel)
 	m.SpawnCharacter(c)
 	return m
 }
 
-// TODO
+// dungeon creates all the levels of the dungeon
 func dungeon() [][][]io.Runeable {
-	return nil
+	d := make([][][]io.Runeable, maxDungeon)
+	for i := range d {
+		d[i] = newMap(uint(i + 1)) // add 1 to avoid creating a home level
+	}
+	return d
 }
 
-// TODO
+// volcano creates all the levels of the volcano
 func volcano() [][][]io.Runeable {
-	return nil
+	v := make([][][]io.Runeable, maxVolcano)
+	for i := range v {
+		v[i] = newMap(uint(i + 1 + maxDungeon)) // +1 + maxDungeon to indicate it's a volcano
+	}
+	return v
 }
 
 // TODO
@@ -45,16 +53,18 @@ func (m *Maps) CurrentMap() [][]io.Runeable {
 	return m.home
 }
 
+// SpawnCharacter places the character on the home level
 func (m *Maps) SpawnCharacter(c *character.Character) {
 
-	x := c.Location().X
-	y := c.Location().Y
+	// Save the displaced element
+	l := randMapCoord()
+	m.displaced = m.home[l.Y][l.X]
 
-	// Save what the character is standing on top of
-	m.displaced = m.home[y][x]
+	// Place the character on the map
+	placeObject(l, c, m.home)
 
 	// Set the character to the location
-	m.home[y][x] = c
+	c.Teleport(int(l.X), int(l.Y))
 }
 
 type cell struct {

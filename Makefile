@@ -2,7 +2,7 @@
 
 NAME="larn"
 
-all: game
+all: clean larn
 larn:
 	CGO_ENABLED=0 GOOS=linux go build -o ./$(NAME) ./cmd/
 clean:

@@ -95,7 +95,7 @@ func (m *Maps) Move(d character.Direction, c *character.Character) []io.Cell {
 	// Set the character to the location
 	m.home[new.Y][new.X] = c
 
-	return []io.Cell{&cell{old.X, old.Y, m.displaced}, &cell{new.X, new.Y, c}}
+	return []io.Cell{&cell{old.X, old.Y, m.home[old.Y][old.X]}, &cell{new.X, new.Y, c}}
 }
 
 // validMove returns true if the move is allowed (i.e not off the edge, not into a wall

@@ -24,6 +24,9 @@ type Coordinate struct {
 // Empty represents an empty map location
 type Empty struct{}
 
+// Displace implementes the Displaceable interface
+func (e Empty) Displace() bool { return true }
+
 // Rune implements the io.Runeable interface
 func (e Empty) Rune() rune { return emptyRune }
 
@@ -47,8 +50,15 @@ func (w Wall) Bg() termbox.Attribute { return termbox.ColorDefault }
 
 // Stairs is a staircase
 type Stairs struct {
-	up bool // indicates if these stairs go up
+	up    bool // indicates if these stairs go up
+	level int  // the level the stairs lead to
 }
+
+// Displace implementes the Displaceable interface
+func (s Stairs) Displace() bool { return true }
+
+// Enter implements the Enterable interface
+func (s Stairs) Enter() int { return s.level }
 
 // Rune implements the io.Runeable interface
 func (s Stairs) Rune() rune {
@@ -67,6 +77,12 @@ func (s Stairs) Bg() termbox.Attribute { return termbox.ColorDefault }
 // DungeonEntrance home level to dungeon level 1
 type DungeonEntrance struct{}
 
+// Displace implementes the Displaceable interface
+func (d DungeonEntrance) Displace() bool { return true }
+
+// Enter implements the Enterable interface
+func (d DungeonEntrance) Enter() int { return 1 } // Dungeron entrance always leads to level 1
+
 // Rune implements the io.Runeable interface
 func (d DungeonEntrance) Rune() rune { return dungeonERune }
 
@@ -75,3 +91,13 @@ func (d DungeonEntrance) Fg() termbox.Attribute { return termbox.ColorBlack }
 
 // Bg implements the io.Runeable interface
 func (d DungeonEntrance) Bg() termbox.Attribute { return termbox.ColorGreen }
+
+// Enterable indicates a object is enterable
+type Enterable interface {
+	Enter() int
+}
+
+// Displaceable indicates if a character can walk on top of an object
+type Displaceable interface {
+	Displace() bool
+}

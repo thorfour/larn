@@ -134,6 +134,9 @@ func (g *Game) run() error {
 			fallthrough
 		case 'Q': // quit the game
 			return nil
+		case 'E': // Enter the building
+			g.currentState.Enter()
+			g.render(display(g.currentState))
 		}
 	}
 

@@ -11,7 +11,7 @@ import (
 const (
 	homeLevel  = 0
 	maxDungeon = 10
-	maxVolcano = 13
+	maxVolcano = 13 // 3 volcanos. 10 dungeons
 )
 
 // newMap is a wrapper of newLevel, it creates the level and places objects in the level.
@@ -185,7 +185,7 @@ func randMapCoord() Coordinate {
 // placeObject places an object in a maze at arandom open location
 func placeObject(c Coordinate, o io.Runeable, lvl [][]io.Runeable) {
 
-	glog.Infof("Coord: (%v,%v) = %s", c.X, c.Y, string(o.Rune()))
+	glog.V(6).Infof("Coord: (%v,%v) = %s", c.X, c.Y, string(o.Rune()))
 
 	// Random walk till and empty room is found
 	for lvl[c.Y][c.X] != (Empty{}) {
@@ -228,7 +228,9 @@ func placeObjects(lvl uint, m [][]io.Runeable) {
 	if lvl == homeLevel {
 		placeObject(randMapCoord(), DungeonEntrance{}, m)
 	} else {
-		placeObject(randMapCoord(), Stairs{Up}, m)
-		placeObject(randMapCoord(), Stairs{Down}, m)
+		placeObject(randMapCoord(), Stairs{Up, int(lvl - 1)}, m)
+		if lvl != maxDungeon && lvl != maxVolcano {
+			placeObject(randMapCoord(), Stairs{Down, int(lvl + 1)}, m)
+		}
 	}
 }

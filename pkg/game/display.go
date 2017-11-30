@@ -16,16 +16,7 @@ func (s Simple) Bg() termbox.Attribute { return termbox.ColorDefault }
 
 // display returns a 2d slice representation of the game
 func display(s *state.State) [][]io.Runeable {
-	// Generate start zone
-	grid := s.CurrentMap()
-
-	// Generate info bar
-	bar := infoBarGrid(s)
-	for i := range bar { // Append the info bar
-		grid = append(grid, bar[i])
-	}
-
-	return grid
+	return addInfoBar(s, s.CurrentMap())
 }
 
 // infoBarGrid returns the info bar in display grid format
@@ -43,4 +34,14 @@ func infoBarGrid(s *state.State) [][]io.Runeable {
 	}
 
 	return r
+}
+
+// appends the info bar to the current map
+func addInfoBar(s *state.State, m [][]io.Runeable) [][]io.Runeable {
+
+	bar := infoBarGrid(s)
+	for i := range bar {
+		m = append(m, bar[i])
+	}
+	return m
 }

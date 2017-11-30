@@ -14,43 +14,33 @@ const (
 
 // Maps is the collection of all the levels in the game
 type Maps struct {
-	volcano   [][][]io.Runeable // Gross type alias?
-	dungeon   [][][]io.Runeable
-	home      [][]io.Runeable
-	displaced io.Runeable
+	mazes     [][][]io.Runeable // slice of all mazes in the game
+	active    [][]io.Runeable   // current active maze
+	displaced io.Runeable       // object the player is currently standing on TODO should be moved to the character type
+	current   int               // index of the active maze. active = mazes[current]
 }
 
 // New returns a set of maps to represent the game
 func New(c *character.Character) *Maps {
 	m := new(Maps)
-	m.dungeon = dungeon()
-	m.volcano = volcano()
-	m.home = newMap(homeLevel)
+	for i := uint(0); i < maxVolcano; i++ {
+		m.mazes = append(m.mazes, newMap(i))
+	}
+	m.active = m.mazes[homeLevel]
 	m.SpawnCharacter(c)
 	return m
 }
 
-// dungeon creates all the levels of the dungeon
-func dungeon() [][][]io.Runeable {
-	d := make([][][]io.Runeable, maxDungeon)
-	for i := range d {
-		d[i] = newMap(uint(i + 1)) // add 1 to avoid creating a home level
-	}
-	return d
-}
-
-// volcano creates all the levels of the volcano
-func volcano() [][][]io.Runeable {
-	v := make([][][]io.Runeable, maxVolcano)
-	for i := range v {
-		v[i] = newMap(uint(i + 1 + maxDungeon)) // +1 + maxDungeon to indicate it's a volcano
-	}
-	return v
-}
-
-// TODO
+// CurrentMap returns the current map where the character is located
 func (m *Maps) CurrentMap() [][]io.Runeable {
-	return m.home
+	return m.active
+}
+
+// RemoveCharacter is used for when a character leaves a map
+func (m *Maps) RemoveCharacter(c *character.Character) {
+	l := c.Location()
+	m.active[l.Y][l.X] = m.displaced
+	m.displaced = nil
 }
 
 // SpawnCharacter places the character on the home level
@@ -58,10 +48,10 @@ func (m *Maps) SpawnCharacter(c *character.Character) {
 
 	// Save the displaced element
 	l := randMapCoord()
-	m.displaced = m.home[l.Y][l.X]
+	m.displaced = m.active[l.Y][l.X]
 
 	// Place the character on the map
-	placeObject(l, c, m.home)
+	placeObject(l, c, m.active)
 
 	// Set the character to the location
 	c.Teleport(int(l.X), int(l.Y))
@@ -79,7 +69,7 @@ func (c *cell) Y() int { return c.y }
 func (m *Maps) Move(d character.Direction, c *character.Character) []io.Cell {
 
 	// Validate the move
-	if !validMove(d, c) {
+	if !m.validMove(d, c) {
 		return nil
 	}
 
@@ -87,19 +77,19 @@ func (m *Maps) Move(d character.Direction, c *character.Character) []io.Cell {
 	new := c.MoveCharacter(d)
 
 	// Reset the displaced
-	m.home[old.Y][old.X] = m.displaced
+	m.active[old.Y][old.X] = m.displaced
 
 	// Save the newly displaced item
-	m.displaced = m.home[new.Y][new.X]
+	m.displaced = m.active[new.Y][new.X]
 
 	// Set the character to the location
-	m.home[new.Y][new.X] = c
+	m.active[new.Y][new.X] = c
 
-	return []io.Cell{&cell{old.X, old.Y, m.home[old.Y][old.X]}, &cell{new.X, new.Y, c}}
+	return []io.Cell{&cell{old.X, old.Y, m.active[old.Y][old.X]}, &cell{new.X, new.Y, c}}
 }
 
 // validMove returns true if the move is allowed (i.e not off the edge, not into a wall
-func validMove(d character.Direction, c *character.Character) bool {
+func (m *Maps) validMove(d character.Direction, c *character.Character) bool {
 
 	// Make the move and check its validity
 	current := c.Location()
@@ -107,5 +97,29 @@ func validMove(d character.Direction, c *character.Character) bool {
 
 	glog.V(6).Infof("ValidMove: (%v,%v)", current.X, current.Y)
 
-	return current.X >= 0 && current.X < width && current.Y >= 0 && current.Y < height
+	// Ensure the character isn't going off the grid, tron
+	inBounds := current.X >= 0 && current.X < width && current.Y >= 0 && current.Y < height
+
+	// Ensure the character is going onto an empty location
+	isDisplaceable := false
+	if inBounds {
+		switch m.active[current.Y][current.X].(type) {
+		case Displaceable:
+			isDisplaceable = true
+		}
+	}
+
+	return inBounds && isDisplaceable
+}
+
+// Displaced returns the displaced object
+func (m *Maps) Displaced() io.Runeable {
+	return m.displaced
+}
+
+// SetCurrent sets the current map level to display (i.e the character moved between levels)
+func (m *Maps) SetCurrent(lvl int) {
+	glog.V(2).Infof("Setting current level %v", lvl)
+	m.current = lvl
+	m.active = m.mazes[m.current]
 }

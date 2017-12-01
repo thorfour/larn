@@ -32,7 +32,7 @@ func (s *State) CurrentMap() [][]io.Runeable {
 }
 
 // Move is for character movement
-func (s *State) Move(d character.Direction) []io.Cell {
+func (s *State) Move(d character.Direction) ([]io.Cell, bool) {
 	return s.maps.Move(d, s.C)
 }
 
@@ -44,8 +44,6 @@ func (s *State) Enter() {
 	// Check if character is standing on an enterable object
 	switch t := s.maps.Displaced().(type) {
 	case maps.Enterable:
-		s.maps.RemoveCharacter(s.C)
-		s.maps.SetCurrent(t.Enter())
-		s.maps.SpawnCharacter(s.C) // TODO THOR map entrances should be used
+		s.maps.EnterLevel(s.C, t.Enter())
 	}
 }

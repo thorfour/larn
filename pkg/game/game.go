@@ -167,10 +167,15 @@ func (g *Game) renderCharacter(c character.Coordinate) {
 	g.err = io.RenderCell(c.X, c.Y, '&', termbox.ColorGreen, termbox.ColorGreen)
 }
 
-func (g *Game) renderCells(c []io.Cell) {
-	if g.err != nil || c == nil {
+func (g *Game) renderCells(c []io.Cell, full bool) {
+	if g.err != nil {
 		return
 	}
 
-	g.err = io.RenderCells(c)
+	// if a full request was rendered, re-render the whole screen
+	if full || c == nil {
+		g.render(display(g.currentState))
+	} else {
+		g.err = io.RenderCells(c)
+	}
 }

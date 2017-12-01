@@ -182,10 +182,8 @@ func randMapCoord() Coordinate {
 	return Coordinate{x, y}
 }
 
-// placeObject places an object in a maze at arandom open location
-func placeObject(c Coordinate, o io.Runeable, lvl [][]io.Runeable) (Coordinate, io.Runeable) {
-
-	glog.V(6).Infof("Coord: (%v,%v) = %s", c.X, c.Y, string(o.Rune()))
+// walkToEmpty takes coordincate c and randomly walks till it finds an empty location
+func walkToEmpty(c Coordinate, lvl [][]io.Runeable) Coordinate {
 
 	// Random walk till and empty room is found
 	for lvl[c.Y][c.X] != (Empty{}) {
@@ -217,6 +215,16 @@ func placeObject(c Coordinate, o io.Runeable, lvl [][]io.Runeable) (Coordinate, 
 		}
 	}
 
+	return c
+}
+
+// placeObject places an object in a maze at arandom open location
+func placeObject(c Coordinate, o io.Runeable, lvl [][]io.Runeable) (Coordinate, io.Runeable) {
+
+	glog.V(6).Infof("Coord: (%v,%v) = %s", c.X, c.Y, string(o.Rune()))
+
+	c = walkToEmpty(c, lvl)
+
 	// Add the object
 	d := lvl[c.Y][c.X]
 	lvl[c.Y][c.X] = o
@@ -228,11 +236,14 @@ func placeObject(c Coordinate, o io.Runeable, lvl [][]io.Runeable) (Coordinate, 
 // it calls placeObject many times
 func placeObjects(lvl uint, m [][]io.Runeable) {
 
+	// Place the stairs
 	if lvl == homeLevel {
 		placeObject(randMapCoord(), DungeonEntrance{}, m)
 	} else {
-		placeObject(randMapCoord(), Stairs{Up, int(lvl - 1)}, m)
-		if lvl != maxDungeon && lvl != maxVolcano {
+		if lvl != 1 { // Dungeon level 1 has an entrance/exit doesn't need stairs up
+			placeObject(randMapCoord(), Stairs{Up, int(lvl - 1)}, m)
+		}
+		if lvl != maxDungeon && lvl != maxVolcano { // Last dungeon/volcano no stairs down
 			placeObject(randMapCoord(), Stairs{Down, int(lvl + 1)}, m)
 		}
 	}

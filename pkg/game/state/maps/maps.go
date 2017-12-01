@@ -15,19 +15,35 @@ const (
 // Maps is the collection of all the levels in the game
 type Maps struct {
 	mazes     [][][]io.Runeable // slice of all mazes in the game
+	entrance  []Coordinate      // list of all entrances in each maze (i.e where a ladder from the previous maze drops you)
 	active    [][]io.Runeable   // current active maze
 	displaced io.Runeable       // object the player is currently standing on TODO should be moved to the character type
 	current   int               // index of the active maze. active = mazes[current]
+}
+
+// EnterLevel moves a character from one level to the next by way of entrance or stairs
+func (m *Maps) EnterLevel(c *character.Character, lvl int) {
+	m.RemoveCharacter(c)
+	m.SetCurrent(lvl)
+	m.SpawnCharacter(m.entrance[lvl], c)
 }
 
 // New returns a set of maps to represent the game
 func New(c *character.Character) *Maps {
 	m := new(Maps)
 	for i := uint(0); i < maxVolcano; i++ {
+
 		m.mazes = append(m.mazes, newMap(i))
+
+		if i == 1 { // dungeon 0 has an entrance
+			m.mazes[i][height-1][width/2] = (Empty{})
+		}
+
+		// Set the entrace for the maze to a random location
+		m.entrance = append(m.entrance, walkToEmpty(randMapCoord(), m.mazes[i]))
 	}
 	m.active = m.mazes[homeLevel]
-	m.SpawnCharacter(c)
+	m.SpawnCharacter(m.entrance[homeLevel], c)
 	return m
 }
 
@@ -44,10 +60,10 @@ func (m *Maps) RemoveCharacter(c *character.Character) {
 }
 
 // SpawnCharacter places the character on the home level
-func (m *Maps) SpawnCharacter(c *character.Character) {
+func (m *Maps) SpawnCharacter(coord Coordinate, c *character.Character) {
 
 	// Place the character on the map
-	l, d := placeObject(randMapCoord(), c, m.active)
+	l, d := placeObject(coord, c, m.active)
 
 	// Save the displaced element
 	m.displaced = d
@@ -65,11 +81,11 @@ type cell struct {
 func (c *cell) X() int { return c.x }
 func (c *cell) Y() int { return c.y }
 
-func (m *Maps) Move(d character.Direction, c *character.Character) []io.Cell {
+func (m *Maps) Move(d character.Direction, c *character.Character) ([]io.Cell, bool) {
 
 	// Validate the move
 	if !m.validMove(d, c) {
-		return nil
+		return nil, false
 	}
 
 	old := c.Location()
@@ -78,13 +94,22 @@ func (m *Maps) Move(d character.Direction, c *character.Character) []io.Cell {
 	// Reset the displaced
 	m.active[old.Y][old.X] = m.displaced
 
+	// Check if they character moved to the exit of the dungeon
+	if m.current == 1 && new.Y == height-1 {
+		// Move the character to the home level
+		m.RemoveCharacter(c)
+		m.SetCurrent(homeLevel)
+		m.SpawnCharacter(m.entrance[homeLevel], c)
+		return nil, true
+	}
+
 	// Save the newly displaced item
 	m.displaced = m.active[new.Y][new.X]
 
 	// Set the character to the location
 	m.active[new.Y][new.X] = c
 
-	return []io.Cell{&cell{old.X, old.Y, m.active[old.Y][old.X]}, &cell{new.X, new.Y, c}}
+	return []io.Cell{&cell{old.X, old.Y, m.active[old.Y][old.X]}, &cell{new.X, new.Y, c}}, false
 }
 
 // validMove returns true if the move is allowed (i.e not off the edge, not into a wall

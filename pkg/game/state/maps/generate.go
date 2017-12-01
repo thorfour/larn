@@ -183,7 +183,7 @@ func randMapCoord() Coordinate {
 }
 
 // placeObject places an object in a maze at arandom open location
-func placeObject(c Coordinate, o io.Runeable, lvl [][]io.Runeable) Coordinate {
+func placeObject(c Coordinate, o io.Runeable, lvl [][]io.Runeable) (Coordinate, io.Runeable) {
 
 	glog.V(6).Infof("Coord: (%v,%v) = %s", c.X, c.Y, string(o.Rune()))
 
@@ -218,9 +218,10 @@ func placeObject(c Coordinate, o io.Runeable, lvl [][]io.Runeable) Coordinate {
 	}
 
 	// Add the object
+	d := lvl[c.Y][c.X]
 	lvl[c.Y][c.X] = o
 
-	return c
+	return c, d
 }
 
 // placeObjects places the required objects for a level

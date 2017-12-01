@@ -46,12 +46,11 @@ func (m *Maps) RemoveCharacter(c *character.Character) {
 // SpawnCharacter places the character on the home level
 func (m *Maps) SpawnCharacter(c *character.Character) {
 
-	// Save the displaced element
-	l := randMapCoord()
-	m.displaced = m.active[l.Y][l.X]
-
 	// Place the character on the map
-	placeObject(l, c, m.active)
+	l, d := placeObject(randMapCoord(), c, m.active)
+
+	// Save the displaced element
+	m.displaced = d
 
 	// Set the character to the location
 	c.Teleport(int(l.X), int(l.Y))

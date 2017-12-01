@@ -89,13 +89,21 @@ func (g *Game) run() error {
 		}
 		switch e := <-g.input; e.Ch {
 		case 'H': // run left
+			g.runAction(character.Left)
 		case 'J': // run down
+			g.runAction(character.Down)
 		case 'K': // run up
+			g.runAction(character.Up)
 		case 'L': // run right
+			g.runAction(character.Right)
 		case 'Y': // run northwest
+			g.runAction(character.UpLeft)
 		case 'U': // run northeast
+			g.runAction(character.UpRight)
 		case 'B': // run southwest
+			g.runAction(character.DownLeft)
 		case 'N': // run southeast
+			g.runAction(character.DownRight)
 		case 'h': // move left
 			g.renderCells(g.currentState.Move(character.Left))
 		case 'j': // move down
@@ -177,5 +185,11 @@ func (g *Game) renderCells(c []io.Cell, full bool) {
 		g.render(display(g.currentState))
 	} else {
 		g.err = io.RenderCells(c)
+	}
+}
+
+func (g *Game) runAction(d character.Direction) {
+	for cells, full := g.currentState.Move(d); cells != nil; cells, full = g.currentState.Move(d) {
+		g.renderCells(cells, full)
 	}
 }

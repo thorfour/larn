@@ -33,10 +33,11 @@ func newMap(lvl uint) [][]io.Runeable {
 // If level == 0 it returns an empty map for the home level
 func newLevel(lvl uint) [][]io.Runeable {
 
-	var base io.Runeable
-	base = Wall{}
+	base := func() io.Runeable {
+		return new(Wall)
+	}
 	if lvl == homeLevel {
-		base = Empty{}
+		base = func() io.Runeable { return Empty{true} }
 	}
 
 	// Generate full grid
@@ -44,7 +45,7 @@ func newLevel(lvl uint) [][]io.Runeable {
 	for i := range level {
 		row := make([]io.Runeable, width)
 		for j := range row {
-			row[j] = base
+			row[j] = base()
 		}
 		level[i] = row
 	}
@@ -60,33 +61,33 @@ func newLevel(lvl uint) [][]io.Runeable {
 
 // eat is the way orginal larn ate through the map of walls to create a maze
 func eat(c Coordinate, lvl [][]io.Runeable) {
-	dir := rand.Intn(4) + 1 // pick a random direction // TODO THOR use a time seed
-	try := 2
-	for try > 0 { // try all directions twice
+	dir := rand.Intn(4) + 1  // pick a random direction // TODO THOR use a time seed
+	for try := 2; try > 0; { // try all directions twice
 		switch dir {
 		case 1: // West
-			if c.X <= 2 || lvl[c.Y][c.X-1] != (Wall{}) || lvl[c.Y][c.X-2] != (Wall{}) { // Only eat if at least the next 2 are walls
+			if c.X <= 2 || !isWall(Coordinate{c.X - 1, c.Y}, lvl) || !isWall(Coordinate{c.X - 2, c.Y}, lvl) { // Only eat if at least the next 2 are walls
 				break
 			}
 			lvl[c.Y][c.X-1] = Empty{}
 			lvl[c.Y][c.X-2] = Empty{}
 			eat(Coordinate{c.X - 2, c.Y}, lvl)
 		case 2: // East
-			if c.X >= width-3 || lvl[c.Y][c.X+1] != (Wall{}) || lvl[c.Y][c.X+2] != (Wall{}) { // Only eat if at least the next 2 are walls
+			if c.X >= width-3 || !isWall(Coordinate{c.X + 1, c.Y}, lvl) || !isWall(Coordinate{c.X + 2, c.Y}, lvl) { // Only eat if at least the next 2 are walls
 				break
 			}
+
 			lvl[c.Y][c.X+1] = Empty{}
 			lvl[c.Y][c.X+2] = Empty{}
 			eat(Coordinate{c.X + 2, c.Y}, lvl)
 		case 3: // South
-			if c.Y <= 2 || lvl[c.Y-1][c.X] != (Wall{}) || lvl[c.Y-2][c.X] != (Wall{}) { // Only eat if at least the next 2 are walls
+			if c.Y <= 2 || !isWall(Coordinate{c.X, c.Y - 1}, lvl) || !isWall(Coordinate{c.X, c.Y - 2}, lvl) { // Only eat if at least the next 2 are walls
 				break
 			}
 			lvl[c.Y-1][c.X] = Empty{}
 			lvl[c.Y-2][c.X] = Empty{}
 			eat(Coordinate{c.X, c.Y - 2}, lvl)
 		case 4: // North
-			if c.Y >= height-3 || lvl[c.Y+1][c.X] != (Wall{}) || lvl[c.Y+2][c.X] != (Wall{}) { // Only eat if at least the next 2 are walls
+			if c.Y >= height-3 || !isWall(Coordinate{c.X, c.Y + 1}, lvl) || !isWall(Coordinate{c.X, c.Y + 2}, lvl) { // Only eat if at least the next 2 are walls
 				break
 			}
 			lvl[c.Y+1][c.X] = Empty{}
@@ -133,10 +134,11 @@ func carve(lvl [][]io.Runeable) {
 
 // adjacentWalls returns all adjacent walls in a map
 func adjacentWalls(c Coordinate, lvl [][]io.Runeable) []Coordinate {
-	adj := adjacent(c)
+	adj := adjacent(c, true)
 	var cords []Coordinate
 	for _, s := range adj {
-		if lvl[s.Y][s.X] == (Wall{}) {
+		switch lvl[s.Y][s.X].(type) {
+		case *Wall:
 			cords = append(cords, s)
 		}
 	}
@@ -145,19 +147,56 @@ func adjacentWalls(c Coordinate, lvl [][]io.Runeable) []Coordinate {
 }
 
 // getAdjacent returns adjacent coordinates in a map, that are valid coordinates
-func adjacent(w Coordinate) []Coordinate {
+// mapEdge indicates to include the edge of the map as well
+func adjacent(w Coordinate, mapEdge bool) []Coordinate {
 	var adj []Coordinate
-	if w.X+1 < width-1 {
+	min := 0
+	maxW := width - 1
+	maxH := height - 1
+	if mapEdge {
+		min = 1
+		maxW = width - 2
+		maxH = height - 2
+	}
+	if int(w.X)+1 <= maxW {
 		adj = append(adj, Coordinate{w.X + 1, w.Y})
 	}
-	if w.X-1 > 0 {
+	if int(w.X)-1 >= min {
 		adj = append(adj, Coordinate{w.X - 1, w.Y})
 	}
-	if w.Y+1 < height-1 {
+	if int(w.Y)+1 <= maxH {
 		adj = append(adj, Coordinate{w.X, w.Y + 1})
 	}
-	if w.Y-1 > 0 {
+	if int(w.Y)-1 >= min {
 		adj = append(adj, Coordinate{w.X, w.Y - 1})
+	}
+
+	return adj
+}
+
+// diagonal returns the diagonally adjacent coordinates in a map that are valid coordinates
+// mapEdge indicates to include the edge of the map as well
+func diagonal(w Coordinate, mapEdge bool) []Coordinate {
+	var adj []Coordinate
+	min := 0
+	maxW := width - 1
+	maxH := height - 1
+	if mapEdge {
+		min = 1
+		maxW = width - 2
+		maxH = height - 2
+	}
+	if int(w.X)+1 <= maxW && int(w.Y)+1 <= maxH {
+		adj = append(adj, Coordinate{w.X + 1, w.Y + 1})
+	}
+	if int(w.X)-1 >= min && int(w.Y)-1 >= min {
+		adj = append(adj, Coordinate{w.X - 1, w.Y - 1})
+	}
+	if int(w.Y)+1 <= maxH && int(w.X)-1 >= min {
+		adj = append(adj, Coordinate{w.X - 1, w.Y + 1})
+	}
+	if int(w.Y)-1 >= min && int(w.X)+1 <= maxW {
+		adj = append(adj, Coordinate{w.X + 1, w.Y - 1})
 	}
 
 	return adj
@@ -165,10 +204,11 @@ func adjacent(w Coordinate) []Coordinate {
 
 // emptyAdjacent returns the number of adjacent spaces that are empty
 func emptyAdjacent(c Coordinate, lvl [][]io.Runeable) int {
-	adj := adjacent(c)
+	adj := adjacent(c, true)
 	count := 0
 	for _, s := range adj {
-		if lvl[s.Y][s.X] == (Empty{}) {
+		switch lvl[s.Y][s.X].(type) {
+		case Empty:
 			count++
 		}
 	}
@@ -186,7 +226,11 @@ func randMapCoord() Coordinate {
 func walkToEmpty(c Coordinate, lvl [][]io.Runeable) Coordinate {
 
 	// Random walk till and empty room is found
-	for lvl[c.Y][c.X] != (Empty{}) {
+	for {
+		switch lvl[c.Y][c.X].(type) {
+		case Empty:
+			return c
+		}
 		xadj := uint(rand.Intn(3) - 2) // [-1,1]
 		yadj := uint(rand.Intn(3) - 2) // [-1,1]
 		if xadj > 0 {
@@ -241,10 +285,20 @@ func placeObjects(lvl uint, m [][]io.Runeable) {
 		placeObject(randMapCoord(), DungeonEntrance{}, m)
 	} else {
 		if lvl != 1 { // Dungeon level 1 has an entrance/exit doesn't need stairs up
-			placeObject(randMapCoord(), Stairs{Up, int(lvl - 1)}, m)
+			placeObject(randMapCoord(), Stairs{Up, int(lvl - 1), false}, m)
 		}
 		if lvl != maxDungeon && lvl != maxVolcano { // Last dungeon/volcano no stairs down
-			placeObject(randMapCoord(), Stairs{Down, int(lvl + 1)}, m)
+			placeObject(randMapCoord(), Stairs{Down, int(lvl + 1), false}, m)
 		}
+	}
+}
+
+// isWall returns true if the coordinate c is a wall on map lvl
+func isWall(c Coordinate, lvl [][]io.Runeable) bool {
+	switch lvl[c.Y][c.X].(type) {
+	case *Wall:
+		return true
+	default:
+		return false
 	}
 }

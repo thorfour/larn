@@ -1,8 +1,11 @@
 package maps
 
-import termbox "github.com/nsf/termbox-go"
+import (
+	termbox "github.com/nsf/termbox-go"
+)
 
 const (
+	invisbleRune  = ' '
 	emptyRune     = '.'
 	wallRune      = '#'
 	stairUpRune   = '>'
@@ -15,6 +18,20 @@ const (
 	Down = false
 )
 
+type Visible interface {
+	Visible(bool)
+}
+
+// Enterable indicates a object is enterable
+type Enterable interface {
+	Enter() int
+}
+
+// Displaceable indicates if a character can walk on top of an object
+type Displaceable interface {
+	Displace() bool
+}
+
 // Coordinate is a map coordinate. (0,0) is the top left corner
 type Coordinate struct {
 	X uint
@@ -22,13 +39,23 @@ type Coordinate struct {
 }
 
 // Empty represents an empty map location
-type Empty struct{}
+type Empty struct {
+	visible bool
+}
+
+func (e Empty) Visible(v bool) { e.visible = v }
 
 // Displace implementes the Displaceable interface
 func (e Empty) Displace() bool { return true }
 
 // Rune implements the io.Runeable interface
-func (e Empty) Rune() rune { return emptyRune }
+func (e Empty) Rune() rune {
+	if e.visible {
+		return emptyRune
+	} else {
+		return invisbleRune
+	}
+}
 
 // Fg implements the io.Runeable interface
 func (e Empty) Fg() termbox.Attribute { return termbox.ColorDefault }
@@ -37,22 +64,35 @@ func (e Empty) Fg() termbox.Attribute { return termbox.ColorDefault }
 func (e Empty) Bg() termbox.Attribute { return termbox.ColorDefault }
 
 // Wall is a maze wall
-type Wall struct{}
+type Wall struct {
+	visible bool
+}
+
+func (w *Wall) Visible(v bool) { w.visible = v }
 
 // Rune implements the io.Runeable interface
-func (w Wall) Rune() rune { return wallRune }
+func (w *Wall) Rune() rune {
+	if w.visible {
+		return wallRune
+	} else {
+		return invisbleRune
+	}
+}
 
 // Fg implements the io.Runeable interface
-func (w Wall) Fg() termbox.Attribute { return termbox.ColorDefault }
+func (w *Wall) Fg() termbox.Attribute { return termbox.ColorDefault }
 
 // Bg implements the io.Runeable interface
-func (w Wall) Bg() termbox.Attribute { return termbox.ColorDefault }
+func (w *Wall) Bg() termbox.Attribute { return termbox.ColorDefault }
 
 // Stairs is a staircase
 type Stairs struct {
-	up    bool // indicates if these stairs go up
-	level int  // the level the stairs lead to
+	up      bool // indicates if these stairs go up
+	level   int  // the level the stairs lead to
+	visible bool
 }
+
+func (s Stairs) Visible(v bool) { s.visible = v }
 
 // Displace implementes the Displaceable interface
 func (s Stairs) Displace() bool { return true }
@@ -62,10 +102,14 @@ func (s Stairs) Enter() int { return s.level }
 
 // Rune implements the io.Runeable interface
 func (s Stairs) Rune() rune {
-	if s.up {
-		return stairUpRune
+	if s.visible {
+		if s.up {
+			return stairUpRune
+		}
+		return stairDownRune
+	} else {
+		return invisbleRune
 	}
-	return stairDownRune
 }
 
 // Fg implements the io.Runeable interface
@@ -91,13 +135,3 @@ func (d DungeonEntrance) Fg() termbox.Attribute { return termbox.ColorBlack }
 
 // Bg implements the io.Runeable interface
 func (d DungeonEntrance) Bg() termbox.Attribute { return termbox.ColorGreen }
-
-// Enterable indicates a object is enterable
-type Enterable interface {
-	Enter() int
-}
-
-// Displaceable indicates if a character can walk on top of an object
-type Displaceable interface {
-	Displace() bool
-}

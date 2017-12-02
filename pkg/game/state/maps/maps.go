@@ -30,6 +30,9 @@ func (m *Maps) EnterLevel(c *character.Character, lvl int) {
 
 // New returns a set of maps to represent the game
 func New(c *character.Character) *Maps {
+
+	glog.V(2).Infof("Generating new maps")
+
 	m := new(Maps)
 	for i := uint(0); i < maxVolcano; i++ {
 
@@ -71,6 +74,8 @@ func (m *Maps) SpawnCharacter(coord Coordinate, c *character.Character) {
 
 	// Set the character to the location
 	c.Teleport(int(l.X), int(l.Y))
+
+	m.setVisible(c)
 }
 
 type cell struct {
@@ -82,11 +87,11 @@ type cell struct {
 func (c *cell) X() int { return c.x }
 func (c *cell) Y() int { return c.y }
 
-func (m *Maps) Move(d character.Direction, c *character.Character) ([]io.Cell, bool) {
+func (m *Maps) Move(d character.Direction, c *character.Character) bool {
 
 	// Validate the move
 	if !m.validMove(d, c) {
-		return nil, false
+		return false
 	}
 
 	old := c.Location()
@@ -101,7 +106,7 @@ func (m *Maps) Move(d character.Direction, c *character.Character) ([]io.Cell, b
 		m.RemoveCharacter(c)
 		m.SetCurrent(homeLevel)
 		m.SpawnCharacter(m.entrance[homeLevel], c)
-		return nil, true
+		return true
 	}
 
 	// Save the newly displaced item
@@ -110,7 +115,9 @@ func (m *Maps) Move(d character.Direction, c *character.Character) ([]io.Cell, b
 	// Set the character to the location
 	m.active[new.Y][new.X] = c
 
-	return []io.Cell{&cell{old.X, old.Y, m.active[old.Y][old.X]}, &cell{new.X, new.Y, c}}, false
+	m.setVisible(c)
+
+	return true
 }
 
 // validMove returns true if the move is allowed (i.e not off the edge, not into a wall
@@ -147,4 +154,17 @@ func (m *Maps) SetCurrent(lvl int) {
 	glog.V(2).Infof("Setting current level %v", lvl)
 	m.current = lvl
 	m.active = m.mazes[m.current]
+}
+
+// setVisible changes the visibilty of surrounding objects
+func (m *Maps) setVisible(c *character.Character) {
+
+	coord := c.Location()
+	adj := append(adjacent(Coordinate{uint(coord.X), uint(coord.Y)}, false), diagonal(Coordinate{uint(coord.X), uint(coord.Y)}, false)...)
+	for _, l := range adj {
+		switch m.active[l.Y][l.X].(type) {
+		case Visible:
+			m.active[l.Y][l.X].(Visible).Visible(true)
+		}
+	}
 }

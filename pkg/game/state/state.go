@@ -32,7 +32,7 @@ func (s *State) CurrentMap() [][]io.Runeable {
 }
 
 // Move is for character movement
-func (s *State) Move(d character.Direction) ([]io.Cell, bool) {
+func (s *State) Move(d character.Direction) bool {
 	return s.maps.Move(d, s.C)
 }
 

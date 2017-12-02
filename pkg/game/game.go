@@ -105,21 +105,29 @@ func (g *Game) run() error {
 		case 'N': // run southeast
 			g.runAction(character.DownRight)
 		case 'h': // move left
-			g.renderCells(g.currentState.Move(character.Left))
+			g.currentState.Move(character.Left)
+			g.render(display(g.currentState))
 		case 'j': // move down
-			g.renderCells(g.currentState.Move(character.Down))
+			g.currentState.Move(character.Down)
+			g.render(display(g.currentState))
 		case 'k': // move up
-			g.renderCells(g.currentState.Move(character.Up))
+			g.currentState.Move(character.Up)
+			g.render(display(g.currentState))
 		case 'l': // move right
-			g.renderCells(g.currentState.Move(character.Right))
+			g.currentState.Move(character.Right)
+			g.render(display(g.currentState))
 		case 'y': // move northwest
-			g.renderCells(g.currentState.Move(character.UpLeft))
+			g.currentState.Move(character.UpLeft)
+			g.render(display(g.currentState))
 		case 'u': // move northeast
-			g.renderCells(g.currentState.Move(character.UpRight))
+			g.currentState.Move(character.UpRight)
+			g.render(display(g.currentState))
 		case 'b': // move southwest
-			g.renderCells(g.currentState.Move(character.DownLeft))
+			g.currentState.Move(character.DownLeft)
+			g.render(display(g.currentState))
 		case 'n': // move southeast
-			g.renderCells(g.currentState.Move(character.DownRight))
+			g.currentState.Move(character.DownRight)
+			g.render(display(g.currentState))
 		case '^': // identify a trap
 		case 'd': // drop an item
 		case 'v': // print program version
@@ -175,21 +183,8 @@ func (g *Game) renderCharacter(c character.Coordinate) {
 	g.err = io.RenderCell(c.X, c.Y, '&', termbox.ColorGreen, termbox.ColorGreen)
 }
 
-func (g *Game) renderCells(c []io.Cell, full bool) {
-	if g.err != nil {
-		return
-	}
-
-	// if a full request was rendered, re-render the whole screen
-	if full || c == nil {
-		g.render(display(g.currentState))
-	} else {
-		g.err = io.RenderCells(c)
-	}
-}
-
 func (g *Game) runAction(d character.Direction) {
-	for cells, full := g.currentState.Move(d); cells != nil; cells, full = g.currentState.Move(d) {
-		g.renderCells(cells, full)
+	for moved := g.currentState.Move(d); moved; moved = g.currentState.Move(d) {
+		g.render(display(g.currentState))
 	}
 }

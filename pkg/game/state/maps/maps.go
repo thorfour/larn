@@ -37,10 +37,11 @@ func New(c *character.Character) *Maps {
 
 		if i == 1 { // dungeon 0 has an entrance
 			m.mazes[i][height-1][width/2] = (Empty{})
+			m.entrance = append(m.entrance, Coordinate{width / 2, height - 2})
+		} else {
+			// Set the entrace for the maze to a random location
+			m.entrance = append(m.entrance, walkToEmpty(randMapCoord(), m.mazes[i]))
 		}
-
-		// Set the entrace for the maze to a random location
-		m.entrance = append(m.entrance, walkToEmpty(randMapCoord(), m.mazes[i]))
 	}
 	m.active = m.mazes[homeLevel]
 	m.SpawnCharacter(m.entrance[homeLevel], c)

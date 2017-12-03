@@ -3,9 +3,14 @@ package game
 import (
 	"fmt"
 
+	"github.com/golang/glog"
 	termbox "github.com/nsf/termbox-go"
 	"github.com/thorfour/larn/pkg/game/state"
 	"github.com/thorfour/larn/pkg/io"
+)
+
+const (
+	logLength = 5 // Number of lines to display for the status log
 )
 
 type Simple rune
@@ -16,7 +21,7 @@ func (s Simple) Bg() termbox.Attribute { return termbox.ColorDefault }
 
 // display returns a 2d slice representation of the game
 func display(s *state.State) [][]io.Runeable {
-	return addInfoBar(s, s.CurrentMap())
+	return cat(s.CurrentMap(), infoBarGrid(s), statusLog(s))
 }
 
 // infoBarGrid returns the info bar in display grid format
@@ -36,12 +41,29 @@ func infoBarGrid(s *state.State) [][]io.Runeable {
 	return r
 }
 
-// appends the info bar to the current map
-func addInfoBar(s *state.State, m [][]io.Runeable) [][]io.Runeable {
-
-	bar := infoBarGrid(s)
-	for i := range bar {
-		m = append(m, bar[i])
+// cat concatenats all the maps together
+func cat(maps ...[][]io.Runeable) [][]io.Runeable {
+	for i, _ := range maps {
+		if i == 0 {
+			continue
+		}
+		maps[0] = append(maps[0], maps[i]...)
 	}
-	return m
+	return maps[0]
+}
+
+// statusLog returns the status log that's displayed on the bottom
+func statusLog(s *state.State) [][]io.Runeable {
+
+	r := make([][]io.Runeable, logLength)
+
+	// Convert the status log to runes
+	for i, logmsg := range s.StatLog {
+		glog.V(6).Info("Adding log message '%s'", logmsg)
+		for _, c := range logmsg {
+			r[i] = append(r[i], Simple(c))
+		}
+	}
+
+	return r
 }

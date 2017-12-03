@@ -18,6 +18,12 @@ const (
 	Down = false
 )
 
+// Loggable returns the string to display on the log status
+type Loggable interface {
+	Log() string
+}
+
+// Visible is the interface to change an objects visibility
 type Visible interface {
 	Visible(bool)
 }
@@ -135,3 +141,6 @@ func (d DungeonEntrance) Fg() termbox.Attribute { return termbox.ColorBlack }
 
 // Bg implements the io.Runeable interface
 func (d DungeonEntrance) Bg() termbox.Attribute { return termbox.ColorGreen }
+
+// Log implements the Loggable interface
+func (d DungeonEntrance) Log() string { return "You have found the dungeon entrnace" }

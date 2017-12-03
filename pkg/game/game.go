@@ -3,6 +3,7 @@ package game
 import (
 	"fmt"
 
+	"github.com/golang/glog"
 	termbox "github.com/nsf/termbox-go"
 	"github.com/thorfour/larn/pkg/game/data"
 	"github.com/thorfour/larn/pkg/game/state"
@@ -37,6 +38,7 @@ func saveFilePresent() (bool, string) {
 
 // New initializes a game state
 func New() *Game {
+	glog.V(1).Info("Creating new game")
 	g := new(Game)
 	g.input = make(chan termbox.Event, internalKeyBufferSize)
 

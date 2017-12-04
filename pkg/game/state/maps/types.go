@@ -10,7 +10,35 @@ const (
 	wallRune      = '#'
 	stairUpRune   = '>'
 	stairDownRune = '<'
-	dungeonERune  = 'E'
+	dungeonRune   = 'E'
+	homeRune      = 'H'
+	collegeRune   = 'C'
+	lrsRune       = 'L'
+	tradeRune     = 'P'
+	bankRune      = '$'
+	dndRune       = 'D'
+	volRune       = 'V'
+)
+
+const (
+	dungeonStr = "You have found the dungeon entrnace."
+	homeStr    = "Your have found your way home."
+	collegeStr = "You have found the College of Larn."
+	lrsStr     = "There is an LRS office here."
+	tradeStr   = "You have found the larn trading post."
+	bankStr    = "You have found the bank of Larn."
+	dndStr     = "There is a DND store here."
+	volStr     = "You have found a volcanic shaft leading downward!"
+)
+
+// Special levels for entrances
+const (
+	homeLvl    = -1
+	bankLvl    = -2
+	collegeLvl = -3
+	dndLvl     = -4
+	tradeLvl   = -5
+	lrsLvl     = -6
 )
 
 const (
@@ -124,23 +152,27 @@ func (s Stairs) Fg() termbox.Attribute { return termbox.ColorDefault }
 // Bg implements the io.Runeable interface
 func (s Stairs) Bg() termbox.Attribute { return termbox.ColorDefault }
 
-// DungeonEntrance home level to dungeon level 1
-type DungeonEntrance struct{}
+// HomeEntrance type are the entrances that are on the home level
+type Entrance struct {
+	r         rune // entrnace rune to displace
+	enterCode int  // code that is returned upon entering
+	log       string
+}
 
 // Displace implementes the Displaceable interface
-func (d DungeonEntrance) Displace() bool { return true }
+func (e Entrance) Displace() bool { return true }
 
 // Enter implements the Enterable interface
-func (d DungeonEntrance) Enter() int { return 1 } // Dungeron entrance always leads to level 1
+func (e Entrance) Enter() int { return e.enterCode }
 
 // Rune implements the io.Runeable interface
-func (d DungeonEntrance) Rune() rune { return dungeonERune }
+func (e Entrance) Rune() rune { return e.r }
 
 // Fg implements the io.Runeable interface
-func (d DungeonEntrance) Fg() termbox.Attribute { return termbox.ColorBlack }
-
-// Bg implements the io.Runeable interface
-func (d DungeonEntrance) Bg() termbox.Attribute { return termbox.ColorGreen }
+func (e Entrance) Fg() termbox.Attribute { return termbox.ColorBlack }
 
 // Log implements the Loggable interface
-func (d DungeonEntrance) Log() string { return "You have found the dungeon entrnace" }
+func (e Entrance) Log() string { return e.log }
+
+// Bg implements the io.Runeable interface
+func (e Entrance) Bg() termbox.Attribute { return termbox.ColorGreen }

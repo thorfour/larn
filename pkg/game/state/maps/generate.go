@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/golang/glog"
+	"github.com/thorfour/larn/pkg/game/state/items"
 	"github.com/thorfour/larn/pkg/io"
 )
 
@@ -262,6 +263,13 @@ func walkToEmpty(c Coordinate, lvl [][]io.Runeable) Coordinate {
 	return c
 }
 
+// placeMultipleObjects places [0,N) objects of type o in lvl at random coordinates
+func placeMultipleObjects(n int, o io.Runeable, lvl [][]io.Runeable) {
+	for i := 0; i < rand.Intn(n); i++ {
+		placeObject(randMapCoord(), o, lvl)
+	}
+}
+
 // placeObject places an object in a maze at arandom open location
 func placeObject(c Coordinate, o io.Runeable, lvl [][]io.Runeable) (Coordinate, io.Runeable) {
 
@@ -291,12 +299,18 @@ func placeObjects(lvl uint, m [][]io.Runeable) {
 		placeObject(randMapCoord(), Entrance{tradeRune, tradeLvl, tradeStr}, m)       // the trading post
 		placeObject(randMapCoord(), Entrance{lrsRune, lrsLvl, lrsStr}, m)             // the larn revenue service
 	} else {
+		// Place the stairs
 		if lvl != 1 { // Dungeon level 1 has an entrance/exit doesn't need stairs up
 			placeObject(randMapCoord(), Stairs{Up, int(lvl - 1), false}, m)
 		}
 		if lvl != maxDungeon && lvl != maxVolcano { // Last dungeon/volcano no stairs down
 			placeObject(randMapCoord(), Stairs{Down, int(lvl + 1), false}, m)
 		}
+
+		// Place random maze objects
+
+		placeMultipleObjects(3, items.Book{}, m)  // up to 2 books a level
+		placeMultipleObjects(3, items.Altar{}, m) // up to 2 altars a level
 	}
 }
 

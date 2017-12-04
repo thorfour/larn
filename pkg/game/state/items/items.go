@@ -2,6 +2,10 @@ package items
 
 import "github.com/thorfour/larn/pkg/game/state/stats"
 
+const (
+	invisibleRune = ' '
+)
+
 // Item is the generis *item interface
 type Item interface {
 	PickUp(s *stats.Stats)

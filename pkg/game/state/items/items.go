@@ -48,10 +48,10 @@ type DefaultItem struct {
 }
 
 // Fg for implementing the io.Runeable interface
-func (d *DefaultItem) Fg() termbox.Attribute { return termbox.ColorDefault }
+func (d *DefaultItem) Fg() termbox.Attribute { return termbox.ColorDefault | termbox.AttrBold }
 
 // Bg for implementing the io.Runeable interface
-func (d *DefaultItem) Bg() termbox.Attribute { return termbox.ColorDefault }
+func (d *DefaultItem) Bg() termbox.Attribute { return termbox.ColorDefault | termbox.AttrBold }
 
 // Visible implements the visibility interface
 func (d *DefaultItem) Visible(v bool) { d.Visibility = v }

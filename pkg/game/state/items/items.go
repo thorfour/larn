@@ -1,6 +1,9 @@
 package items
 
-import "github.com/thorfour/larn/pkg/game/state/stats"
+import (
+	termbox "github.com/nsf/termbox-go"
+	"github.com/thorfour/larn/pkg/game/state/stats"
+)
 
 const (
 	invisibleRune = ' '
@@ -43,3 +46,12 @@ type DisplaceableItem struct{}
 
 // Displace implements the displaceable interface
 func (d *DisplaceableItem) Displace() bool { return true }
+
+// DefaultItem provide default Fg and Bg functions
+type DefaultItem struct{}
+
+// Fg for implementing the io.Runeable interface
+func (d *DefaultItem) Fg() termbox.Attribute { return termbox.ColorDefault }
+
+// Bg for implementing the io.Runeable interface
+func (d *DefaultItem) Bg() termbox.Attribute { return termbox.ColorDefault }

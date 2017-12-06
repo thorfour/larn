@@ -314,8 +314,8 @@ func placeObjects(lvl uint, m [][]io.Runeable) {
 		}
 
 		// Place random maze objects
-		placeMultipleObjects(3, new(items.Book), m)  // up to 2 books a level
-		placeMultipleObjects(3, new(items.Altar), m) // up to 2 altars a level
+		placeMultipleObjects(3, &items.Book{Level: lvl}, m) // up to 2 books a level
+		placeMultipleObjects(3, new(items.Altar), m)        // up to 2 altars a level
 	}
 }
 

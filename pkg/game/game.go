@@ -26,6 +26,9 @@ type Game struct {
 	// input channel from keyboard
 	input chan termbox.Event
 
+	// Function that gets dynamically set when certain actions are taken. (i.e after an inventory request only accept space or esc)
+	truncatedInput func(e termbox.Event)
+
 	// Indicates if the game has hit an error
 	err error
 }
@@ -89,7 +92,17 @@ func (g *Game) run() error {
 		if g.err != nil {
 			return g.err
 		}
-		switch e := <-g.input; e.Ch {
+
+		// Get next input
+		e := <-g.input
+
+		// Certain commands require a unique set of input to follow
+		if g.truncatedInput != nil {
+			g.truncatedInput(e)
+			continue
+		}
+
+		switch e.Ch {
 		case 'H': // run left
 			g.runAction(character.Left)
 		case 'J': // run down
@@ -139,6 +152,8 @@ func (g *Game) run() error {
 		case '?': // help screen
 		case 'g': // give present pack weight
 		case 'i': // inventory your pockets
+			g.truncatedInput = g.inventory // After an inventory request only Esc and space are accepted
+			g.render(overlay(display(g.currentState), convert(g.currentState.Inventory())))
 		case 'A': // create diagnostic file
 		case '.': // stay here
 		case 'Z': // teleport yourself
@@ -191,5 +206,18 @@ func (g *Game) renderCharacter(c character.Coordinate) {
 func (g *Game) runAction(d character.Direction) {
 	for moved := g.currentState.Move(d); moved; moved = g.currentState.Move(d) {
 		g.render(display(g.currentState))
+	}
+}
+
+// inventory is a truncated input handler, used after a user requests an inventory display
+func (g *Game) inventory(e termbox.Event) {
+	switch e.Key {
+	case termbox.KeyEsc: // Escape key
+		g.truncatedInput = nil
+	case termbox.KeySpace: // Space key
+		g.truncatedInput = nil
+	default:
+		glog.V(6).Infof("Receive invalid input: %s", string(e.Ch))
+		return
 	}
 }

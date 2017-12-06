@@ -30,3 +30,6 @@ func (b *Book) PickUp(s *stats.Stats) {}
 
 // Drop implements the Item interface
 func (b *Book) Drop(s *stats.Stats) {}
+
+// String returns the texutal representation of the item
+func (b *Book) String() string { return "a book" }

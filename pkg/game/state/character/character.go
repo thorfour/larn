@@ -1,6 +1,9 @@
 package character
 
 import (
+	"fmt"
+
+	"github.com/golang/glog"
 	termbox "github.com/nsf/termbox-go"
 	"github.com/thorfour/larn/pkg/game/state/items"
 	"github.com/thorfour/larn/pkg/game/state/stats"
@@ -114,4 +117,21 @@ func (c *Coordinate) Move(d Direction) {
 // AddItem adds an item to the players inventory
 func (c *Character) AddItem(i items.Item) {
 	c.inventory = append(c.inventory, i)
+}
+
+// Inventory returns a list of displayable inventory items
+func (c *Character) Inventory() []string {
+	var inv []string
+	for _, i := range c.armor {
+		inv = append(inv, fmt.Sprintf("%v %v", i.String(), "(being worn)"))
+	}
+	for _, i := range c.weapon {
+		inv = append(inv, fmt.Sprintf("%v %v", i.String(), "(weapon in hand)"))
+	}
+	for _, i := range c.inventory {
+		inv = append(inv, i.String())
+	}
+
+	glog.V(4).Infof("Inventory: %v", inv)
+	return inv
 }

@@ -96,3 +96,9 @@ func (s *State) PickUp() {
 		s.maps.RemoveDisplaced()
 	}
 }
+
+// Inventory request
+func (s *State) Inventory() []string {
+	glog.V(2).Info("Inventory request")
+	return s.C.Inventory()
+}

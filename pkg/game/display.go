@@ -41,9 +41,22 @@ func infoBarGrid(s *state.State) [][]io.Runeable {
 	return r
 }
 
+// overlay starts overlaying a map at the begging of the original map
+func overlay(original, overlay [][]io.Runeable) [][]io.Runeable {
+	if len(overlay) > len(original) {
+		glog.Errorf("Overlay is longer than original %v > %v", len(overlay), len(original))
+		return original
+	}
+	for i := range overlay {
+		original[i] = overlay[i]
+	}
+
+	return original
+}
+
 // cat concatenats all the maps together
 func cat(maps ...[][]io.Runeable) [][]io.Runeable {
-	for i, _ := range maps {
+	for i := range maps {
 		if i == 0 {
 			continue
 		}
@@ -54,13 +67,15 @@ func cat(maps ...[][]io.Runeable) [][]io.Runeable {
 
 // statusLog returns the status log that's displayed on the bottom
 func statusLog(s *state.State) [][]io.Runeable {
-
-	r := make([][]io.Runeable, logLength)
-
 	// Convert the status log to runes
-	for i, logmsg := range s.StatLog {
-		glog.V(6).Info("Adding log message '%s'", logmsg)
-		for _, c := range logmsg {
+	return convert(s.StatLog[:logLength])
+}
+
+// convert changes a slice of strings to a runeable map
+func convert(s []string) [][]io.Runeable {
+	r := make([][]io.Runeable, len(s))
+	for i, msg := range s {
+		for _, c := range msg {
 			r[i] = append(r[i], Simple(c))
 		}
 	}

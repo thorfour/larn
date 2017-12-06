@@ -13,6 +13,7 @@ const (
 type Item interface {
 	PickUp(s *stats.Stats)
 	Drop(s *stats.Stats)
+	String() string
 }
 
 // Food for edible Items (fortune s *ookies)

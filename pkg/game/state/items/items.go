@@ -41,17 +41,19 @@ type Armor interface {
 	TakeOff(s *stats.Stats)
 }
 
-// DisplaceableItem is used as an embedded struct to indicate an object is displaceable
-type DisplaceableItem struct{}
-
-// Displace implements the displaceable interface
-func (d *DisplaceableItem) Displace() bool { return true }
-
 // DefaultItem provide default Fg and Bg functions
-type DefaultItem struct{}
+type DefaultItem struct {
+	Visibility bool
+}
 
 // Fg for implementing the io.Runeable interface
 func (d *DefaultItem) Fg() termbox.Attribute { return termbox.ColorDefault }
 
 // Bg for implementing the io.Runeable interface
 func (d *DefaultItem) Bg() termbox.Attribute { return termbox.ColorDefault }
+
+// Visible implements the visibility interface
+func (d *DefaultItem) Visible(v bool) { d.Visibility = v }
+
+// Displace implements the displaceable interface
+func (d *DefaultItem) Displace() bool { return true }

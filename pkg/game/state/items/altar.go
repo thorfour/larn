@@ -6,7 +6,6 @@ const (
 
 type Altar struct {
 	Visibility bool
-	DisplaceableItem
 	DefaultItem
 }
 

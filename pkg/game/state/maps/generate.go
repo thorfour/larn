@@ -35,7 +35,7 @@ func newMap(lvl uint) [][]io.Runeable {
 func newLevel(lvl uint) [][]io.Runeable {
 
 	base := func() io.Runeable {
-		return new(Wall)
+		return &Wall{DEBUG} // If DEBUG is set, maze will be visible by default
 	}
 	if lvl == homeLevel {
 		base = func() io.Runeable { return Empty{true} }
@@ -265,7 +265,13 @@ func walkToEmpty(c Coordinate, lvl [][]io.Runeable) Coordinate {
 
 // placeMultipleObjects places [0,N) objects of type o in lvl at random coordinates
 func placeMultipleObjects(n int, o io.Runeable, lvl [][]io.Runeable) {
-	for i := 0; i < rand.Intn(n); i++ {
+
+	// Set the visibility of the object
+	o.(Visible).Visible(DEBUG)
+
+	num := rand.Intn(n)
+	glog.V(2).Infof("Placing %v objects of %s", num, string(o.Rune()))
+	for i := 0; i < num; i++ {
 		placeObject(randMapCoord(), o, lvl)
 	}
 }
@@ -301,16 +307,15 @@ func placeObjects(lvl uint, m [][]io.Runeable) {
 	} else {
 		// Place the stairs
 		if lvl != 1 { // Dungeon level 1 has an entrance/exit doesn't need stairs up
-			placeObject(randMapCoord(), Stairs{Up, int(lvl - 1), false}, m)
+			placeObject(randMapCoord(), Stairs{Up, int(lvl - 1), DEBUG}, m)
 		}
 		if lvl != maxDungeon && lvl != maxVolcano { // Last dungeon/volcano no stairs down
-			placeObject(randMapCoord(), Stairs{Down, int(lvl + 1), false}, m)
+			placeObject(randMapCoord(), Stairs{Down, int(lvl + 1), DEBUG}, m)
 		}
 
 		// Place random maze objects
-
-		placeMultipleObjects(3, items.Book{}, m)  // up to 2 books a level
-		placeMultipleObjects(3, items.Altar{}, m) // up to 2 altars a level
+		placeMultipleObjects(3, new(items.Book), m)  // up to 2 books a level
+		placeMultipleObjects(3, new(items.Altar), m) // up to 2 altars a level
 	}
 }
 

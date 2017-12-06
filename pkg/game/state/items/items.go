@@ -37,3 +37,9 @@ type Armor interface {
 	Wear(s *stats.Stats)
 	TakeOff(s *stats.Stats)
 }
+
+// DisplaceableItem is used as an embedded struct to indicate an object is displaceable
+type DisplaceableItem struct{}
+
+// Displace implements the displaceable interface
+func (d *DisplaceableItem) Displace() bool { return true }

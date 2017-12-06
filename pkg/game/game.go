@@ -214,8 +214,10 @@ func (g *Game) inventory(e termbox.Event) {
 	switch e.Key {
 	case termbox.KeyEsc: // Escape key
 		g.truncatedInput = nil
+		g.render(display(g.currentState))
 	case termbox.KeySpace: // Space key
 		g.truncatedInput = nil
+		g.render(display(g.currentState)) // TODO  this needs to be conditional if there are more pages of inventory
 	default:
 		glog.V(6).Infof("Receive invalid input: %s", string(e.Ch))
 		return

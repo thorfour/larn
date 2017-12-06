@@ -16,6 +16,7 @@ const (
 	borderRune            = rune('#')
 	borderWidth           = 67
 	borderHeight          = 17
+	invMaxDisplay         = 5 // number of inventory items to display on a page at a time
 )
 
 // Game holds all current game information
@@ -152,8 +153,7 @@ func (g *Game) run() error {
 		case '?': // help screen
 		case 'g': // give present pack weight
 		case 'i': // inventory your pockets
-			g.truncatedInput = g.inventory // After an inventory request only Esc and space are accepted
-			g.render(overlay(display(g.currentState), convert(g.currentState.Inventory())))
+			g.truncatedInput = g.inventoryWrapper(g.currentState.Inventory()) // After an inventory request only Esc and space are accepted
 		case 'A': // create diagnostic file
 		case '.': // stay here
 		case 'Z': // teleport yourself
@@ -210,16 +210,46 @@ func (g *Game) runAction(d character.Direction) {
 }
 
 // inventory is a truncated input handler, used after a user requests an inventory display
-func (g *Game) inventory(e termbox.Event) {
-	switch e.Key {
-	case termbox.KeyEsc: // Escape key
-		g.truncatedInput = nil
-		g.render(display(g.currentState))
-	case termbox.KeySpace: // Space key
-		g.truncatedInput = nil
-		g.render(display(g.currentState)) // TODO  this needs to be conditional if there are more pages of inventory
-	default:
-		glog.V(6).Infof("Receive invalid input: %s", string(e.Ch))
-		return
+func (g *Game) inventoryWrapper(s []string) func(termbox.Event) {
+	offset := 0
+	label := 'a' // first inventory item is labled as a)
+
+	var inv []string
+	inv = append(inv, "") // empty string at the top
+	for i := 0; i < invMaxDisplay && offset < len(s); i++ {
+		inv = append(inv, fmt.Sprintf("%s) %v", string(label), s[offset]))
+		label++
+		offset++
+	}
+	inv = append(inv, "   --- press space to continue ---") // add the help string at the bottom
+
+	g.render(overlay(display(g.currentState), convert(inv)))
+
+	return func(e termbox.Event) {
+		switch e.Key {
+		case termbox.KeyEsc: // Escape key
+			g.truncatedInput = nil
+			g.render(display(g.currentState))
+		case termbox.KeySpace: // Space key
+			if offset < len(s) {
+				var inv []string
+				inv = append(inv, "") // empty string at the top
+				for i := 0; i < invMaxDisplay && offset < len(s); i++ {
+					inv = append(inv, fmt.Sprintf("%s) %v", string(label), s[offset]))
+					label++
+					offset++
+				}
+				inv = append(inv, "   --- press space to continue ---") // add the help string at the bottom
+
+				g.render(overlay(display(g.currentState), convert(inv)))
+				return
+			}
+			// No more pages to display, remove the overlay
+			g.truncatedInput = nil
+			g.render(display(g.currentState))
+		default:
+			glog.V(6).Infof("Receive invalid input: %s", string(e.Ch))
+			return
+		}
 	}
 }

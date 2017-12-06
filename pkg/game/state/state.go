@@ -6,6 +6,7 @@ import (
 
 	"github.com/golang/glog"
 	"github.com/thorfour/larn/pkg/game/state/character"
+	"github.com/thorfour/larn/pkg/game/state/items"
 	"github.com/thorfour/larn/pkg/game/state/maps"
 	"github.com/thorfour/larn/pkg/io"
 )
@@ -80,5 +81,18 @@ func (s *State) Enter() {
 	switch t := s.maps.Displaced().(type) {
 	case maps.Enterable:
 		s.maps.EnterLevel(s.C, t.Enter())
+	}
+}
+
+// PickUp will pick up the item the player is standing on
+func (s *State) PickUp() {
+
+	glog.V(2).Info("PickUp request")
+
+	i, ok := s.maps.Displaced().(items.Item)
+	if ok {
+		i.PickUp(s.C.Stats)
+		// TODO record the item in the character inventory
+		// TODO remove it from the map
 	}
 }

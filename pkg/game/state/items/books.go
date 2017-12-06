@@ -1,5 +1,7 @@
 package items
 
+import "github.com/thorfour/larn/pkg/game/state/stats"
+
 const (
 	bookRune = 'B'
 )
@@ -22,3 +24,9 @@ func (b *Book) Rune() rune {
 func (b *Book) Log() string {
 	return "You have found a book"
 }
+
+// PickUp implements the Item interface
+func (b *Book) PickUp(s *stats.Stats) {}
+
+// Drop implements the Item interface
+func (b *Book) Drop(s *stats.Stats) {}

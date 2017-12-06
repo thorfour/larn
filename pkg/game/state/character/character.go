@@ -32,7 +32,7 @@ type Character struct {
 	weapon    []items.Weapon // Currently wielded weapon(s)
 	inventory []items.Item
 	//knownSpells []Spells
-	stats.Stats
+	Stats *stats.Stats
 }
 
 type Coordinate struct {
@@ -41,19 +41,20 @@ type Coordinate struct {
 }
 
 func (c *Character) Init() {
-	c.Level = 1
-	c.Title = titles[c.Level-1]
-	c.MaxSpells = 1
-	c.Spells = 1
-	c.MaxHP = 5
-	c.Hp = 5
-	c.Cha = 12
-	c.Str = 12
-	c.Intelligence = 12
-	c.Wisdom = 12
-	c.Con = 12
-	c.Dex = 12
-	c.Cha = 12
+	c.Stats = new(stats.Stats)
+	c.Stats.Level = 1
+	c.Stats.Title = titles[c.Stats.Level-1]
+	c.Stats.MaxSpells = 1
+	c.Stats.Spells = 1
+	c.Stats.MaxHP = 5
+	c.Stats.Hp = 5
+	c.Stats.Cha = 12
+	c.Stats.Str = 12
+	c.Stats.Intelligence = 12
+	c.Stats.Wisdom = 12
+	c.Stats.Con = 12
+	c.Stats.Dex = 12
+	c.Stats.Cha = 12
 }
 
 func (c *Character) Rune() rune {

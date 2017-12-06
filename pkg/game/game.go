@@ -130,6 +130,9 @@ func (g *Game) run() error {
 		case 'n': // move southeast
 			g.currentState.Move(character.DownRight)
 			g.render(display(g.currentState))
+		case ',': // Pick up the item
+			g.currentState.PickUp()
+			g.render(display(g.currentState))
 		case '^': // identify a trap
 		case 'd': // drop an item
 		case 'v': // print program version

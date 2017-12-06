@@ -159,6 +159,7 @@ func (g *Game) defaultHandler(e termbox.Event) {
 		g.render(display(g.currentState))
 	case '^': // identify a trap
 	case 'd': // drop an item
+		g.inputHandler = g.drop()
 	case 'v': // print program version
 	case '?': // help screen
 	case 'g': // give present pack weight
@@ -254,6 +255,43 @@ func (g *Game) inventoryWrapper(s []string) func(termbox.Event) {
 		default:
 			glog.V(6).Infof("Receive invalid input: %s", string(e.Ch))
 			return
+		}
+	}
+}
+
+// drop func to drop an item
+func (g *Game) drop() func(termbox.Event) {
+	glog.V(2).Infof("Drop requested")
+
+	g.currentState.Log("What do you want to drop [* for all] ?")
+	g.render(display(g.currentState))
+
+	// Capute the input character for the item to drop
+	return func(e termbox.Event) {
+		g.inputHandler = g.defaultHandler
+
+		switch e.Key {
+		case termbox.KeyEsc:
+			g.currentState.Log("aborted")
+			g.render(display(g.currentState))
+		default:
+			label := 'a'
+			for n, i := range g.currentState.Inventory() { // FIXME the drop function isn't stable (i.e dropping item a results in item be now becoming item a)
+				if e.Ch == label {
+					if err := g.currentState.Drop(n); err != nil { // drop item n
+						g.currentState.Log(err.Error()) // unable to drop
+						g.render(display(g.currentState))
+						return
+					}
+					g.currentState.Log("You drop:")
+					g.currentState.Log(fmt.Sprintf("%s) %v", string(label), i))
+					g.render(display(g.currentState))
+					return
+				}
+				label++
+			}
+			g.currentState.Log(fmt.Sprintf("You don't have item %s!", string(e.Ch)))
+			g.render(display(g.currentState))
 		}
 	}
 }

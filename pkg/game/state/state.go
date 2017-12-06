@@ -1,6 +1,7 @@
 package state
 
 import (
+	"fmt"
 	"math/rand"
 	"time"
 
@@ -15,10 +16,15 @@ const (
 	logLength = 5 // Ideally should be the same as the game.logLength but is useful to be definde separately for debug
 )
 
+var (
+	NoItemErr           = fmt.Errorf("You don't have item")
+	AlreadyDisplacedErr = fmt.Errorf("There's something here already")
+)
+
 type logring []string
 
-// Add adds a new log to the log ring
-func (log logring) Add(s string) logring {
+// add adds a new log to the log ring
+func (log logring) add(s string) logring {
 	log = append(log, s)      // Append the new string
 	if len(log) > logLength { // remove first element if the log exceeds length
 		log = log[1:]
@@ -45,10 +51,27 @@ func New() *State {
 
 	// Display the welcome string at the bottom
 	for i := 0; i < logLength-1; i++ {
-		s.StatLog = s.StatLog.Add("")
+		s.Log("")
 	}
-	s.StatLog = s.StatLog.Add("Welcome to larn -- Press ? for help")
+	s.Log("Welcome to larn -- Press ? for help")
 	return s
+}
+
+// Drop drops an item where the player is standing, returns false if the player is already standing on an item
+func (s *State) Drop(n int) error {
+	if _, ok := s.maps.Displaced().(maps.Empty); ok {
+		if item := s.C.DropItem(n); item != nil {
+			s.maps.AddDisplaced(item)
+			return nil
+		}
+		return NoItemErr
+	}
+	return AlreadyDisplacedErr
+}
+
+// Log adds the string to the statlog
+func (s *State) Log(str string) {
+	s.StatLog = s.StatLog.add(str)
 }
 
 // CurrentMap returns the current map the character is on
@@ -65,8 +88,12 @@ func (s *State) Move(d character.Direction) bool {
 	if moved {
 		// If the character is displacing something add it to the status log
 		switch t := s.maps.Displaced().(type) {
+		case *items.GoldPile:
+			t.PickUp(s.C.Stats) // auto-pick up gold
+			s.maps.RemoveDisplaced()
+			s.Log(t.Log())
 		case maps.Loggable:
-			s.StatLog = s.StatLog.Add(t.Log())
+			s.Log(t.Log())
 		}
 	}
 	return moved

@@ -1,38 +1,85 @@
 package items
 
-import "github.com/thorfour/larn/pkg/game/state/stats"
+import (
+	"strconv"
 
-// armorclass satisfies the item interface as well as the armor Interface
-type armorclass struct {
-	class uint
-	name  string
-}
-
-var (
-	shield = armorclass{2, "shield"}
-
-	leather     = armorclass{2, "leather armor"}
-	studleather = armorclass{3, "studded leather armor"}
-	ring        = armorclass{5, "ring mai"}
-	chain       = armorclass{6, "chain mail"}
-	splint      = armorclass{7, "splint mail"}
-	plateMail   = armorclass{9, "plate mail"}
-	plateArmor  = armorclass{10, "plate armor"}
-	stainless   = armorclass{12, "stainless plate armor"}
+	"github.com/thorfour/larn/pkg/game/state/stats"
 )
 
-func (a *armorclass) String() string {
-	return a.name
+type ArmorType int
+
+const armorRune = '['
+
+const (
+	Leather ArmorType = iota
+	StuddedLeather
+	RingMail
+	ChainMail
+	SplintMail
+	PlateMail
+	PlateArmor
+	StainlessPlateArmor
+)
+
+// Map of all the armor base values
+var armorBase = map[ArmorType]int{
+	Leather:             2,
+	StuddedLeather:      3,
+	RingMail:            5,
+	ChainMail:           6,
+	SplintMail:          7,
+	PlateMail:           9,
+	PlateArmor:          10,
+	StainlessPlateArmor: 12,
 }
 
-func (a *armorclass) PickUp(c *stats.Stats) {
+// Map of all the displayable armor names
+var armorName = map[ArmorType]string{
+	Leather:             "leather",
+	StuddedLeather:      "studded leather",
+	RingMail:            "ring mail",
+	ChainMail:           "chain mail",
+	SplintMail:          "splint mail",
+	PlateMail:           "plate mail",
+	PlateArmor:          "plate armor",
+	StainlessPlateArmor: "stainless plate armor",
 }
 
-func (a *armorclass) Drop(c *stats.Stats) {
+// ArmorClass satisfies the item interface as well as the Armor Interface
+type ArmorClass struct {
+	Type      ArmorType // the type of armor
+	Attribute int       // the attributes of the armor that add/subtract from the class
+	DefaultItem
+	NoStats
 }
 
-func (a *armorclass) Sell(c *stats.Stats) {
+// Rune implements the io.Runeable interface
+func (a *ArmorClass) Rune() rune {
+	return armorRune
 }
 
-func (a *armorclass) Wear(c *stats.Stats)    { c.Ac += a.class }
-func (a *armorclass) TakeOff(c *stats.Stats) { c.Ac -= a.class }
+// Log implements the Loggable interface
+func (a *ArmorClass) Log() string {
+	return "You have found a " + a.String()
+}
+
+// String implements the Item interface
+func (a *ArmorClass) String() string {
+	if a.Attribute < 0 {
+		return armorName[a.Type] + " " + strconv.Itoa(a.Attribute)
+	} else if a.Attribute > 0 {
+		return armorName[a.Type] + " +" + strconv.Itoa(a.Attribute)
+	}
+	return armorName[a.Type]
+}
+
+// Wear implements the Armor interface
+func (a *ArmorClass) Wear(c *stats.Stats) {
+	c.Ac += (armorBase[a.Type] + a.Attribute)
+
+}
+
+// TakeOff implements the Armor interface
+func (a *ArmorClass) TakeOff(c *stats.Stats) {
+	c.Ac -= (armorBase[a.Type] + a.Attribute)
+}

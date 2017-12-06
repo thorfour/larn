@@ -173,3 +173,8 @@ func (m *Maps) setVisible(c *character.Character) {
 func (m *Maps) RemoveDisplaced() {
 	m.displaced = Empty{} // Set displaced to empty, so it gets replaced when the player moves
 }
+
+// AddDisplaced adds a displaced item to the map. (i.e the player dropped an item)
+func (m *Maps) AddDisplaced(i io.Runeable) {
+	m.displaced = i
+}

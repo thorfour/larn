@@ -15,6 +15,9 @@ const (
 	maxVolcano = 13 // 3 volcanos. 10 dungeons
 )
 
+// package global to indicate if bessmans hammer has been placed on a level
+var bessman bool
+
 // newMap is a wrapper of newLevel, it creates the level and places objects in the level.
 func newMap(lvl uint) [][]io.Runeable {
 	m := newLevel(lvl) // Create the level
@@ -25,7 +28,7 @@ func newMap(lvl uint) [][]io.Runeable {
 	// Seed the global rand // FIXME maps shouldn't use global rand
 	rand.Seed(seed)
 
-	placeObjects(lvl, m) // Add objects to the level
+	placeMapObjects(lvl, m) // Add objects to the level
 	return m
 }
 
@@ -265,7 +268,7 @@ func walkToEmpty(c Coordinate, lvl [][]io.Runeable) Coordinate {
 
 // placeMultipleObjects places [0,N) objects of type o in lvl at random coordinates
 func placeMultipleObjects(n int, f func() io.Runeable, lvl [][]io.Runeable) {
-	for i := 0; i < rand.Intn(n); i++ {
+	for i := 0; i < n; i++ {
 		// generate the object
 		o := f()
 		// Set the visibility of the object
@@ -290,9 +293,9 @@ func placeObject(c Coordinate, o io.Runeable, lvl [][]io.Runeable) (Coordinate, 
 	return c, d
 }
 
-// placeObjects places the required objects for a level
+// placeMapObjects places the required objects for a level
 // it calls placeObject many times
-func placeObjects(lvl uint, m [][]io.Runeable) {
+func placeMapObjects(lvl uint, m [][]io.Runeable) {
 
 	// Place the stairs
 	if lvl == homeLevel {
@@ -314,8 +317,81 @@ func placeObjects(lvl uint, m [][]io.Runeable) {
 		}
 
 		// Place random maze objects
-		placeMultipleObjects(3, func() io.Runeable { return &items.Book{Level: lvl} }, m) // up to 2 books a level
-		placeMultipleObjects(3, func() io.Runeable { return new(items.Altar) }, m)        // up to 2 altars a level
+		// Up to 2 objects per level
+		placeMultipleObjects(rand.Intn(3), func() io.Runeable { return &items.Book{Level: lvl} }, m)
+		placeMultipleObjects(rand.Intn(3), func() io.Runeable { return new(items.Altar) }, m)
+		placeMultipleObjects(rand.Intn(3), func() io.Runeable { return new(items.Statue) }, m)
+		placeMultipleObjects(rand.Intn(3), func() io.Runeable { return new(items.Pit) }, m)
+		placeMultipleObjects(rand.Intn(3), func() io.Runeable { return new(items.Fountain) }, m)
+		placeMultipleObjects(rand.Intn(3), func() io.Runeable { return &items.Trap{TrapType: items.ArrowTrap} }, m)
+		placeMultipleObjects(rand.Intn(3)-1, func() io.Runeable { return &items.Trap{TrapType: items.TeleTrap} }, m)
+		placeMultipleObjects(rand.Intn(3)-1, func() io.Runeable { return &items.Trap{TrapType: items.DartTrap} }, m)
+		if lvl == 1 {
+			placeObject(randMapCoord(), &items.Chest{Level: lvl}, m)
+		} else {
+			placeMultipleObjects(rand.Intn(2), func() io.Runeable { return &items.Chest{Level: lvl} }, m)
+		}
+
+		if lvl != maxDungeon && lvl != maxVolcano {
+			placeMultipleObjects(rand.Intn(2), func() io.Runeable { return &items.Trap{TrapType: items.DoorTrap} }, m)
+		}
+
+		if lvl <= 10 {
+			placeMultipleObjects(rand.Intn(2), func() io.Runeable { return &items.Gem{Stone: items.Diamond, Value: rand.Intn(10*int(lvl)+1) + 10} }, m)
+			placeMultipleObjects(rand.Intn(2), func() io.Runeable { return &items.Gem{Stone: items.Ruby, Value: rand.Intn(6*int(lvl)+1) + 6} }, m)
+			placeMultipleObjects(rand.Intn(2), func() io.Runeable { return &items.Gem{Stone: items.Emerald, Value: rand.Intn(4*int(lvl)+1) + 4} }, m)
+			placeMultipleObjects(rand.Intn(2), func() io.Runeable { return &items.Gem{Stone: items.Sapphire, Value: rand.Intn(3*int(lvl)+1) + 2} }, m)
+		}
+
+		placeMultipleObjects(rand.Intn(4)+4, func() io.Runeable { return &items.Potion{} }, m)
+		placeMultipleObjects(rand.Intn(5)+4, func() io.Runeable { return &items.Scroll{} }, m)
+		placeMultipleObjects(rand.Intn(12)+12, func() io.Runeable {
+			return &items.GoldPile{Amount: 12*rand.Intn(int(lvl+1)) + (int(lvl) << 3) + 10}
+		}, m)
+		// TODO Add level 5 bank branch office
+
+		// Add armor to level
+		placeRareObject(2, &items.ArmorClass{Type: items.RingMail}, m)
+		placeRareObject(1, &items.ArmorClass{Type: items.StuddedLeather}, m)
+		placeRareObject(3, &items.ArmorClass{Type: items.SplintMail}, m)
+		placeRareObject(5, &items.Shield{Attribute: rand.Intn(3)}, m)
+
+		// Add weaspons to level
+		placeRareObject(2, &items.WeaponClass{Type: items.BattleAxe, Attribute: rand.Intn(3)}, m)
+		placeRareObject(5, &items.WeaponClass{Type: items.LongSword, Attribute: rand.Intn(3)}, m)
+		placeRareObject(5, &items.WeaponClass{Type: items.Flail, Attribute: rand.Intn(3)}, m)
+		placeRareObject(7, &items.WeaponClass{Type: items.Spear, Attribute: rand.Intn(5)}, m)
+		placeRareObject(2, &items.WeaponClass{Type: items.SwordOfSlashing}, m)
+		if lvl == 1 { // Bessman's hammer can only be created on level 1
+			placeRareObject(4, &items.WeaponClass{Type: items.BessmansHammer}, m)
+		}
+
+		// TODO don't add these weapons is difficulty >= 3
+		if rand.Intn(4) == 3 && lvl > 3 {
+			placeRareObject(3, &items.WeaponClass{Type: items.SunSword, Attribute: 3}, m)
+			placeRareObject(5, &items.WeaponClass{Type: items.TwoHandedSword, Attribute: rand.Intn(3) + 1}, m)
+			placeRareObject(3, &items.Belt{Attribute: 4}, m)
+			placeRareObject(3, &items.Ring{Type: items.Energy, Attribute: 3}, m)
+			placeRareObject(4, &items.ArmorClass{Type: items.PlateMail, Attribute: 5}, m)
+		}
+
+		// Add rings to level
+		placeRareObject(4, &items.Ring{Type: items.Regen, Attribute: rand.Intn(3)}, m)
+		placeRareObject(1, &items.Ring{Type: items.Protection, Attribute: rand.Intn(3)}, m)
+		placeRareObject(2, &items.Ring{Type: items.Strength, Attribute: 4}, m)
+
+		// place special objects
+		placeRareObject(3, &items.Special{Type: items.Orb}, m)
+		placeRareObject(4, &items.Special{Type: items.Scarab}, m)
+		placeRareObject(4, &items.Special{Type: items.Cube}, m)
+		placeRareObject(3, &items.Special{Type: items.Device}, m)
+	}
+}
+
+// placeRareObject will place the object on the map with a chance of prob/151
+func placeRareObject(prob int, o io.Runeable, lvl [][]io.Runeable) {
+	if rand.Intn(151) < prob {
+		placeObject(randMapCoord(), o, lvl)
 	}
 }
 

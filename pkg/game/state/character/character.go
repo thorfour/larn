@@ -45,6 +45,7 @@ type Coordinate struct {
 
 func (c *Character) Init() {
 	c.Stats = new(stats.Stats)
+	c.Stats.Special = make(map[int]bool)
 	c.Stats.Level = 1
 	c.Stats.Title = titles[c.Stats.Level-1]
 	c.Stats.MaxSpells = 1
@@ -117,6 +118,15 @@ func (c *Coordinate) Move(d Direction) {
 // AddItem adds an item to the players inventory
 func (c *Character) AddItem(i items.Item) {
 	c.inventory = append(c.inventory, i)
+}
+
+func (c *Character) DropItem(i int) items.Item {
+	if i >= len(c.inventory) {
+		return nil
+	}
+	item := c.inventory[i]
+	c.inventory = append(c.inventory[:i], c.inventory[i+1:]...)
+	return item
 }
 
 // Inventory returns a list of displayable inventory items

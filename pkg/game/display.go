@@ -67,6 +67,7 @@ func cat(maps ...[][]io.Runeable) [][]io.Runeable {
 
 // statusLog returns the status log that's displayed on the bottom
 func statusLog(s *state.State) [][]io.Runeable {
+	glog.V(6).Infof("StatusLog: %v", s.StatLog[:logLength])
 	// Convert the status log to runes
 	return convert(s.StatLog[:logLength])
 }

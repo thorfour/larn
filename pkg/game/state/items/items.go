@@ -3,6 +3,7 @@ package items
 import (
 	termbox "github.com/nsf/termbox-go"
 	"github.com/thorfour/larn/pkg/game/state/stats"
+	"github.com/thorfour/larn/pkg/io"
 )
 
 const (
@@ -14,6 +15,7 @@ type Item interface {
 	PickUp(s *stats.Stats)
 	Drop(s *stats.Stats)
 	String() string
+	io.Runeable
 }
 
 // Food for edible Items (fortune s *ookies)
@@ -22,8 +24,8 @@ type Food interface {
 	Eat(s *stats.Stats)
 }
 
-// Potion for anything that s *an be quaffed
-type Potion interface {
+// Quaffable for anything that s *an be quaffed
+type Quaffable interface {
 	Item
 	Quaff(s *stats.Stats)
 }
@@ -58,3 +60,12 @@ func (d *DefaultItem) Visible(v bool) { d.Visibility = v }
 
 // Displace implements the displaceable interface
 func (d *DefaultItem) Displace() bool { return true }
+
+// NoStats provides empty PickUp and Drop functions
+type NoStats struct{}
+
+// PickUp implements the Item interface
+func (n *NoStats) PickUp(_ *stats.Stats) {}
+
+// PickUp implements the Item interface
+func (n *NoStats) Drop(_ *stats.Stats) {}

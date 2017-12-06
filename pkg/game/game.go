@@ -209,21 +209,25 @@ func (g *Game) runAction(d character.Direction) {
 	}
 }
 
-// inventory is a truncated input handler, used after a user requests an inventory display
+// inventoryWrapper returns a truncated input handler, used after a user requests an inventory display
+// it will render the first inventory list, and subsequent calls the the function it returns will render the remaining pages
 func (g *Game) inventoryWrapper(s []string) func(termbox.Event) {
 	offset := 0
 	label := 'a' // first inventory item is labled as a)
 
-	var inv []string
-	inv = append(inv, "") // empty string at the top
-	for i := 0; i < invMaxDisplay && offset < len(s); i++ {
-		inv = append(inv, fmt.Sprintf("%s) %v", string(label), s[offset]))
-		label++
-		offset++
+	generateInv := func() []string {
+		var inv []string
+		inv = append(inv, "") // empty string at the top
+		for i := 0; i < invMaxDisplay && offset < len(s); i++ {
+			inv = append(inv, fmt.Sprintf("%s) %v", string(label), s[offset]))
+			label++
+			offset++
+		}
+		inv = append(inv, "   --- press space to continue ---") // add the help string at the bottom
+		return inv
 	}
-	inv = append(inv, "   --- press space to continue ---") // add the help string at the bottom
 
-	g.render(overlay(display(g.currentState), convert(inv)))
+	g.render(overlay(display(g.currentState), convert(generateInv())))
 
 	return func(e termbox.Event) {
 		switch e.Key {
@@ -231,17 +235,8 @@ func (g *Game) inventoryWrapper(s []string) func(termbox.Event) {
 			g.truncatedInput = nil
 			g.render(display(g.currentState))
 		case termbox.KeySpace: // Space key
-			if offset < len(s) {
-				var inv []string
-				inv = append(inv, "") // empty string at the top
-				for i := 0; i < invMaxDisplay && offset < len(s); i++ {
-					inv = append(inv, fmt.Sprintf("%s) %v", string(label), s[offset]))
-					label++
-					offset++
-				}
-				inv = append(inv, "   --- press space to continue ---") // add the help string at the bottom
-
-				g.render(overlay(display(g.currentState), convert(inv)))
+			if offset < len(s) { // Render next page
+				g.render(overlay(display(g.currentState), convert(generateInv())))
 				return
 			}
 			// No more pages to display, remove the overlay

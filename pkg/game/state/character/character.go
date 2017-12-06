@@ -110,3 +110,8 @@ func (c *Coordinate) Move(d Direction) {
 	case Here:
 	}
 }
+
+// AddItem adds an item to the players inventory
+func (c *Character) AddItem(i items.Item) {
+	c.inventory = append(c.inventory, i)
+}

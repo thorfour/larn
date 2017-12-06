@@ -92,7 +92,7 @@ func (s *State) PickUp() {
 	i, ok := s.maps.Displaced().(items.Item)
 	if ok {
 		i.PickUp(s.C.Stats)
-		// TODO record the item in the character inventory
+		s.C.AddItem(i)
 		// TODO remove it from the map
 	}
 }

@@ -20,3 +20,8 @@ func (a *Altar) Rune() rune {
 		return invisibleRune
 	}
 }
+
+// Log implementes the Loggable interface
+func (a *Altar) Log() string {
+	return "There is an altar here"
+}

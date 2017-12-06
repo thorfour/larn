@@ -5,8 +5,7 @@ const (
 )
 
 type Book struct {
-	Level      uint // the level the book was placed in
-	Visibility bool
+	Level uint // the level the book was placed in
 	DefaultItem
 }
 
@@ -17,4 +16,9 @@ func (b *Book) Rune() rune {
 	} else {
 		return invisibleRune
 	}
+}
+
+// Log implements the Loggable interface
+func (b *Book) Log() string {
+	return "You have found a book"
 }

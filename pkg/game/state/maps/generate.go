@@ -264,14 +264,14 @@ func walkToEmpty(c Coordinate, lvl [][]io.Runeable) Coordinate {
 }
 
 // placeMultipleObjects places [0,N) objects of type o in lvl at random coordinates
-func placeMultipleObjects(n int, o io.Runeable, lvl [][]io.Runeable) {
+func placeMultipleObjects(n int, f func() io.Runeable, lvl [][]io.Runeable) {
+	for i := 0; i < rand.Intn(n); i++ {
+		// generate the object
+		o := f()
+		// Set the visibility of the object
+		o.(Visible).Visible(DEBUG)
 
-	// Set the visibility of the object
-	o.(Visible).Visible(DEBUG)
-
-	num := rand.Intn(n)
-	glog.V(2).Infof("Placing %v objects of %s", num, string(o.Rune()))
-	for i := 0; i < num; i++ {
+		// Place the object in the map
 		placeObject(randMapCoord(), o, lvl)
 	}
 }
@@ -279,7 +279,7 @@ func placeMultipleObjects(n int, o io.Runeable, lvl [][]io.Runeable) {
 // placeObject places an object in a maze at arandom open location
 func placeObject(c Coordinate, o io.Runeable, lvl [][]io.Runeable) (Coordinate, io.Runeable) {
 
-	glog.V(6).Infof("Coord: (%v,%v) = %s", c.X, c.Y, string(o.Rune()))
+	glog.V(6).Infof("Placing %s", string(o.Rune()))
 
 	c = walkToEmpty(c, lvl)
 
@@ -314,8 +314,8 @@ func placeObjects(lvl uint, m [][]io.Runeable) {
 		}
 
 		// Place random maze objects
-		placeMultipleObjects(3, &items.Book{Level: lvl}, m) // up to 2 books a level
-		placeMultipleObjects(3, new(items.Altar), m)        // up to 2 altars a level
+		placeMultipleObjects(3, func() io.Runeable { return &items.Book{Level: lvl} }, m) // up to 2 books a level
+		placeMultipleObjects(3, func() io.Runeable { return new(items.Altar) }, m)        // up to 2 altars a level
 	}
 }
 

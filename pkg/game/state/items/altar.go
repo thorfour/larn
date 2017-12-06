@@ -23,5 +23,5 @@ func (a *Altar) Rune() rune {
 
 // Log implementes the Loggable interface
 func (a *Altar) Log() string {
-	return "There is an altar here"
+	return "There is a Holy Altar here!"
 }

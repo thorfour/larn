@@ -100,5 +100,12 @@ func (s *State) PickUp() {
 // Inventory request
 func (s *State) Inventory() []string {
 	glog.V(2).Info("Inventory request")
-	return s.C.Inventory()
+	var inv []string
+	inv = append(inv, "")                                   // empty string at the top
+	inv = append(inv, s.C.Inventory()...)                   // add the inventory
+	inv = append(inv, "   --- press space to continue ---") // add the help string at the bottom
+
+	// TODO handle multiple pages of inventory
+
+	return inv
 }

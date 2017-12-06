@@ -93,6 +93,6 @@ func (s *State) PickUp() {
 	if ok {
 		i.PickUp(s.C.Stats)
 		s.C.AddItem(i)
-		// TODO remove it from the map
+		s.maps.RemoveDisplaced()
 	}
 }

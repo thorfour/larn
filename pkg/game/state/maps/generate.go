@@ -21,6 +21,7 @@ var bessman bool
 // newMap is a wrapper of newLevel, it creates the level and places objects in the level.
 func newMap(lvl uint) [][]io.Runeable {
 	m := newLevel(lvl) // Create the level
+	treasureRoom(m)
 
 	seed := time.Now().UnixNano()
 	glog.V(1).Infof("Map Seed: %v", seed)
@@ -402,5 +403,58 @@ func isWall(c Coordinate, lvl [][]io.Runeable) bool {
 		return true
 	default:
 		return false
+	}
+}
+
+// treasureRoom creates a treasure room on a level
+func treasureRoom(m [][]io.Runeable) {
+	for x := 2 + rand.Intn(10); x < width-10; x += 10 {
+		if rand.Intn(13) == 0 { // not every level gets a room
+			tWidth := rand.Intn(6) + 4
+			tHeight := rand.Intn(6) + 4
+			y := rand.Intn(height-9) + 2 // uper left corner of room
+			// TODO special handling for last level of dungeon and volcano?
+			makeRoom(tWidth, tHeight, x, y, rand.Intn(9)+1, m)
+		}
+	}
+}
+
+func makeRoom(w, h, x, y, glyph int, m [][]io.Runeable) {
+	glog.V(2).Infof("Making room at (%v,%v) width: %v height: %v", x, y, w, h)
+	for i := x; i < x+w; i++ { // Create only walls where the room will be
+		for j := y; j < y+h; j++ {
+			m[j][i] = &Wall{DEBUG}
+		}
+	}
+
+	// Clear out the interior
+	for i := x + 1; i < x+w-1; i++ { // Create only walls where the room will be
+		for j := y + 1; j < y+h-1; j++ {
+			m[j][i] = Empty{}
+		}
+	}
+
+	// TODO add objects
+	// TODO add monsters
+
+	// Add a door
+	doorLoc := rand.Intn((w * 2) + ((h - 2) * 2))
+	wallCount := 0
+	for i := x; i < x+w; i++ {
+		for j := y; j < y+h; j++ {
+			// Determine if we're on a wall
+			if i == x || i == x+w-1 || j == y || j == y+h-1 {
+				if wallCount == doorLoc {
+					m[j][i] = &items.Door{
+						Open: false,
+						DefaultItem: items.DefaultItem{
+							Visibility: DEBUG,
+						},
+					}
+					return
+				}
+				wallCount++
+			}
+		}
 	}
 }

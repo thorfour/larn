@@ -11,6 +11,11 @@ import (
 	"github.com/thorfour/larn/pkg/io"
 )
 
+var (
+	Quit = fmt.Errorf("%s", "Quit")
+	Save = fmt.Errorf("%s", "Save")
+)
+
 const (
 	internalKeyBufferSize = 10
 	borderRune            = rune('#')
@@ -27,8 +32,8 @@ type Game struct {
 	// input channel from keyboard
 	input chan termbox.Event
 
-	// Function that gets dynamically set when certain actions are taken. (i.e after an inventory request only accept space or esc)
-	truncatedInput func(e termbox.Event)
+	// inputHandler is the function that handles input from the keyboard
+	inputHandler func(e termbox.Event)
 
 	// Indicates if the game has hit an error
 	err error
@@ -44,6 +49,7 @@ func saveFilePresent() (bool, string) {
 func New() *Game {
 	glog.V(1).Info("Creating new game")
 	g := new(Game)
+	g.inputHandler = g.defaultHandler
 	g.input = make(chan termbox.Event, internalKeyBufferSize)
 
 	if ok, saveFile := saveFilePresent(); ok {
@@ -91,92 +97,95 @@ func (g *Game) run() error {
 	for {
 		// Check for a game error
 		if g.err != nil {
+			if g.err == Save || g.err == Quit { // Save or Quit aren't errors to return
+				return nil
+			}
 			return g.err
 		}
 
 		// Get next input
 		e := <-g.input
 
-		// Certain commands require a unique set of input to follow
-		if g.truncatedInput != nil {
-			g.truncatedInput(e)
-			continue
-		}
-
-		switch e.Ch {
-		case 'H': // run left
-			g.runAction(character.Left)
-		case 'J': // run down
-			g.runAction(character.Down)
-		case 'K': // run up
-			g.runAction(character.Up)
-		case 'L': // run right
-			g.runAction(character.Right)
-		case 'Y': // run northwest
-			g.runAction(character.UpLeft)
-		case 'U': // run northeast
-			g.runAction(character.UpRight)
-		case 'B': // run southwest
-			g.runAction(character.DownLeft)
-		case 'N': // run southeast
-			g.runAction(character.DownRight)
-		case 'h': // move left
-			g.currentState.Move(character.Left)
-			g.render(display(g.currentState))
-		case 'j': // move down
-			g.currentState.Move(character.Down)
-			g.render(display(g.currentState))
-		case 'k': // move up
-			g.currentState.Move(character.Up)
-			g.render(display(g.currentState))
-		case 'l': // move right
-			g.currentState.Move(character.Right)
-			g.render(display(g.currentState))
-		case 'y': // move northwest
-			g.currentState.Move(character.UpLeft)
-			g.render(display(g.currentState))
-		case 'u': // move northeast
-			g.currentState.Move(character.UpRight)
-			g.render(display(g.currentState))
-		case 'b': // move southwest
-			g.currentState.Move(character.DownLeft)
-			g.render(display(g.currentState))
-		case 'n': // move southeast
-			g.currentState.Move(character.DownRight)
-			g.render(display(g.currentState))
-		case ',': // Pick up the item
-			g.currentState.PickUp()
-			g.render(display(g.currentState))
-		case '^': // identify a trap
-		case 'd': // drop an item
-		case 'v': // print program version
-		case '?': // help screen
-		case 'g': // give present pack weight
-		case 'i': // inventory your pockets
-			g.truncatedInput = g.inventoryWrapper(g.currentState.Inventory()) // After an inventory request only Esc and space are accepted
-		case 'A': // create diagnostic file
-		case '.': // stay here
-		case 'Z': // teleport yourself
-		case 'c': // cast a spell
-		case 'r': // read a scroll
-		case 'q': // quaff a potion
-		case 'W': // wear armor
-		case 'T': // take off armor
-		case 'w': // wield a weapon
-		case 'P': // give tax status
-		case 'D': // list all items found
-		case 'e': // eat something
-		case 'S': // save the game and quit
-			fallthrough
-		case 'Q': // quit the game
-			return nil
-		case 'E': // Enter the building
-			g.currentState.Enter()
-			g.render(display(g.currentState))
-		}
+		// Handle the next input event
+		g.inputHandler(e)
 	}
+}
 
-	return nil
+func (g *Game) defaultHandler(e termbox.Event) {
+
+	switch e.Ch {
+	case 'H': // run left
+		g.runAction(character.Left)
+	case 'J': // run down
+		g.runAction(character.Down)
+	case 'K': // run up
+		g.runAction(character.Up)
+	case 'L': // run right
+		g.runAction(character.Right)
+	case 'Y': // run northwest
+		g.runAction(character.UpLeft)
+	case 'U': // run northeast
+		g.runAction(character.UpRight)
+	case 'B': // run southwest
+		g.runAction(character.DownLeft)
+	case 'N': // run southeast
+		g.runAction(character.DownRight)
+	case 'h': // move left
+		g.currentState.Move(character.Left)
+		g.render(display(g.currentState))
+	case 'j': // move down
+		g.currentState.Move(character.Down)
+		g.render(display(g.currentState))
+	case 'k': // move up
+		g.currentState.Move(character.Up)
+		g.render(display(g.currentState))
+	case 'l': // move right
+		g.currentState.Move(character.Right)
+		g.render(display(g.currentState))
+	case 'y': // move northwest
+		g.currentState.Move(character.UpLeft)
+		g.render(display(g.currentState))
+	case 'u': // move northeast
+		g.currentState.Move(character.UpRight)
+		g.render(display(g.currentState))
+	case 'b': // move southwest
+		g.currentState.Move(character.DownLeft)
+		g.render(display(g.currentState))
+	case 'n': // move southeast
+		g.currentState.Move(character.DownRight)
+		g.render(display(g.currentState))
+	case ',': // Pick up the item
+		g.currentState.PickUp()
+		g.render(display(g.currentState))
+	case '^': // identify a trap
+	case 'd': // drop an item
+	case 'v': // print program version
+	case '?': // help screen
+	case 'g': // give present pack weight
+	case 'i': // inventory your pockets
+		g.inputHandler = g.inventoryWrapper(g.currentState.Inventory()) // After an inventory request only Esc and space are accepted
+	case 'A': // create diagnostic file
+	case '.': // stay here
+	case 'Z': // teleport yourself
+	case 'c': // cast a spell
+	case 'r': // read a scroll
+	case 'q': // quaff a potion
+	case 'W': // wear armor
+	case 'T': // take off armor
+	case 'w': // wield a weapon
+	case 'P': // give tax status
+	case 'D': // list all items found
+	case 'e': // eat something
+	case 'S': // save the game and quit
+		g.err = Save
+		return
+	case 'Q': // quit the game
+		g.err = Quit // Set the error to quit
+		return
+	case 'E': // Enter the building
+		g.currentState.Enter()
+		g.render(display(g.currentState))
+	}
 }
 
 //  renderWelcome generates the welcome to larn message
@@ -232,7 +241,7 @@ func (g *Game) inventoryWrapper(s []string) func(termbox.Event) {
 	return func(e termbox.Event) {
 		switch e.Key {
 		case termbox.KeyEsc: // Escape key
-			g.truncatedInput = nil
+			g.inputHandler = g.defaultHandler
 			g.render(display(g.currentState))
 		case termbox.KeySpace: // Space key
 			if offset < len(s) { // Render next page
@@ -240,7 +249,7 @@ func (g *Game) inventoryWrapper(s []string) func(termbox.Event) {
 				return
 			}
 			// No more pages to display, remove the overlay
-			g.truncatedInput = nil
+			g.inputHandler = g.defaultHandler
 			g.render(display(g.currentState))
 		default:
 			glog.V(6).Infof("Receive invalid input: %s", string(e.Ch))

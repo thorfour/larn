@@ -171,7 +171,7 @@ func (m *Maps) setVisible(c *character.Character) {
 
 // RemoveDisplaced removes the displaced object on the map (i.e the player picked up an item)
 func (m *Maps) RemoveDisplaced() {
-	m.displaced = Empty{} // Set displaced to empty, so it gets replaced when the player moves
+	m.displaced = Empty{m.current == homeLevel} // Set displaced to empty, so it gets replaced when the player moves
 }
 
 // AddDisplaced adds a displaced item to the map. (i.e the player dropped an item)

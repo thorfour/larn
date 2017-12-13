@@ -79,11 +79,11 @@ func (a *WeaponClass) String() string {
 	return weaponName[a.Type]
 }
 
-// Wear implements the Armor interface
-func (a *WeaponClass) Wear(c *stats.Stats) {
+// Wield implements the Weapon interface
+func (a *WeaponClass) Wield(c *stats.Stats) {
 	switch a.Type { // Special weapon handling
 	case SwordOfSlashing:
-		c.Dex += 5 // sword of slashin increases dexterity
+		c.Dex += 5 // sword of slashing increases dexterity
 	case BessmansHammer:
 		c.Dex += 10
 		c.Str += 10
@@ -92,8 +92,8 @@ func (a *WeaponClass) Wear(c *stats.Stats) {
 	c.Wc += (weaponBase[a.Type] + a.Attribute)
 }
 
-// TakeOff implements the Armor interface
-func (a *WeaponClass) TakeOff(c *stats.Stats) {
+// Disarm implements the Weapon interface
+func (a *WeaponClass) Disarm(c *stats.Stats) {
 	switch a.Type { // Special weapon handling
 	case SwordOfSlashing:
 		c.Dex -= 5 // sword of slashin increases dexterity

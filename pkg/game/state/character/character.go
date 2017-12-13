@@ -115,13 +115,32 @@ func (c *Coordinate) Move(d Direction) {
 	}
 }
 
+// Wield has the character wield a weapon
+func (c *Character) Wield(e rune) error {
+	label := 'a'
+	for i, item := range c.inventory {
+		if label == e {
+			if t, ok := item.(items.Weapon); ok { // Ensure the item is a weapon
+				t.Wield(c.Stats)                                            // Wield the weapon
+				c.weapon = append(c.weapon, t)                              // Add item to weapons
+				c.inventory = append(c.inventory[:i], c.inventory[i+1:]...) // Remove item from inventory
+				return nil
+			} else {
+				return fmt.Errorf("You can't wield item %s!", string(e))
+			}
+		}
+		label++
+	}
+	return fmt.Errorf("You don't have item %s!", string(e))
+}
+
 // AddItem adds an item to the players inventory
 func (c *Character) AddItem(i items.Item) {
 	c.inventory = append(c.inventory, i)
 }
 
 func (c *Character) DropItem(i int) items.Item {
-	if i >= len(c.inventory) {
+	if i >= len(c.inventory) { // FIXME wont let you drop wielded weapon
 		return nil
 	}
 	item := c.inventory[i]

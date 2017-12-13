@@ -174,6 +174,7 @@ func (g *Game) defaultHandler(e termbox.Event) {
 	case 'W': // wear armor
 	case 'T': // take off armor
 	case 'w': // wield a weapon
+		g.inputHandler = g.wield()
 	case 'P': // give tax status
 	case 'D': // list all items found
 	case 'e': // eat something
@@ -273,7 +274,6 @@ func (g *Game) drop() func(termbox.Event) {
 		switch e.Key {
 		case termbox.KeyEsc:
 			g.currentState.Log("aborted")
-			g.render(display(g.currentState))
 		default:
 			label := 'a'
 			for n, i := range g.currentState.Inventory() { // FIXME the drop function isn't stable (i.e dropping item a results in item be now becoming item a)
@@ -291,7 +291,35 @@ func (g *Game) drop() func(termbox.Event) {
 				label++
 			}
 			g.currentState.Log(fmt.Sprintf("You don't have item %s!", string(e.Ch)))
-			g.render(display(g.currentState))
 		}
+		g.render(display(g.currentState))
+	}
+}
+
+// wield function to allow the player to wield a weapon
+func (g *Game) wield() func(termbox.Event) { // FIXME this can be merged with the drop function
+	glog.V(2).Infof("Wield requested")
+
+	g.currentState.Log("What do you want to wield (- for nothing) [* for all] ?")
+	g.render(display(g.currentState))
+
+	// Capute the input character for the item to wield
+	return func(e termbox.Event) {
+		g.inputHandler = g.defaultHandler
+
+		switch e.Key {
+		case termbox.KeyEsc: // abort
+			g.currentState.Log("aborted")
+		default:
+			glog.V(2).Infof("Wield %s", string(e.Ch))
+			switch e.Ch {
+			case '-': // drop nothing
+			default: // try and drop something
+				if err := g.currentState.C.Wield(e.Ch); err != nil {
+					g.currentState.Log(err.Error())
+				}
+			}
+		}
+		g.render(display(g.currentState))
 	}
 }

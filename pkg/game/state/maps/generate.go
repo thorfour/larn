@@ -412,7 +412,7 @@ func treasureRoom(m [][]io.Runeable) {
 		if rand.Intn(13) == 0 { // not every level gets a room
 			tWidth := rand.Intn(6) + 4
 			tHeight := rand.Intn(6) + 4
-			y := rand.Intn(height-9) + 2 // uper left corner of room
+			y := rand.Intn(height-10) + 2 // uper left corner of room
 			// TODO special handling for last level of dungeon and volcano?
 			makeRoom(tWidth, tHeight, x, y, rand.Intn(9)+1, m)
 		}

@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 
 	"github.com/golang/glog"
 	"github.com/thorfour/larn/pkg/game"
@@ -19,6 +20,8 @@ func main() {
 }
 
 func flushLogs() {
-	// TODO panic greacefully if need be
+	if r := recover(); r != nil {
+		fmt.Println("Larn encountered an error")
+	}
 	glog.Flush()
 }

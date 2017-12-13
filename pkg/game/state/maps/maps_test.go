@@ -1,15 +1,23 @@
 package maps
 
-import "testing"
+import (
+	"testing"
+)
 
-func TestMapsSmoke(t *testing.T) {
-	m := New()
+// TestTreasureRooms ensures treasure rooms don't cause panic
+func TestTreasureRooms(t *testing.T) {
 
-	for i, col := range m.home {
-		for j, r := range col {
-			if ru := r.(Empty).Rune(); ru != '.' {
-				t.Error("(%v,%v): not an empty rune: %v", i, j, ru)
-			}
+	// Create a map
+	m := newLevel(1)
+
+	defer func() {
+		if r := recover(); r != nil {
+			t.Fatal("treasureRoom caused a panic")
 		}
+	}()
+
+	// Generate treasure rooms
+	for i := 0; i < 1000; i++ {
+		treasureRoom(m)
 	}
 }

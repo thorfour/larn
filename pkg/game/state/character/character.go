@@ -146,7 +146,7 @@ func (c *Character) DropItem(e rune) (items.Item, error) {
 	for i, w := range c.weapon {
 		if label == e {
 			c.weapon = append(c.weapon[:i], c.weapon[i+1:]...)
-			w.Drop(c.Stats)
+			w.Disarm(c.Stats)
 			return w, nil
 		}
 		label++
@@ -155,7 +155,7 @@ func (c *Character) DropItem(e rune) (items.Item, error) {
 	for i, a := range c.armor {
 		if label == e {
 			c.armor = append(c.armor[:i], c.armor[i+1:]...)
-			a.Drop(c.Stats)
+			a.TakeOff(c.Stats)
 			return a, nil
 		}
 		label++

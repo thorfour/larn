@@ -56,6 +56,7 @@ type WeaponClass struct {
 	Type      WeaponType // the type of armor
 	Attribute int        // the attributes of the armor that add/subtract from the class
 	DefaultItem
+	NoStats
 }
 
 // Rune implements the io.Runeable interface
@@ -103,9 +104,3 @@ func (a *WeaponClass) Disarm(c *stats.Stats) {
 	}
 	c.Wc -= (weaponBase[a.Type] + a.Attribute)
 }
-
-// PickUp implements the Item interface
-func (w *WeaponClass) PickUp(_ *stats.Stats) {}
-
-// PickUp implements the Item interface
-func (w *WeaponClass) Drop(s *stats.Stats) { w.Disarm(s) }

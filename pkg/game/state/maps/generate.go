@@ -15,9 +15,6 @@ const (
 	maxVolcano = 13 // 3 volcanos. 10 dungeons
 )
 
-// package global to indicate if bessmans hammer has been placed on a level
-var bessman bool
-
 // newMap is a wrapper of newLevel, it creates the level and places objects in the level.
 func newMap(lvl uint) [][]io.Runeable {
 	m := newLevel(lvl) // Create the level

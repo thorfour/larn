@@ -111,6 +111,10 @@ func (g *Game) run() error {
 	}
 }
 
+func (g *Game) defaultWrapper() func(termbox.Event) {
+	return g.defaultHandler
+}
+
 func (g *Game) defaultHandler(e termbox.Event) {
 
 	switch e.Ch {
@@ -164,7 +168,7 @@ func (g *Game) defaultHandler(e termbox.Event) {
 	case '?': // help screen
 	case 'g': // give present pack weight
 	case 'i': // inventory your pockets
-		g.inputHandler = g.inventoryWrapper(g.currentState.Inventory()) // After an inventory request only Esc and space are accepted
+		g.inputHandler = g.inventoryWrapper(g.defaultWrapper)
 	case 'A': // create diagnostic file
 	case '.': // stay here
 	case 'Z': // teleport yourself
@@ -222,9 +226,10 @@ func (g *Game) runAction(d character.Direction) {
 
 // inventoryWrapper returns a truncated input handler, used after a user requests an inventory display
 // it will render the first inventory list, and subsequent calls the the function it returns will render the remaining pages
-func (g *Game) inventoryWrapper(s []string) func(termbox.Event) {
+func (g *Game) inventoryWrapper(callback func() func(termbox.Event)) func(termbox.Event) {
 	offset := 0
 	label := 'a' // first inventory item is labled as a)
+	s := g.currentState.Inventory()
 
 	generateInv := func() []string {
 		var inv []string
@@ -243,7 +248,7 @@ func (g *Game) inventoryWrapper(s []string) func(termbox.Event) {
 	return func(e termbox.Event) {
 		switch e.Key {
 		case termbox.KeyEsc: // Escape key
-			g.inputHandler = g.defaultHandler
+			g.inputHandler = callback()
 			g.render(display(g.currentState))
 		case termbox.KeySpace: // Space key
 			if offset < len(s) { // Render next page
@@ -251,7 +256,7 @@ func (g *Game) inventoryWrapper(s []string) func(termbox.Event) {
 				return
 			}
 			// No more pages to display, remove the overlay
-			g.inputHandler = g.defaultHandler
+			g.inputHandler = callback()
 			g.render(display(g.currentState))
 		default:
 			glog.V(6).Infof("Receive invalid input: %s", string(e.Ch))
@@ -275,6 +280,10 @@ func (g *Game) drop() func(termbox.Event) {
 		case termbox.KeyEsc:
 			g.currentState.Log("aborted")
 		default:
+			if e.Ch == '*' {
+				g.inputHandler = g.inventoryWrapper(g.drop)
+				return
+			}
 			item, err := g.currentState.Drop(e.Ch) // drop item
 			if err != nil {
 				g.currentState.Log(err.Error()) // unable to drop

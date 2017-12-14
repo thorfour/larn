@@ -275,22 +275,14 @@ func (g *Game) drop() func(termbox.Event) {
 		case termbox.KeyEsc:
 			g.currentState.Log("aborted")
 		default:
-			label := 'a'
-			for n, i := range g.currentState.Inventory() { // FIXME the drop function isn't stable (i.e dropping item a results in item be now becoming item a)
-				if e.Ch == label {
-					if err := g.currentState.Drop(n); err != nil { // drop item n
-						g.currentState.Log(err.Error()) // unable to drop
-						g.render(display(g.currentState))
-						return
-					}
-					g.currentState.Log("You drop:")
-					g.currentState.Log(fmt.Sprintf("%s) %v", string(label), i))
-					g.render(display(g.currentState))
-					return
-				}
-				label++
+			item, err := g.currentState.Drop(e.Ch) // drop item
+			if err != nil {
+				g.currentState.Log(err.Error()) // unable to drop
+				g.render(display(g.currentState))
+				return
 			}
-			g.currentState.Log(fmt.Sprintf("You don't have item %s!", string(e.Ch)))
+			g.currentState.Log("You drop:")
+			g.currentState.Log(fmt.Sprintf("%s) %s", string(e.Ch), item.String()))
 		}
 		g.render(display(g.currentState))
 	}

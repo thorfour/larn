@@ -58,15 +58,17 @@ func New() *State {
 }
 
 // Drop drops an item where the player is standing, returns false if the player is already standing on an item
-func (s *State) Drop(n int) error {
-	if _, ok := s.maps.Displaced().(maps.Empty); ok {
-		if item := s.C.DropItem(n); item != nil {
-			s.maps.AddDisplaced(item)
-			return nil
-		}
-		return NoItemErr
+func (s *State) Drop(e rune) (items.Item, error) {
+	if _, ok := s.maps.Displaced().(maps.Empty); !ok { // Check if player is already displacing an object
+		return nil, AlreadyDisplacedErr
 	}
-	return AlreadyDisplacedErr
+
+	item, err := s.C.DropItem(e)
+	if err != nil {
+		return nil, err
+	}
+	s.maps.AddDisplaced(item)
+	return item, nil
 }
 
 // Log adds the string to the statlog

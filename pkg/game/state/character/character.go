@@ -139,13 +139,35 @@ func (c *Character) AddItem(i items.Item) {
 	c.inventory = append(c.inventory, i)
 }
 
-func (c *Character) DropItem(i int) items.Item {
-	if i >= len(c.inventory) { // FIXME wont let you drop wielded weapon
-		return nil
+// DropItem removes an item from a characters inventory. Returns the item if there was no error
+// FIXME this isn't a stable removal. Items need to maintain their index
+func (c *Character) DropItem(e rune) (items.Item, error) {
+	label := 'a'
+	for i, w := range c.weapon {
+		if label == e {
+			c.weapon = append(c.weapon[:i], c.weapon[i+1:]...)
+			return w, nil
+		}
+		label++
 	}
-	item := c.inventory[i]
-	c.inventory = append(c.inventory[:i], c.inventory[i+1:]...)
-	return item
+
+	for i, a := range c.armor {
+		if label == e {
+			c.armor = append(c.armor[:i], c.armor[i+1:]...)
+			return a, nil
+		}
+		label++
+	}
+
+	for i, t := range c.inventory {
+		if label == e {
+			c.inventory = append(c.inventory[:i], c.inventory[i+1:]...)
+			return t, nil
+		}
+		label++
+	}
+
+	return nil, fmt.Errorf("You don't have item %s!", string(e))
 }
 
 // Inventory returns a list of displayable inventory items

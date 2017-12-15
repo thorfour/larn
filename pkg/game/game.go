@@ -176,7 +176,9 @@ func (g *Game) defaultHandler(e termbox.Event) {
 	case 'r': // read a scroll
 	case 'q': // quaff a potion
 	case 'W': // wear armor
+		g.inputHandler = g.wear()
 	case 'T': // take off armor
+		g.takeOff()
 	case 'w': // wield a weapon
 		g.inputHandler = g.wield()
 	case 'P': // give tax status
@@ -312,11 +314,58 @@ func (g *Game) wield() func(termbox.Event) { // FIXME this can be merged with th
 		case termbox.KeyEsc: // abort
 			g.currentState.Log("aborted")
 		default:
+			if e.Ch == '*' {
+				g.inputHandler = g.inventoryWrapper(g.wield)
+				return
+			}
 			glog.V(2).Infof("Wield %s", string(e.Ch))
 			switch e.Ch {
 			case '-': // drop nothing
 			default: // try and drop something
 				if err := g.currentState.C.Wield(e.Ch); err != nil {
+					g.currentState.Log(err.Error())
+				}
+			}
+		}
+		g.render(display(g.currentState))
+	}
+}
+
+// takeOff function takes off a players armor
+func (g *Game) takeOff() {
+	glog.V(2).Infof("Take off requested")
+
+	if err := g.currentState.C.TakeOff(); err != nil {
+		g.currentState.Log("You aren't wearing anything")
+	} else {
+		g.currentState.Log("Your armor is off")
+	}
+	g.render(display(g.currentState))
+}
+
+// wear function to allow the player to wear armor
+func (g *Game) wear() func(termbox.Event) { // FIXME this can be merged with the drop function
+	glog.V(2).Infof("Wear requested")
+
+	g.currentState.Log("What do you want to wear [* for all] ?")
+	g.render(display(g.currentState))
+
+	// Capute the input character for the item to wear
+	return func(e termbox.Event) {
+		g.inputHandler = g.defaultHandler
+
+		switch e.Key {
+		case termbox.KeyEsc: // abort
+			g.currentState.Log("aborted")
+		default:
+			if e.Ch == '*' {
+				g.inputHandler = g.inventoryWrapper(g.wear)
+				return
+			}
+			glog.V(2).Infof("Wear %s", string(e.Ch))
+			switch e.Ch {
+			default: // try and wear something
+				if err := g.currentState.C.Wear(e.Ch); err != nil {
 					g.currentState.Log(err.Error())
 				}
 			}

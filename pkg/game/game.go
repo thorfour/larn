@@ -8,7 +8,17 @@ import (
 	"github.com/thorfour/larn/pkg/game/data"
 	"github.com/thorfour/larn/pkg/game/state"
 	"github.com/thorfour/larn/pkg/game/state/character"
+	"github.com/thorfour/larn/pkg/game/state/items"
 	"github.com/thorfour/larn/pkg/io"
+)
+
+type action int
+
+const (
+	DropAction action = iota
+	WieldAction
+	WearAction
+	TakeOffAction
 )
 
 var (
@@ -163,7 +173,7 @@ func (g *Game) defaultHandler(e termbox.Event) {
 		g.render(display(g.currentState))
 	case '^': // identify a trap
 	case 'd': // drop an item
-		g.inputHandler = g.drop()
+		g.inputHandler = g.itemAction(DropAction)
 	case 'v': // print program version
 	case '?': // help screen
 	case 'g': // give present pack weight
@@ -176,11 +186,11 @@ func (g *Game) defaultHandler(e termbox.Event) {
 	case 'r': // read a scroll
 	case 'q': // quaff a potion
 	case 'W': // wear armor
-		g.inputHandler = g.wear()
+		g.inputHandler = g.itemAction(WearAction)
 	case 'T': // take off armor
-		g.takeOff()
+		g.inputHandler = g.itemAction(TakeOffAction)
 	case 'w': // wield a weapon
-		g.inputHandler = g.wield()
+		g.inputHandler = g.itemAction(WieldAction)
 	case 'P': // give tax status
 	case 'D': // list all items found
 	case 'e': // eat something
@@ -267,46 +277,30 @@ func (g *Game) inventoryWrapper(callback func() func(termbox.Event)) func(termbo
 	}
 }
 
-// drop func to drop an item
-func (g *Game) drop() func(termbox.Event) {
-	glog.V(2).Infof("Drop requested")
+// itemAction is a subroutine for a player to interact with his inventory
+func (g *Game) itemAction(a action) func(termbox.Event) {
+	glog.V(2).Infof("item action requested")
 
-	g.currentState.Log("What do you want to drop [* for all] ?")
-	g.render(display(g.currentState))
-
-	// Capute the input character for the item to drop
-	return func(e termbox.Event) {
-		g.inputHandler = g.defaultHandler
-
-		switch e.Key {
-		case termbox.KeyEsc:
-			g.currentState.Log("aborted")
-		default:
-			if e.Ch == '*' {
-				g.inputHandler = g.inventoryWrapper(g.drop)
-				return
-			}
-			item, err := g.currentState.Drop(e.Ch) // drop item
-			if err != nil {
-				g.currentState.Log(err.Error()) // unable to drop
-				g.render(display(g.currentState))
-				return
-			}
-			g.currentState.Log("You drop:")
-			g.currentState.Log(fmt.Sprintf("%s) %s", string(e.Ch), item.String()))
+	switch a {
+	case WieldAction:
+		g.currentState.Log("What do you want to wield (- for nothing) [* for all] ?")
+	case DropAction:
+		g.currentState.Log("What do you want to drop [* for all] ?")
+	case WearAction:
+		g.currentState.Log("What do you want to wear [* for all] ?")
+	case TakeOffAction:
+		if err := g.currentState.C.TakeOff(); err != nil {
+			g.currentState.Log("You aren't wearing anything")
+		} else {
+			g.currentState.Log("Your armor is off")
 		}
 		g.render(display(g.currentState))
+		return g.defaultHandler
 	}
-}
 
-// wield function to allow the player to wield a weapon
-func (g *Game) wield() func(termbox.Event) { // FIXME this can be merged with the drop function
-	glog.V(2).Infof("Wield requested")
-
-	g.currentState.Log("What do you want to wield (- for nothing) [* for all] ?")
 	g.render(display(g.currentState))
 
-	// Capute the input character for the item to wield
+	// Capute the input character for the item action
 	return func(e termbox.Event) {
 		g.inputHandler = g.defaultHandler
 
@@ -315,14 +309,27 @@ func (g *Game) wield() func(termbox.Event) { // FIXME this can be merged with th
 			g.currentState.Log("aborted")
 		default:
 			if e.Ch == '*' {
-				g.inputHandler = g.inventoryWrapper(g.wield)
+				g.inputHandler = g.inventoryWrapper(g.itemActionWrapper(a))
 				return
 			}
-			glog.V(2).Infof("Wield %s", string(e.Ch))
 			switch e.Ch {
 			case '-': // drop nothing
 			default: // try and drop something
-				if err := g.currentState.C.Wield(e.Ch); err != nil {
+				var err error
+				switch a {
+				case WieldAction:
+					err = g.currentState.C.Wield(e.Ch)
+				case WearAction:
+					err = g.currentState.C.Wear(e.Ch)
+				case DropAction:
+					var item items.Item
+					item, err = g.currentState.Drop(e.Ch)
+					if err == nil {
+						g.currentState.Log("You drop:")
+						g.currentState.Log(fmt.Sprintf("%s) %s", string(e.Ch), item.String()))
+					}
+				}
+				if err != nil {
 					g.currentState.Log(err.Error())
 				}
 			}
@@ -331,45 +338,9 @@ func (g *Game) wield() func(termbox.Event) { // FIXME this can be merged with th
 	}
 }
 
-// takeOff function takes off a players armor
-func (g *Game) takeOff() {
-	glog.V(2).Infof("Take off requested")
-
-	if err := g.currentState.C.TakeOff(); err != nil {
-		g.currentState.Log("You aren't wearing anything")
-	} else {
-		g.currentState.Log("Your armor is off")
-	}
-	g.render(display(g.currentState))
-}
-
-// wear function to allow the player to wear armor
-func (g *Game) wear() func(termbox.Event) { // FIXME this can be merged with the drop function
-	glog.V(2).Infof("Wear requested")
-
-	g.currentState.Log("What do you want to wear [* for all] ?")
-	g.render(display(g.currentState))
-
-	// Capute the input character for the item to wear
-	return func(e termbox.Event) {
-		g.inputHandler = g.defaultHandler
-
-		switch e.Key {
-		case termbox.KeyEsc: // abort
-			g.currentState.Log("aborted")
-		default:
-			if e.Ch == '*' {
-				g.inputHandler = g.inventoryWrapper(g.wear)
-				return
-			}
-			glog.V(2).Infof("Wear %s", string(e.Ch))
-			switch e.Ch {
-			default: // try and wear something
-				if err := g.currentState.C.Wear(e.Ch); err != nil {
-					g.currentState.Log(err.Error())
-				}
-			}
-		}
-		g.render(display(g.currentState))
+// itemActionWrapper wraps the itemAction functon for inventory callbacks
+func (g *Game) itemActionWrapper(a action) func() func(termbox.Event) {
+	return func() func(termbox.Event) {
+		return g.itemAction(a)
 	}
 }

@@ -19,6 +19,7 @@ const (
 	WieldAction
 	WearAction
 	TakeOffAction
+	ReadAction
 )
 
 var (
@@ -183,7 +184,8 @@ func (g *Game) defaultHandler(e termbox.Event) {
 	case '.': // stay here
 	case 'Z': // teleport yourself
 	case 'c': // cast a spell
-	case 'r': // read a scroll
+	case 'r': // read a scroll/book
+		g.inputHandler = g.itemAction(ReadAction)
 	case 'q': // quaff a potion
 	case 'W': // wear armor
 		g.inputHandler = g.itemAction(WearAction)
@@ -296,6 +298,8 @@ func (g *Game) itemAction(a action) func(termbox.Event) {
 		}
 		g.render(display(g.currentState))
 		return g.defaultHandler
+	case ReadAction:
+		g.currentState.Log("What do you want to read [* for all] ?")
 	}
 
 	g.render(display(g.currentState))
@@ -314,7 +318,7 @@ func (g *Game) itemAction(a action) func(termbox.Event) {
 			}
 			switch e.Ch {
 			case '-': // drop nothing
-			default: // try and drop something
+			default: // try and act on something
 				var err error
 				switch a {
 				case WieldAction:
@@ -328,6 +332,8 @@ func (g *Game) itemAction(a action) func(termbox.Event) {
 						g.currentState.Log("You drop:")
 						g.currentState.Log(fmt.Sprintf("%s) %s", string(e.Ch), item.String()))
 					}
+				case ReadAction:
+					err = g.currentState.Read(e.Ch)
 				}
 				if err != nil {
 					g.currentState.Log(err.Error())

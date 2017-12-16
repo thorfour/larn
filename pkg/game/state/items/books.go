@@ -1,5 +1,12 @@
 package items
 
+import (
+	"fmt"
+	"math/rand"
+
+	"github.com/thorfour/larn/pkg/game/state/stats"
+)
+
 const (
 	bookRune = 'B'
 )
@@ -26,3 +33,29 @@ func (b *Book) Log() string {
 
 // String returns the texutal representation of the item
 func (b *Book) String() string { return "a book" }
+
+// Read implements the Readable interface
+func (b *Book) Read(s *stats.Stats) []string {
+	// Generate a spell based on level
+	var i int
+	if b.Level < 4 {
+		i = rand.Intn(spellLevel[b.Level])
+	} else {
+		i = rand.Intn(spellLevel[b.Level]-9) + 9
+	}
+
+	spell := SpellFromIndex(i)
+
+	// Mark the spell as known
+	s.KnownSpells[spell.code] = true
+
+	logs := []string{"", fmt.Sprintf("Spell %s: %s", spell.code, spell.name), spell.desc}
+
+	// Reading can gain player knowledge
+	if rand.Intn(10) == 0 {
+		s.Intelligence++
+		logs = append(logs, "Your int went up by one!")
+	}
+
+	return logs
+}

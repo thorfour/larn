@@ -17,6 +17,7 @@ const (
 	DropAction action = iota
 	WieldAction
 	WearAction
+	ReadAction
 )
 
 const (
@@ -42,8 +43,7 @@ type Character struct {
 	armor     []items.Armor  // Currently worn armor
 	weapon    []items.Weapon // Currently wielded weapon(s)
 	inventory []items.Item
-	//knownSpells []Spells
-	Stats *stats.Stats
+	Stats     *stats.Stats
 }
 
 type Coordinate struct {
@@ -54,6 +54,7 @@ type Coordinate struct {
 func (c *Character) Init() {
 	c.Stats = new(stats.Stats)
 	c.Stats.Special = make(map[int]bool)
+	c.Stats.KnownSpells = make(map[string]bool)
 	c.Stats.Level = 1
 	c.Stats.Title = titles[c.Stats.Level-1]
 	c.Stats.MaxSpells = 1
@@ -184,11 +185,21 @@ func (c *Character) Wear(e rune) error {
 	return err
 }
 
+func (c *Character) Read(e rune) ([]string, error) {
+	i, err := c.item(e, ReadAction)
+	if err != nil {
+		return nil, err
+	}
+	return i.(items.Readable).Read(c.Stats), nil
+}
+
 func (c *Character) item(e rune, a action) (items.Item, error) {
 	label := 'a'
 	for i, w := range c.weapon {
 		if label == e {
 			switch a {
+			case ReadAction:
+				return nil, fmt.Errorf("You can't read that!")
 			case DropAction:
 				c.weapon = append(c.weapon[:i], c.weapon[i+1:]...)
 				w.Disarm(c.Stats)
@@ -211,6 +222,8 @@ func (c *Character) item(e rune, a action) (items.Item, error) {
 	for i, ar := range c.armor {
 		if label == e {
 			switch a {
+			case ReadAction:
+				return nil, fmt.Errorf("You can't read that!")
 			case DropAction:
 				c.armor = append(c.armor[:i], c.armor[i+1:]...)
 				ar.TakeOff(c.Stats)
@@ -233,6 +246,12 @@ func (c *Character) item(e rune, a action) (items.Item, error) {
 	for i, t := range c.inventory {
 		if label == e {
 			switch a {
+			case ReadAction:
+				if _, ok := t.(items.Readable); ok { // Ensure item is readable
+					c.inventory = append(c.inventory[:i], c.inventory[i+1:]...) // Remove the item from inventory
+					return t, nil
+				}
+				return nil, fmt.Errorf("You can't read that!")
 			case DropAction:
 				c.inventory = append(c.inventory[:i], c.inventory[i+1:]...)
 				t.Drop(c.Stats)

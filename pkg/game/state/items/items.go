@@ -44,6 +44,11 @@ type Armor interface {
 	TakeOff(s *stats.Stats)
 }
 
+// Readable interface for any items that the user can read
+type Readable interface {
+	Read(s *stats.Stats) []string
+}
+
 // DefaultItem provide default Fg and Bg functions
 type DefaultItem struct {
 	Visibility bool

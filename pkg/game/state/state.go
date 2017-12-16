@@ -131,3 +131,19 @@ func (s *State) Inventory() []string {
 	glog.V(2).Info("Inventory request")
 	return s.C.Inventory()
 }
+
+// Read is for the player to read a scroll or book
+func (s *State) Read(e rune) error {
+	glog.V(2).Info("Read requested")
+	l, err := s.C.Read(e)
+	if err != nil {
+		return err
+	}
+
+	// Log all the information that read returned
+	for _, r := range l {
+		s.Log(r)
+	}
+
+	return nil
+}

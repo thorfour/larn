@@ -13,14 +13,13 @@ const (
 )
 
 type Trap struct {
-	TrapType   int
-	discovered bool
+	TrapType int
 	DefaultItem
 }
 
 // Rune implements the io.Runeable interface
 func (t *Trap) Rune() rune {
-	if t.discovered {
+	if !t.Visibility {
 		return invisibleRune
 	}
 

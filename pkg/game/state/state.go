@@ -19,6 +19,7 @@ const (
 var (
 	NoItemErr           = fmt.Errorf("You don't have item")
 	AlreadyDisplacedErr = fmt.Errorf("There's something here already")
+	DidntWork           = fmt.Errorf("  It didn't seem to work")
 )
 
 type logring []string
@@ -37,6 +38,7 @@ func (log logring) add(s string) logring {
 type State struct {
 	StatLog logring
 	C       *character.Character
+	Active  map[string]func()
 	maps    *maps.Maps
 	rng     *rand.Rand
 }
@@ -46,6 +48,7 @@ func New() *State {
 	s := new(State)
 	s.C = new(character.Character)
 	s.C.Init()
+	s.Active = make(map[string]func())
 	s.rng = rand.New(rand.NewSource(time.Now().UnixNano()))
 	s.maps = maps.New(s.C)
 
@@ -146,4 +149,86 @@ func (s *State) Read(e rune) error {
 	}
 
 	return nil
+}
+
+// Cast casts the requested spell
+func (s *State) Cast(spell string) error {
+	var sp *items.Spell
+	if !DEBUG {
+		var err error
+		sp, err = s.C.Cast(spell)
+		if err != nil {
+			return err
+		}
+
+		if s.Active["stp"] != nil { // can't cast spells when time is stopped
+			return DidntWork
+		}
+	}
+
+	if DEBUG { // Pass through the spell for debugging
+		sp = &items.Spell{Code: spell}
+	}
+
+	switch sp.Code {
+	case "vpr": // vaporize rock
+		s.maps.VaporizeAdjacent(s.C)
+	case "cbl": // cure blindness
+		s.Active[sp.Code] = nil
+	case "hel": // healing
+		s.C.Heal(20 + int(s.C.Stats.Level<<1))
+	case "sca": // scare monsters
+		fallthrough
+	case "hld": // hold monsters
+		s.decay(sp.Code, rand.Intn(10)+int(s.C.Stats.Level), func() {})
+	case "stp": // time stop
+		s.decay(sp.Code, rand.Intn(20)+(int(s.C.Stats.Level)<<1), func() {})
+	case "glo":
+		if s.Active[sp.Code] == nil {
+			s.C.Stats.Ac += 10
+		}
+		if s.C.Stats.Intelligence > 3 { // globe decreases intelligence to minimum of 3
+			s.C.Stats.Intelligence--
+		}
+		s.decay(sp.Code, 200, func() { s.C.Stats.Ac -= 10 })
+	case "str":
+		if s.Active[sp.Code] == nil {
+			s.C.Stats.Str += 3
+		}
+		s.decay(sp.Code, 150+rand.Intn(100), func() { s.C.Stats.Str -= 3 })
+	case "dex":
+		if s.Active[sp.Code] == nil {
+			s.C.Stats.Dex += 3
+		}
+		s.decay(sp.Code, 400, func() { s.C.Stats.Dex -= 3 })
+	case "pro":
+		if s.Active[sp.Code] == nil {
+			s.C.Stats.Ac += 2 // protection field +2
+		}
+		s.decay(sp.Code, 250, func() { s.C.Stats.Ac -= 2 })
+	case "cld":
+		fallthrough
+	case "ssp":
+		fallthrough
+	case "bal":
+		fallthrough
+	case "lit":
+		fallthrough
+	case "mle":
+		panic("TODO")
+	}
+
+	return nil
+}
+
+// decay adds a decay function to the Active functions map
+func (s *State) decay(code string, dur int, f func()) {
+	s.Active[code] = func() {
+		dur--
+		if dur == 0 {
+			f() // execute the func
+			// remove it from the list of actives
+			s.Active[code] = nil
+		}
+	}
 }

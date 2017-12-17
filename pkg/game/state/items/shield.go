@@ -21,7 +21,11 @@ type Shield struct {
 
 // Rune implements the io.Runeable interface
 func (s *Shield) Rune() rune {
-	return shieldRune
+	if s.Visibility {
+		return shieldRune
+	} else {
+		return invisibleRune
+	}
 }
 
 // Log implements the Loggable interface

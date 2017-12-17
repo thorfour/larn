@@ -55,7 +55,11 @@ type ArmorClass struct {
 
 // Rune implements the io.Runeable interface
 func (a *ArmorClass) Rune() rune {
-	return armorRune
+	if a.Visibility {
+		return armorRune
+	} else {
+		return invisibleRune
+	}
 }
 
 // Log implements the Loggable interface

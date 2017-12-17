@@ -40,7 +40,11 @@ type Ring struct {
 
 // Rune implements the io.Runeable interface
 func (r *Ring) Rune() rune {
-	return ringRune
+	if r.Visibility {
+		return ringRune
+	} else {
+		return invisibleRune
+	}
 }
 
 // Log implements the Loggable interface

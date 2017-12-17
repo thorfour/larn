@@ -184,6 +184,7 @@ func (g *Game) defaultHandler(e termbox.Event) {
 	case '.': // stay here
 	case 'Z': // teleport yourself
 	case 'c': // cast a spell
+		g.inputHandler = g.cast()
 	case 'r': // read a scroll/book
 		g.inputHandler = g.itemAction(ReadAction)
 	case 'q': // quaff a potion
@@ -348,5 +349,35 @@ func (g *Game) itemAction(a action) func(termbox.Event) {
 func (g *Game) itemActionWrapper(a action) func() func(termbox.Event) {
 	return func() func(termbox.Event) {
 		return g.itemAction(a)
+	}
+}
+
+func (g *Game) cast() func(termbox.Event) {
+	if g.currentState.C.Stats.Spells <= 0 {
+		g.currentState.Log("You don't have any spells!")
+		g.render(display(g.currentState))
+		return g.defaultHandler
+	}
+
+	g.currentState.Log("Enter your spell: ")
+	g.render(display(g.currentState))
+
+	var spell []byte
+
+	// Next 3 inputs count towards casting a spell
+	return func(e termbox.Event) {
+		switch e.Key {
+		case termbox.KeyEsc: // abort
+			g.currentState.Log("aborted")
+			g.inputHandler = g.defaultHandler
+		default:
+			spell = append(spell, byte(e.Ch))
+			if len(spell) == 3 { // Spell complete
+				glog.V(2).Infof("Spell: %s", string(spell))
+				g.currentState.Cast(string(spell))
+				g.inputHandler = g.defaultHandler
+			}
+		}
+		g.render(display(g.currentState))
 	}
 }

@@ -148,7 +148,7 @@ func adjacentWalls(c Coordinate, lvl [][]io.Runeable) []Coordinate {
 	return cords
 }
 
-// getAdjacent returns adjacent coordinates in a map, that are valid coordinates
+// getAdjacent returns orthogonally adjacent coordinates in a map, that are valid coordinates
 // mapEdge indicates to include the edge of the map as well
 func adjacent(w Coordinate, mapEdge bool) []Coordinate {
 	var adj []Coordinate
@@ -177,7 +177,7 @@ func adjacent(w Coordinate, mapEdge bool) []Coordinate {
 }
 
 // diagonal returns the diagonally adjacent coordinates in a map that are valid coordinates
-// mapEdge indicates to include the edge of the map as well
+// if mapEdge is true it wont include the map edge
 func diagonal(w Coordinate, mapEdge bool) []Coordinate {
 	var adj []Coordinate
 	min := 0
@@ -269,8 +269,6 @@ func placeMultipleObjects(n int, f func() io.Runeable, lvl [][]io.Runeable) {
 	for i := 0; i < n; i++ {
 		// generate the object
 		o := f()
-		// Set the visibility of the object
-		o.(Visible).Visible(DEBUG)
 
 		// Place the object in the map
 		placeObject(randMapCoord(), o, lvl)
@@ -283,6 +281,11 @@ func placeObject(c Coordinate, o io.Runeable, lvl [][]io.Runeable) (Coordinate, 
 	glog.V(6).Infof("Placing %s", string(o.Rune()))
 
 	c = walkToEmpty(c, lvl)
+
+	// Set the visibility of the object if possible
+	if _, ok := o.(Visible); ok {
+		o.(Visible).Visible(DEBUG)
+	}
 
 	// Add the object
 	d := lvl[c.Y][c.X]

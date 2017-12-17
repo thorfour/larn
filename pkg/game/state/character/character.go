@@ -2,11 +2,19 @@ package character
 
 import (
 	"fmt"
+	"math/rand"
 
 	"github.com/golang/glog"
 	termbox "github.com/nsf/termbox-go"
 	"github.com/thorfour/larn/pkg/game/state/items"
 	"github.com/thorfour/larn/pkg/game/state/stats"
+)
+
+var (
+	NoSpellsErr     = fmt.Errorf("You don't have any spells!")
+	NothingHappened = fmt.Errorf("  Nothing Happened")
+	Inexperienced   = fmt.Errorf("  Nothing happens. You seem Inexperienced at this")
+	DidntWork       = fmt.Errorf("  It didn't work!")
 )
 
 type Direction uint8
@@ -280,4 +288,42 @@ func (c *Character) item(e rune, a action) (items.Item, error) {
 	}
 
 	return nil, fmt.Errorf("You don't have item %s!", string(e))
+}
+
+// Cast handles the bookkeeping for a character casting a spell
+func (c *Character) Cast(s string) (*items.Spell, error) {
+	if c.Stats.Spells == 0 { // this should never happen, there's a guard before calls to this
+		glog.Error("Cast requested with no spells")
+		return nil, NoSpellsErr
+	}
+
+	// lookup spell and remove available spells from caster
+	spell := items.SpellFromCode(s)
+	c.Stats.Spells--
+
+	// check if caster knows this spell
+	if !c.Stats.KnownSpells[s] {
+		return nil, NothingHappened
+	}
+
+	// check if caster has enough intelligence also always random chance to fail
+	if rand.Intn(23) == 0 || rand.Intn(18) > int(c.Stats.Intelligence) {
+		return nil, DidntWork
+	}
+
+	// check if caster is high level enough to cast spell
+	if int(c.Stats.Level)*3+2 < spell.Level {
+		return nil, Inexperienced
+	}
+
+	// Return the spell the character cast
+	return &spell, nil
+}
+
+//Heal the character up to their max hp
+func (c *Character) Heal(hp int) {
+	c.Stats.Hp += uint(hp)
+	if c.Stats.Hp > c.Stats.MaxHP {
+		c.Stats.Hp = c.Stats.MaxHP
+	}
 }

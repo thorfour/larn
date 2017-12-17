@@ -61,7 +61,11 @@ type WeaponClass struct {
 
 // Rune implements the io.Runeable interface
 func (a *WeaponClass) Rune() rune {
-	return weaponRune
+	if a.Visibility {
+		return weaponRune
+	} else {
+		return invisibleRune
+	}
 }
 
 // Log implements the Loggable interface

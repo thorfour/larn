@@ -178,3 +178,15 @@ func (m *Maps) RemoveDisplaced() {
 func (m *Maps) AddDisplaced(i io.Runeable) {
 	m.displaced = i
 }
+
+// function to vaporize walls at adjacent locations
+func (m *Maps) VaporizeAdjacent(c *character.Character) {
+	coord := c.Location()
+	adj := append(adjacent(Coordinate{uint(coord.X), uint(coord.Y)}, true), diagonal(Coordinate{uint(coord.X), uint(coord.Y)}, true)...)
+	for _, l := range adj { // set all to empty
+		switch m.active[l.Y][l.X].(type) {
+		case *Wall: // only vaporize walls
+			m.active[l.Y][l.X] = Empty{}
+		}
+	}
+}

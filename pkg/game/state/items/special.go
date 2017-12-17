@@ -38,7 +38,11 @@ func (s *Special) Log() string {
 
 // Rune implements the io.Runeable interface
 func (s *Special) Rune() rune {
-	return specialRunes[s.Type]
+	if s.Visibility {
+		return specialRunes[s.Type]
+	} else {
+		return invisibleRune
+	}
 }
 
 // String implements the Item interface

@@ -47,9 +47,9 @@ func (b *Book) Read(s *stats.Stats) []string {
 	spell := SpellFromIndex(i)
 
 	// Mark the spell as known
-	s.KnownSpells[spell.code] = true
+	s.KnownSpells[spell.Code] = true
 
-	logs := []string{"", fmt.Sprintf("Spell %s: %s", spell.code, spell.name), spell.desc}
+	logs := []string{"", fmt.Sprintf("Spell %s: %s", spell.Code, spell.Name), spell.Desc}
 
 	// Reading can gain player knowledge
 	if rand.Intn(10) == 0 {

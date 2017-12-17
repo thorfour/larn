@@ -31,7 +31,11 @@ func (b *Belt) String() string {
 
 // Rune implements the io.Runeable interface
 func (b *Belt) Rune() rune {
-	return beltRune
+	if b.Visibility {
+		return beltRune
+	} else {
+		return invisibleRune
+	}
 }
 
 // Log implements the Loggable interface

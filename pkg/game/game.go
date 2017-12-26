@@ -254,6 +254,7 @@ func (g *Game) inventoryWrapper(callback func() func(termbox.Event)) func(termbo
 			label++
 			offset++
 		}
+		inv = append(inv, g.currentState.TimeStr())             // add the elapsed time
 		inv = append(inv, "   --- press space to continue ---") // add the help string at the bottom
 		return inv
 	}

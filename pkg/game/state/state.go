@@ -13,7 +13,8 @@ import (
 )
 
 const (
-	logLength = 5 // Ideally should be the same as the game.logLength but is useful to be definde separately for debug
+	logLength = 5     // Ideally should be the same as the game.logLength but is useful to be definde separately for debug
+	timeLimit = 30000 // max time to win a game
 )
 
 var (
@@ -36,11 +37,12 @@ func (log logring) add(s string) logring {
 
 // State holds all current game state
 type State struct {
-	StatLog logring
-	C       *character.Character
-	Active  map[string]func()
-	maps    *maps.Maps
-	rng     *rand.Rand
+	StatLog  logring
+	C        *character.Character
+	Active   map[string]func()
+	maps     *maps.Maps
+	rng      *rand.Rand
+	timeUsed uint
 }
 
 func New() *State {
@@ -62,6 +64,7 @@ func New() *State {
 
 // Drop drops an item where the player is standing, returns false if the player is already standing on an item
 func (s *State) Drop(e rune) (items.Item, error) {
+	s.timeUsed++
 	if _, ok := s.maps.Displaced().(maps.Empty); !ok { // Check if player is already displacing an object
 		return nil, AlreadyDisplacedErr
 	}
@@ -86,6 +89,7 @@ func (s *State) CurrentMap() [][]io.Runeable {
 
 // Move is for character movement
 func (s *State) Move(d character.Direction) bool {
+	s.timeUsed++
 
 	// Move the character
 	moved := s.maps.Move(d, s.C)
@@ -106,8 +110,8 @@ func (s *State) Move(d character.Direction) bool {
 
 // Enter is used for entering into a building or dungeon/volcano
 func (s *State) Enter() {
-
 	glog.V(2).Infof("Enter request")
+	s.timeUsed++
 
 	// Check if character is standing on an enterable object
 	switch t := s.maps.Displaced().(type) {
@@ -118,8 +122,8 @@ func (s *State) Enter() {
 
 // PickUp will pick up the item the player is standing on
 func (s *State) PickUp() {
-
 	glog.V(2).Info("PickUp request")
+	s.timeUsed++
 
 	i, ok := s.maps.Displaced().(items.Item)
 	if ok {
@@ -135,9 +139,16 @@ func (s *State) Inventory() []string {
 	return s.C.Inventory()
 }
 
+// TimeStr returns the current time elapsed in the game
+func (s *State) TimeStr() string {
+	return fmt.Sprintf("Elapsed time is %v. You have %v mobuls left", (s.timeUsed+99)/100+1, (timeLimit-s.timeUsed)/100)
+}
+
 // Read is for the player to read a scroll or book
 func (s *State) Read(e rune) error {
 	glog.V(2).Info("Read requested")
+	s.timeUsed++
+
 	l, err := s.C.Read(e)
 	if err != nil {
 		return err
@@ -153,6 +164,7 @@ func (s *State) Read(e rune) error {
 
 // Cast casts the requested spell
 func (s *State) Cast(spell string) error {
+	s.timeUsed++
 	var sp *items.Spell
 	if !DEBUG {
 		var err error

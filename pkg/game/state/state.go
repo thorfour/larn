@@ -64,7 +64,7 @@ func New() *State {
 
 // Drop drops an item where the player is standing, returns false if the player is already standing on an item
 func (s *State) Drop(e rune) (items.Item, error) {
-	s.timeUsed++
+	defer s.update()
 	if _, ok := s.maps.Displaced().(maps.Empty); !ok { // Check if player is already displacing an object
 		return nil, AlreadyDisplacedErr
 	}
@@ -89,7 +89,7 @@ func (s *State) CurrentMap() [][]io.Runeable {
 
 // Move is for character movement
 func (s *State) Move(d character.Direction) bool {
-	s.timeUsed++
+	defer s.update()
 
 	// Move the character
 	moved := s.maps.Move(d, s.C)
@@ -110,8 +110,8 @@ func (s *State) Move(d character.Direction) bool {
 
 // Enter is used for entering into a building or dungeon/volcano
 func (s *State) Enter() {
+	defer s.update()
 	glog.V(2).Infof("Enter request")
-	s.timeUsed++
 
 	// Check if character is standing on an enterable object
 	switch t := s.maps.Displaced().(type) {
@@ -122,8 +122,8 @@ func (s *State) Enter() {
 
 // PickUp will pick up the item the player is standing on
 func (s *State) PickUp() {
+	defer s.update()
 	glog.V(2).Info("PickUp request")
-	s.timeUsed++
 
 	i, ok := s.maps.Displaced().(items.Item)
 	if ok {
@@ -146,8 +146,8 @@ func (s *State) TimeStr() string {
 
 // Read is for the player to read a scroll or book
 func (s *State) Read(e rune) error {
+	defer s.update()
 	glog.V(2).Info("Read requested")
-	s.timeUsed++
 
 	l, err := s.C.Read(e)
 	if err != nil {
@@ -164,7 +164,7 @@ func (s *State) Read(e rune) error {
 
 // Cast casts the requested spell
 func (s *State) Cast(spell string) error {
-	s.timeUsed++
+	defer s.update()
 	var sp *items.Spell
 	if !DEBUG {
 		var err error
@@ -236,18 +236,19 @@ func (s *State) Cast(spell string) error {
 // decay adds a decay function to the Active functions map
 func (s *State) decay(code string, dur int, f func()) {
 	s.Active[code] = func() {
+		glog.V(6).Infof("Decay %s: %v", code, dur)
 		dur--
 		if dur == 0 {
 			f() // execute the func
 			// remove it from the list of actives
-			s.Active[code] = nil
+			delete(s.Active, code)
 		}
 	}
 }
 
 // IdentTrap notifies the player if there are traps adjacent
 func (s *State) IdentTrap() {
-	s.timeUsed++
+	defer s.update()
 
 	// Get adjacent spaces
 	adj := s.maps.Adjacent(s.C)
@@ -273,4 +274,17 @@ func (s *State) IdentTrap() {
 	if !found {
 		s.Log("No traps are visible")
 	}
+}
+
+// update function to handle time passage, spell decay and monster movement
+func (s *State) update() {
+	// increase the time used
+	s.timeUsed++
+
+	// Decay all active functions
+	for k := range s.Active {
+		s.Active[k]()
+	}
+
+	// TODO move monsters
 }

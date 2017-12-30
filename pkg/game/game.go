@@ -173,6 +173,8 @@ func (g *Game) defaultHandler(e termbox.Event) {
 		g.currentState.PickUp()
 		g.render(display(g.currentState))
 	case '^': // identify a trap
+		g.currentState.IdentTrap()
+		g.render(display(g.currentState))
 	case 'd': // drop an item
 		g.inputHandler = g.itemAction(DropAction)
 	case 'v': // print program version

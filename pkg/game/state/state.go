@@ -244,3 +244,32 @@ func (s *State) decay(code string, dur int, f func()) {
 		}
 	}
 }
+
+// IdentTrap notifies the player if there are traps adjacent
+func (s *State) IdentTrap() {
+
+	// Get adjacent spaces
+	adj := s.maps.Adjacent(s.C)
+
+	// Check all loc for traps
+	var found bool
+	for _, l := range adj {
+		if t, ok := l.(*items.Trap); ok {
+			switch t.TrapType {
+			case items.TeleTrap:
+				s.Log("It's a teleport trap")
+			case items.ArrowTrap:
+				s.Log("It's an arrow trap")
+			case items.DartTrap:
+				s.Log("It's an dart trap")
+			case items.DoorTrap:
+				s.Log("It's a trapdoor")
+			}
+			found = true
+		}
+	}
+
+	if !found {
+		s.Log("No traps are visible")
+	}
+}

@@ -190,3 +190,22 @@ func (m *Maps) VaporizeAdjacent(c *character.Character) {
 		}
 	}
 }
+
+// Adjacent returns all adjacent spaces to the character
+func (m *Maps) Adjacent(c *character.Character) []io.Runeable {
+
+	loc := Coordinate{uint(c.Location().X), uint(c.Location().Y)}
+
+	// get adjacent locations to the player
+	coords := append(adjacent(loc, false), diagonal(loc, false)...)
+
+	var adj []io.Runeable
+	lvl := m.CurrentMap()
+
+	// Populate the adjacent spaces
+	for _, l := range coords {
+		adj = append(adj, lvl[l.Y][l.X])
+	}
+
+	return adj
+}

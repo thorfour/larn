@@ -30,26 +30,6 @@ type Cell interface {
 	Y() int
 }
 
-// RenderWelcome renders a welcome string
-func RenderWelcome(msg string) error {
-
-	termbox.Clear(DefaultColor, DefaultColor)
-
-	x, y := 0, 0
-	for _, c := range msg {
-		termbox.SetCell(x, y, c, DefaultColor, DefaultColor)
-		switch c {
-		case '\n':
-			y++
-			x = 0
-		default:
-			x += runewidth.RuneWidth(c)
-		}
-	}
-
-	return termbox.Flush()
-}
-
 // RenderNew will clear the terminal and render a whole new string
 func RenderNew(s string) error {
 

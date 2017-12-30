@@ -90,7 +90,7 @@ func (g *Game) Start() error {
 
 	// If the game wasn't from a save file, display the welcome screen
 	if !g.settings.FromSaveFile {
-		g.renderWelcome()
+		g.renderSplash(welcome)
 
 		// Wait for first key stroke to bypass welcome
 		<-g.input
@@ -179,6 +179,7 @@ func (g *Game) defaultHandler(e termbox.Event) {
 		g.inputHandler = g.itemAction(DropAction)
 	case 'v': // print program version
 	case '?': // help screen
+		g.inputHandler = g.help()
 	case 'g': // give present pack weight
 	case 'i': // inventory your pockets
 		g.inputHandler = g.inventoryWrapper(g.defaultWrapper)
@@ -211,12 +212,12 @@ func (g *Game) defaultHandler(e termbox.Event) {
 	}
 }
 
-//  renderWelcome generates the welcome to larn message
-func (g *Game) renderWelcome() {
+//  renderSplash renders a pre-arranged splash screen
+func (g *Game) renderSplash(s string) {
 	if g.err != nil {
 		return
 	}
-	g.err = io.RenderWelcome(welcome)
+	g.err = io.RenderNew(s)
 }
 
 func (g *Game) render(display [][]io.Runeable) {
@@ -382,5 +383,31 @@ func (g *Game) cast() func(termbox.Event) {
 			}
 		}
 		g.render(display(g.currentState))
+	}
+}
+
+func (g *Game) help() func(termbox.Event) {
+
+	// Display the first help screen
+	i := 0
+	g.renderSplash(help[i])
+	i++
+
+	return func(e termbox.Event) {
+		switch e.Key {
+		case termbox.KeyEnter: // exit
+			fallthrough
+		case termbox.KeyEsc: // abort
+			g.inputHandler = g.defaultHandler
+			g.render(display(g.currentState))
+		case termbox.KeySpace:
+			if i >= len(help) { // run out of help menus
+				g.inputHandler = g.defaultHandler
+				g.render(display(g.currentState))
+				return
+			}
+			g.renderSplash(help[i])
+			i++
+		}
 	}
 }

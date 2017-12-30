@@ -247,6 +247,7 @@ func (s *State) decay(code string, dur int, f func()) {
 
 // IdentTrap notifies the player if there are traps adjacent
 func (s *State) IdentTrap() {
+	s.timeUsed++
 
 	// Get adjacent spaces
 	adj := s.maps.Adjacent(s.C)

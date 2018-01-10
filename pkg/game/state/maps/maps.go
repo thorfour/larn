@@ -3,6 +3,7 @@ package maps
 import (
 	"github.com/golang/glog"
 	"github.com/thorfour/larn/pkg/game/state/character"
+	"github.com/thorfour/larn/pkg/game/state/monster"
 	"github.com/thorfour/larn/pkg/io"
 )
 
@@ -14,11 +15,12 @@ const (
 
 // Maps is the collection of all the levels in the game
 type Maps struct {
-	mazes     [][][]io.Runeable // slice of all mazes in the game
-	entrance  []Coordinate      // list of all entrances in each maze (i.e where a ladder from the previous maze drops you)
-	active    [][]io.Runeable   // current active maze
-	displaced io.Runeable       // object the player is currently standing on TODO should be moved to the character type
-	current   int               // index of the active maze. active = mazes[current]
+	monsters  [][]monster.Monster // list of all monsters on all levels
+	mazes     [][][]io.Runeable   // slice of all mazes in the game
+	entrance  []Coordinate        // list of all entrances in each maze (i.e where a ladder from the previous maze drops you)
+	active    [][]io.Runeable     // current active maze
+	displaced io.Runeable         // object the player is currently standing on TODO should be moved to the character type
+	current   int                 // index of the active maze. active = mazes[current]
 }
 
 // EnterLevel moves a character from one level to the next by way of entrance or stairs
@@ -34,17 +36,24 @@ func New(c *character.Character) *Maps {
 	glog.V(2).Infof("Generating new maps")
 
 	m := new(Maps)
+	m.monsters = make([][]monster.Monster, maxVolcano)
 	for i := uint(0); i < maxVolcano; i++ {
 
-		m.mazes = append(m.mazes, newMap(i))
+		nm := newMap(i) // create the new map with items
 
-		if i == 1 { // dungeon 0 has an entrance
-			m.mazes[i][height-1][width/2] = (Empty{})
+		switch i {
+		case homeLevel:
+		case 1: // dungeon 0 has an entrance
+			nm[height-1][width/2] = (Empty{})
 			m.entrance = append(m.entrance, Coordinate{width / 2, height - 2})
-		} else {
+			m.monsters[i] = spawnMonsters(nm, i, true) // spawn monsters onto the map
+		default:
 			// Set the entrace for the maze to a random location
-			m.entrance = append(m.entrance, walkToEmpty(randMapCoord(), m.mazes[i]))
+			m.entrance = append(m.entrance, walkToEmpty(randMapCoord(), nm))
+			m.monsters[i] = spawnMonsters(nm, i, true) // spawn monsters onto the map
 		}
+
+		m.mazes = append(m.mazes, nm)
 	}
 	m.active = m.mazes[homeLevel]
 	m.SpawnCharacter(m.entrance[homeLevel], c)

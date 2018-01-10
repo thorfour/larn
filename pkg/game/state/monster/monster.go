@@ -1,6 +1,9 @@
 package monster
 
-import "github.com/thorfour/larn/pkg/game/state/character"
+import (
+	termbox "github.com/nsf/termbox-go"
+	"github.com/thorfour/larn/pkg/game/state/character"
+)
 
 const (
 	Bat = iota
@@ -67,27 +70,8 @@ const (
 type Monster interface {
 	MoveTowards(*character.Character) // moves a monster towards a character and attacks if able
 	Damage(*character.Character)      // character attacks the monster
-}
-
-type MonsterType struct {
-	Rune         rune   // the monsters displayable rune
-	Name         string // the monsters displayable name
-	Id           int
-	Lvl          int
-	Armor        int
-	Damage       int
-	Attack       int
-	Defense      int
-	Intelligence int
-	Gold         int
-	Hitpoints    int
-	Experience   int
-}
-
-// MoveTowards implements the Monster interface
-func (m *MonsterType) MoveTowards(c *character.Character) {
-}
-
-// Damage implements the Monster interface
-func (m *MonsterType) Damage(c *character.Character) {
+	Fg() termbox.Attribute
+	Bg() termbox.Attribute
+	Visible(v bool)
+	Displace() bool
 }

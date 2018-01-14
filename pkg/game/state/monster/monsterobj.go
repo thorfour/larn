@@ -20,9 +20,6 @@ func (m *MonsterObj) Bg() termbox.Attribute { return termbox.ColorDefault }
 // Fg implements the io.Runeable interface
 func (m *MonsterObj) Fg() termbox.Attribute { return termbox.ColorDefault }
 
-// Displace implements the Displaceable interface
-func (m *MonsterObj) Displace() bool { return false } // monsters are never displaceable
-
 // Visible implements the Visibility interface
 func (m *MonsterObj) Visible(v bool) { m.Visibility = v }
 

@@ -12,5 +12,4 @@ type Monster interface {
 	Fg() termbox.Attribute
 	Bg() termbox.Attribute
 	Visible(v bool)
-	Displace() bool
 }

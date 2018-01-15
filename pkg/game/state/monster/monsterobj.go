@@ -5,6 +5,10 @@ import (
 	"github.com/thorfour/larn/pkg/game/state/character"
 )
 
+const (
+	InvisibleRune = ' '
+)
+
 type MonsterObj struct {
 	Id         int  // the lookup id for the monster
 	Hitpoints  int  // the remaining hitpoints for the monster
@@ -12,7 +16,13 @@ type MonsterObj struct {
 }
 
 // Rune implements the io.Runeable interface
-func (m *MonsterObj) Rune() rune { return monsterData[m.Id].MonsterRune }
+func (m *MonsterObj) Rune() rune {
+	if m.Visibility {
+		return monsterData[m.Id].MonsterRune
+	} else {
+		return InvisibleRune
+	}
+}
 
 // Bg implements the io.Runeable interface
 func (m *MonsterObj) Bg() termbox.Attribute { return termbox.ColorDefault }

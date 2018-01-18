@@ -220,9 +220,7 @@ func emptyAdjacent(c Coordinate, lvl [][]io.Runeable) int {
 }
 
 func randMapCoord() Coordinate {
-	x := uint(rand.Intn(width-1) + 1)
-	y := uint(rand.Intn(height-1) + 1)
-	return Coordinate{x, y}
+	return Coordinate{rand.Intn(width-1) + 1, rand.Intn(height-1) + 1}
 }
 
 // walkToEmpty takes coordincate c and randomly walks till it finds an empty location
@@ -234,8 +232,8 @@ func walkToEmpty(c Coordinate, lvl [][]io.Runeable) Coordinate {
 		case Empty:
 			return c
 		}
-		xadj := uint(rand.Intn(3) - 2) // [-1,1]
-		yadj := uint(rand.Intn(3) - 2) // [-1,1]
+		xadj := rand.Intn(3) - 2 // [-1,1]
+		yadj := rand.Intn(3) - 2 // [-1,1]
 		if xadj > 0 {
 			c.X += xadj
 		} else {

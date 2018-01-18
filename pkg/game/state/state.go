@@ -9,6 +9,7 @@ import (
 	"github.com/thorfour/larn/pkg/game/state/character"
 	"github.com/thorfour/larn/pkg/game/state/items"
 	"github.com/thorfour/larn/pkg/game/state/maps"
+	"github.com/thorfour/larn/pkg/game/state/monster"
 	"github.com/thorfour/larn/pkg/io"
 )
 
@@ -278,6 +279,15 @@ func (s *State) IdentTrap() {
 
 // update function to handle time passage, spell decay and monster movement
 func (s *State) update() {
+	glog.V(3).Infof("Updating game state")
+	if f, ok := s.Active["stp"]; ok {
+		f()
+		return // time stop only thing to do is decay that spell
+	}
+
+	// Move monsters
+	s.moveMonsters()
+
 	// increase the time used
 	s.timeUsed++
 
@@ -285,6 +295,69 @@ func (s *State) update() {
 	for k := range s.Active {
 		s.Active[k]()
 	}
+}
 
-	// TODO move monsters
+func (s *State) moveMonsters() {
+	glog.V(4).Infof("Move monsters")
+
+	// Hold monsters, monsters don't move
+	if _, ok := s.Active["hld"]; ok {
+		return
+	}
+
+	// TODO check for aggravate monsters
+	// TODO check for stealth
+
+	// Create a window from the current players position
+	// c1 is the bottom left coordindate of a square, and c2 is the top right
+	c := s.C.Location()
+	c1 := maps.Coordinate{int(c.X) - 5, int(c.Y) - 3}
+	c2 := maps.Coordinate{int(c.X) + 6, int(c.X) + 4}
+
+	// Get a list of all monsters that appear in that window
+	monsters := s.monstersInWindow(c1, c2)
+
+	// Move all monsters in the window
+	for _, m := range monsters {
+		glog.V(5).Infof("Moving monster %s", string(m.Rune()))
+		// TODO move the monsters
+	}
+}
+
+// monstersInWindow returns the list of monsters withing a given section of the map
+/*
+	------c2
+	|      |
+	|      |
+	|      |
+	c1------
+*/
+// c1 is the lower left corner of a square and c2 is the upper right corner of a square
+func (s *State) monstersInWindow(c1, c2 maps.Coordinate) []monster.Monster {
+	glog.V(5).Infof("monster window: %v, %v", c1, c2)
+
+	level := s.maps.CurrentMap()
+	var ml []monster.Monster
+
+	// Walk through the window checking each space for a monster
+	for i := c1.Y; i < (c2.Y - c1.Y); i++ {
+		for j := c1.X; j < (c2.X - c1.X); j++ {
+
+			// Current coordinate within the window
+			c := maps.Coordinate{c1.X + j, c1.Y + i}
+			glog.V(6).Infof("checking %v", c)
+
+			// First always check if the coordinate is within the map
+			if !s.maps.ValidCoordinate(c) {
+				continue
+			}
+
+			// Check if there is a monster at the coordinate
+			if m, ok := level[c.Y][c.X].(monster.Monster); ok {
+				ml = append(ml, m) // add the monster to the list
+			}
+		}
+	}
+
+	return ml
 }

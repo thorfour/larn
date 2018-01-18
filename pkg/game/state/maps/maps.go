@@ -169,7 +169,7 @@ func (m *Maps) SetCurrent(lvl int) {
 func (m *Maps) setVisible(c *character.Character) {
 
 	coord := c.Location()
-	adj := append(adjacent(Coordinate{uint(coord.X), uint(coord.Y)}, false), diagonal(Coordinate{uint(coord.X), uint(coord.Y)}, false)...)
+	adj := append(adjacent(Coordinate{coord.X, coord.Y}, false), diagonal(Coordinate{coord.X, coord.Y}, false)...)
 	for _, l := range adj {
 		switch m.active[l.Y][l.X].(type) {
 		case Visible:
@@ -191,7 +191,7 @@ func (m *Maps) AddDisplaced(i io.Runeable) {
 // function to vaporize walls at adjacent locations
 func (m *Maps) VaporizeAdjacent(c *character.Character) {
 	coord := c.Location()
-	adj := append(adjacent(Coordinate{uint(coord.X), uint(coord.Y)}, true), diagonal(Coordinate{uint(coord.X), uint(coord.Y)}, true)...)
+	adj := append(adjacent(Coordinate{coord.X, coord.Y}, true), diagonal(Coordinate{coord.X, coord.Y}, true)...)
 	for _, l := range adj { // set all to empty
 		switch m.active[l.Y][l.X].(type) {
 		case *Wall: // only vaporize walls
@@ -203,7 +203,7 @@ func (m *Maps) VaporizeAdjacent(c *character.Character) {
 // Adjacent returns all adjacent spaces to the character
 func (m *Maps) Adjacent(c *character.Character) []io.Runeable {
 
-	loc := Coordinate{uint(c.Location().X), uint(c.Location().Y)}
+	loc := Coordinate{c.Location().X, c.Location().Y}
 
 	// get adjacent locations to the player
 	coords := append(adjacent(loc, false), diagonal(loc, false)...)
@@ -217,4 +217,12 @@ func (m *Maps) Adjacent(c *character.Character) []io.Runeable {
 	}
 
 	return adj
+}
+
+// LevelMonsters returns the list of monsters on the current level
+func (m *Maps) LevelMonsters() []monster.Monster { return m.monsters[m.current] }
+
+// ValidCoordindate returns true if the coordinate provided is within the map boundaries
+func (m *Maps) ValidCoordinate(c Coordinate) bool {
+	return c.X < width && c.X >= 0 && c.Y < height && c.Y >= 0
 }

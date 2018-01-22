@@ -340,12 +340,11 @@ func (s *State) monstersInWindow(c1, c2 maps.Coordinate) []monster.Monster {
 	var ml []monster.Monster
 
 	// Walk through the window checking each space for a monster
-	for i := c1.Y; i < (c2.Y - c1.Y); i++ {
-		for j := c1.X; j < (c2.X - c1.X); j++ {
+	for i := c1.Y; i <= c2.Y; i++ {
+		for j := c1.X; j <= c2.X; j++ {
 
 			// Current coordinate within the window
-			c := maps.Coordinate{c1.X + j, c1.Y + i}
-			glog.V(6).Infof("checking %v", c)
+			c := maps.Coordinate{j, i}
 
 			// First always check if the coordinate is within the map
 			if !s.maps.ValidCoordinate(c) {
@@ -354,6 +353,7 @@ func (s *State) monstersInWindow(c1, c2 maps.Coordinate) []monster.Monster {
 
 			// Check if there is a monster at the coordinate
 			if m, ok := level[c.Y][c.X].(monster.Monster); ok {
+				glog.V(6).Infof("monster %s found at %v", string(level[c.Y][c.X].Rune()), c)
 				ml = append(ml, m) // add the monster to the list
 			}
 		}

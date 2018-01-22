@@ -319,12 +319,11 @@ func (s *State) moveMonsters() {
 
 	// Move all monsters in the window
 	for _, m := range monsters {
-		glog.V(5).Infof("Moving monster %s", string(m.Rune()))
-		// TODO move the monsters
+		s.monsterMove(m)
 	}
 }
 
-// monstersInWindow returns the list of monsters withing a given section of the map
+// monstersInWindow returns the list of coordinates of monsters withing a given section of the map
 /*
 	------c2
 	|      |
@@ -333,11 +332,11 @@ func (s *State) moveMonsters() {
 	c1------
 */
 // c1 is the lower left corner of a square and c2 is the upper right corner of a square
-func (s *State) monstersInWindow(c1, c2 maps.Coordinate) []monster.Monster {
+func (s *State) monstersInWindow(c1, c2 maps.Coordinate) []maps.Coordinate {
 	glog.V(5).Infof("monster window: %v, %v", c1, c2)
 
 	level := s.maps.CurrentMap()
-	var ml []monster.Monster
+	var ml []maps.Coordinate
 
 	// Walk through the window checking each space for a monster
 	for i := c1.Y; i <= c2.Y; i++ {
@@ -352,12 +351,42 @@ func (s *State) monstersInWindow(c1, c2 maps.Coordinate) []monster.Monster {
 			}
 
 			// Check if there is a monster at the coordinate
-			if m, ok := level[c.Y][c.X].(monster.Monster); ok {
+			if _, ok := level[c.Y][c.X].(monster.Monster); ok {
 				glog.V(6).Infof("monster %s found at %v", string(level[c.Y][c.X].Rune()), c)
-				ml = append(ml, m) // add the monster to the list
+				ml = append(ml, c) // add the monsters coordinate to the list
 			}
 		}
 	}
-
 	return ml
+}
+
+func (s *State) monsterMove(m maps.Coordinate) {
+	level := s.maps.CurrentMap()
+	glog.V(5).Infof("moving monster %s", string(level[m.Y][m.X].Rune()))
+
+	// Cast map location to a monster (this should never fail)
+	mon := level[m.Y][m.X].(monster.Monster)
+
+	// Slow monsters only move every other tick
+	if s.timeUsed&1 == 1 {
+		switch mon.ID() {
+		case monster.Troglodyte:
+			fallthrough
+		case monster.Hobgoblin:
+			fallthrough
+		case monster.Metamorph:
+			fallthrough
+		case monster.Xvart:
+			fallthrough
+		case monster.Invisiblestalker:
+			fallthrough
+		case monster.Icelizard:
+			return
+		}
+	}
+
+	// TODO handle scared monsters (randomly select valid location to move)
+	// TODO handle intelligent monsters (they can navigate maze)
+
+	// Dumb monster movement (greedy)
 }

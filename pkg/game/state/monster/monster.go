@@ -7,6 +7,7 @@ import (
 
 // Monster interface is used to represent monsters
 type Monster interface {
+	ID() int                          // return the id number of the monster
 	MoveTowards(*character.Character) // moves a monster towards a character and attacks if able
 	Damage(*character.Character)      // character attacks the monster
 	Fg() termbox.Attribute

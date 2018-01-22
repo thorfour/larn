@@ -24,6 +24,9 @@ func (m *MonsterObj) Rune() rune {
 	}
 }
 
+// ID implements the monster interface
+func (m *MonsterObj) ID() int { return m.Id }
+
 // Bg implements the io.Runeable interface
 func (m *MonsterObj) Bg() termbox.Attribute { return termbox.ColorDefault }
 

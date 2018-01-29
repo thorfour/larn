@@ -16,6 +16,8 @@ const (
 	maxVolcano = 13 // 3 volcanos. 10 dungeons
 )
 
+// TODO maps functions should operate on a Coordinate interface
+
 // newMap is a wrapper of newLevel, it creates the level and places objects in the level.
 func newMap(lvl uint) [][]io.Runeable {
 	m := newLevel(lvl) // Create the level

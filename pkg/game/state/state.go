@@ -252,7 +252,7 @@ func (s *State) IdentTrap() {
 	defer s.update()
 
 	// Get adjacent spaces
-	adj := s.maps.Adjacent(s.C)
+	adj := s.maps.Adjacent(maps.Coordinate{s.C.Location().X, s.C.Location().Y})
 
 	// Check all loc for traps
 	var found bool
@@ -385,8 +385,31 @@ func (s *State) monsterMove(m maps.Coordinate) {
 		}
 	}
 
+	// all spaces surrounding monster
+	adj := s.maps.AdjacentCoords(m)
+
 	// TODO handle scared monsters (randomly select valid location to move)
 	// TODO handle intelligent monsters (they can navigate maze)
 
+	//
 	// Dumb monster movement (greedy)
+	//
+
+	// For each space calculate the space closest to the player
+	minD := 10000
+	var minC maps.Coordinate
+	for _, c := range adj {
+		if _, ok := level[c.Y][c.X].(maps.Displaceable); !ok { // Invalid movement location
+			continue
+		}
+
+		if d := s.maps.Distance(m, c); d < minD {
+			minD = d
+			minC = c
+		}
+	}
+
+	glog.V(6).Infof("min coordinate %v. %v away from %v", minC, minD, m)
+	// TODO actually move the monster
+	// TODO monsters are going to have to hold the displaced item
 }

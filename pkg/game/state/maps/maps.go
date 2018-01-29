@@ -200,13 +200,16 @@ func (m *Maps) VaporizeAdjacent(c *character.Character) {
 	}
 }
 
-// Adjacent returns all adjacent spaces to the character
-func (m *Maps) Adjacent(c *character.Character) []io.Runeable {
+// AdjacentCoords returns all adjacent coordinates to the location
+func (m *Maps) AdjacentCoords(c Coordinate) []Coordinate {
+	return append(adjacent(c, false), diagonal(c, false)...)
+}
 
-	loc := Coordinate{c.Location().X, c.Location().Y}
+// Adjacent returns all adjacent spaces to the location
+func (m *Maps) Adjacent(c Coordinate) []io.Runeable {
 
 	// get adjacent locations to the player
-	coords := append(adjacent(loc, false), diagonal(loc, false)...)
+	coords := m.AdjacentCoords(c)
 
 	var adj []io.Runeable
 	lvl := m.CurrentMap()
@@ -225,4 +228,9 @@ func (m *Maps) LevelMonsters() []monster.Monster { return m.monsters[m.current] 
 // ValidCoordindate returns true if the coordinate provided is within the map boundaries
 func (m *Maps) ValidCoordinate(c Coordinate) bool {
 	return c.X < width && c.X >= 0 && c.Y < height && c.Y >= 0
+}
+
+// Distance returns the distance between coordinates
+func (m *Maps) Distance(c0, c1 Coordinate) int {
+	return 0
 }

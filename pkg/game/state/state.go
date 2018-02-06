@@ -402,6 +402,7 @@ func (s *State) monsterMove(m maps.Coordinate) {
 	var minC maps.Coordinate
 	for _, c := range adj {
 		if _, ok := level[c.Y][c.X].(maps.Displaceable); !ok { // Invalid movement location
+			glog.Infof("not displaceable %v", c)
 			continue
 		}
 
@@ -410,6 +411,8 @@ func (s *State) monsterMove(m maps.Coordinate) {
 			minC = c
 		}
 	}
+
+	// TODO if the min distance == 0 attack player instead
 
 	glog.V(6).Infof("min coordinate %v. %v away from %v", minC, minD, m)
 

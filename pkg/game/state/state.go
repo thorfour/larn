@@ -323,6 +323,7 @@ func (s *State) moveMonsters() {
 	}
 }
 
+// TODO this window is still far to large
 // monstersInWindow returns the list of coordinates of monsters withing a given section of the map
 /*
 	------c2

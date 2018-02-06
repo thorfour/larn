@@ -1,6 +1,8 @@
 package maps
 
 import (
+	"math"
+
 	"github.com/golang/glog"
 	"github.com/thorfour/larn/pkg/game/state/character"
 	"github.com/thorfour/larn/pkg/game/state/monster"
@@ -232,5 +234,5 @@ func (m *Maps) ValidCoordinate(c Coordinate) bool {
 
 // Distance returns the distance between coordinates
 func (m *Maps) Distance(c0, c1 Coordinate) int {
-	return 0
+	return int(math.Abs(float64(c0.X-c1.X)) + math.Abs(float64(c0.Y-c1.Y)))
 }

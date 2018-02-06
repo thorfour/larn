@@ -411,8 +411,9 @@ func (s *State) monsterMove(m maps.Coordinate) {
 	}
 
 	glog.V(6).Infof("min coordinate %v. %v away from %v", minC, minD, m)
-	// TODO actually move the monster
 
+	// Perform the move
 	level[m.Y][m.X] = mon.Displaced
-	// TODO monsters are going to have to hold the displaced item
+	mon.Displaced = level[minC.Y][minC.X]
+	level[minC.Y][minC.X] = mon
 }

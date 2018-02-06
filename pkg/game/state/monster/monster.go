@@ -55,5 +55,31 @@ func New(monster int) *Monster {
 	return &Monster{
 		Id:        monster,
 		Hitpoints: monsterData[monster].Hitpoints,
+		Displaced: Empty{},
 	}
 }
+
+// Empty represents an empty map location
+type Empty struct {
+	visible bool
+}
+
+func (e Empty) Visible(v bool) { e.visible = v }
+
+// Displace implementes the Displaceable interface
+func (e Empty) Displace() bool { return true }
+
+// Rune implements the io.Runeable interface
+func (e Empty) Rune() rune {
+	if e.visible {
+		return '.'
+	} else {
+		return ' '
+	}
+}
+
+// Fg implements the io.Runeable interface
+func (e Empty) Fg() termbox.Attribute { return termbox.ColorDefault }
+
+// Bg implements the io.Runeable interface
+func (e Empty) Bg() termbox.Attribute { return termbox.ColorDefault }

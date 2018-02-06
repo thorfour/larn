@@ -404,7 +404,6 @@ func (s *State) monsterMove(m maps.Coordinate) {
 			continue
 		}
 
-		// TODO THOR ADJACENT SPACES that aren't in the direction of character need to be ignored..
 		if d := s.maps.Distance(maps.Coordinate(s.C.Location()), c); d < minD {
 			minD = d
 			minC = c

@@ -351,7 +351,7 @@ func (s *State) monstersInWindow(c1, c2 maps.Coordinate) []maps.Coordinate {
 			}
 
 			// Check if there is a monster at the coordinate
-			if _, ok := level[c.Y][c.X].(monster.Monster); ok {
+			if _, ok := level[c.Y][c.X].(*monster.Monster); ok {
 				glog.V(6).Infof("monster %s found at %v", string(level[c.Y][c.X].Rune()), c)
 				ml = append(ml, c) // add the monsters coordinate to the list
 			}
@@ -362,10 +362,9 @@ func (s *State) monstersInWindow(c1, c2 maps.Coordinate) []maps.Coordinate {
 
 func (s *State) monsterMove(m maps.Coordinate) {
 	level := s.maps.CurrentMap()
-	glog.V(5).Infof("moving monster %s", string(level[m.Y][m.X].Rune()))
 
 	// Cast map location to a monster (this should never fail)
-	mon := level[m.Y][m.X].(monster.Monster)
+	mon := level[m.Y][m.X].(*monster.Monster)
 
 	// Slow monsters only move every other tick
 	if s.timeUsed&1 == 1 {
@@ -384,6 +383,8 @@ func (s *State) monsterMove(m maps.Coordinate) {
 			return
 		}
 	}
+
+	glog.V(5).Infof("moving monster %s", string(level[m.Y][m.X].Rune()))
 
 	// all spaces surrounding monster
 	adj := s.maps.AdjacentCoords(m)
@@ -411,5 +412,7 @@ func (s *State) monsterMove(m maps.Coordinate) {
 
 	glog.V(6).Infof("min coordinate %v. %v away from %v", minC, minD, m)
 	// TODO actually move the monster
+
+	level[m.Y][m.X] = mon.Displaced
 	// TODO monsters are going to have to hold the displaced item
 }

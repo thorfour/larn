@@ -462,13 +462,13 @@ func makeRoom(w, h, x, y, glyph int, m [][]io.Runeable) {
 
 // spawnMonsters will add monsters to a given dungeon level. If fresh is set, it will spawn a new set instead of an additive amount
 // returns the list of monsters that were added
-func spawnMonsters(m [][]io.Runeable, lvl uint, fresh bool) []monster.Monster {
+func spawnMonsters(m [][]io.Runeable, lvl uint, fresh bool) []*monster.Monster {
 	num := (int(lvl) >> 1) + 1
 	if fresh {
 		num += rand.Intn(12) + 1
 	}
 
-	var monsterList []monster.Monster
+	var monsterList []*monster.Monster
 
 	// spawn num monsters
 	for i := 0; i < num; i++ {

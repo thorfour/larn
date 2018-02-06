@@ -15,12 +15,12 @@ const (
 
 // Maps is the collection of all the levels in the game
 type Maps struct {
-	monsters  [][]monster.Monster // list of all monsters on all levels
-	mazes     [][][]io.Runeable   // slice of all mazes in the game
-	entrance  []Coordinate        // list of all entrances in each maze (i.e where a ladder from the previous maze drops you)
-	active    [][]io.Runeable     // current active maze
-	displaced io.Runeable         // object the player is currently standing on TODO should be moved to the character type
-	current   int                 // index of the active maze. active = mazes[current]
+	monsters  [][]*monster.Monster // list of all monsters on all levels
+	mazes     [][][]io.Runeable    // slice of all mazes in the game
+	entrance  []Coordinate         // list of all entrances in each maze (i.e where a ladder from the previous maze drops you)
+	active    [][]io.Runeable      // current active maze
+	displaced io.Runeable          // object the player is currently standing on TODO should be moved to the character type
+	current   int                  // index of the active maze. active = mazes[current]
 }
 
 // EnterLevel moves a character from one level to the next by way of entrance or stairs
@@ -36,7 +36,7 @@ func New(c *character.Character) *Maps {
 	glog.V(2).Infof("Generating new maps")
 
 	m := new(Maps)
-	m.monsters = make([][]monster.Monster, maxVolcano)
+	m.monsters = make([][]*monster.Monster, maxVolcano)
 	for i := uint(0); i < maxVolcano; i++ {
 
 		nm := newMap(i) // create the new map with items
@@ -223,7 +223,7 @@ func (m *Maps) Adjacent(c Coordinate) []io.Runeable {
 }
 
 // LevelMonsters returns the list of monsters on the current level
-func (m *Maps) LevelMonsters() []monster.Monster { return m.monsters[m.current] }
+func (m *Maps) LevelMonsters() []*monster.Monster { return m.monsters[m.current] }
 
 // ValidCoordindate returns true if the coordinate provided is within the map boundaries
 func (m *Maps) ValidCoordinate(c Coordinate) bool {

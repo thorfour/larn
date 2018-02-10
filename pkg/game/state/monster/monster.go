@@ -38,13 +38,6 @@ func (m *Monster) Fg() termbox.Attribute { return termbox.ColorDefault }
 // Visible implements the Visibility interface
 func (m *Monster) Visible(v bool) { m.Visibility = v }
 
-// MoveTowards implements the Monster interface
-// makes no decisions about whether the monster should move, it only contains the logic
-// of how to move it only performs the move
-func (m *Monster) MoveTowards(c *character.Character) {
-	// TODO
-}
-
 // Damage implements the Monster interface
 func (m *Monster) Damage(c *character.Character) {
 	// TODO

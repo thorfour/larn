@@ -188,3 +188,6 @@ var monsterData = map[int]MonsterType{
 	DemonlordVII:     {' ', "type VII demon lord", 18, -70, 27, 6, 0, 0, 26, 0, 260, 200000},
 	Demonprince:      {' ', "demon prince", 25, -127, 30, 6, 0, 0, 28, 0, 345, 300000},
 }
+
+// NameFromID returns the monsters name from a monster ID
+func NameFromID(id int) string { return monsterData[id].Name }

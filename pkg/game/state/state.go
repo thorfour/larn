@@ -397,6 +397,12 @@ func (s *State) monsterMove(m maps.Coordinate) {
 	// Dumb monster movement (greedy)
 	//
 
+	// If the monster is already adjacent to the player attack player instead
+	if s.maps.Distance(maps.Coordinate(s.C.Location()), m) == 1 {
+		s.Log(fmt.Sprintf("The %v hit you", mon.Name())) // TODO this needs to be calculated
+		return
+	}
+
 	// For each space calculate the space closest to the player
 	minD := 10000
 	var minC maps.Coordinate
@@ -411,8 +417,6 @@ func (s *State) monsterMove(m maps.Coordinate) {
 			minC = c
 		}
 	}
-
-	// TODO if the min distance == 0 attack player instead
 
 	glog.V(6).Infof("min coordinate %v. %v away from %v", minC, minD, m)
 

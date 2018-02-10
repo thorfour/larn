@@ -43,6 +43,9 @@ func (m *Monster) Damage(c *character.Character) {
 	// TODO
 }
 
+// Name returns the name of the monster
+func (m *Monster) Name() string { return NameFromID(m.Id) }
+
 // New returns a new Monster from a monster id
 func New(monster int) *Monster {
 	return &Monster{

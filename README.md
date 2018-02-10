@@ -4,6 +4,8 @@
 
 [About](https://en.wikipedia.org/wiki/Larn_(video_game))
 
+![alt text](etc/larn.png)
+
 ## Installing
 
 ### Using go

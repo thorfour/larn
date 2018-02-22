@@ -399,7 +399,7 @@ func (s *State) monsterMove(m maps.Coordinate) {
 
 	// If the monster is already adjacent to the player attack player instead
 	if s.maps.Distance(maps.Coordinate(s.C.Location()), m) == 1 {
-		s.Log(fmt.Sprintf("The %v hit you", mon.Name())) // TODO this needs to be calculated
+		s.attackPlayer(mon)
 		return
 	}
 
@@ -424,4 +424,36 @@ func (s *State) monsterMove(m maps.Coordinate) {
 	level[m.Y][m.X] = mon.Displaced
 	mon.Displaced = level[minC.Y][minC.X]
 	level[minC.Y][minC.X] = mon
+}
+
+// attackPlayer attempts an attack on the player from the monster
+func (s *State) attackPlayer(mon monster.Monster) {
+	// TODO check for negatespirit or spirit pro against poltergeis and naga
+	// TODO cubeundead or undeadpro against vampire, wraith, zombie
+
+	// if blind don't print monster name
+	mName := mon.Name()
+	if s.Active["blind"] {
+		mName = "monster"
+	}
+
+	// If character is invisble chance to miss
+	if s.Active["invsibility"] {
+		if rand.Intn(33) < 20 {
+			s.Log(fmt.Sprintf("The %s misses wildly", mName))
+			return
+		}
+	}
+
+	if s.Active["charm"] {
+		if rand.Intn(30)+5*mon.Level()-s.C.Stats.Cha < 30 {
+			s.Log(fmt.Sprintf("The %s is awestruct at your magnificence!", mName))
+			return
+		}
+	}
+
+	// TODO bias the damage based on game difficulty
+	bias := 0
+
+	s.Log(fmt.Sprintf("The %v hit you", mon.Name())) // TODO this needs to be calculated
 }

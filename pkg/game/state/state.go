@@ -446,14 +446,41 @@ func (s *State) attackPlayer(mon *monster.Monster) {
 	}
 
 	if _, ok := s.Active["charm"]; ok {
-		if rand.Intn(30)+5*mon.Level()-int(s.C.Stats.Cha) < 30 {
+		if rand.Intn(30)+5*mon.Info.Lvl-int(s.C.Stats.Cha) < 30 {
 			s.Log(fmt.Sprintf("The %s is awestruct at your magnificence!", mName))
 			return
 		}
 	}
 
-	// TODO bias the damage based on game difficulty
-	//bias := 0
+	s.hitPlayer(mon)
+}
 
-	s.Log(fmt.Sprintf("The %v hit you", mon.Name())) // TODO this needs to be calculated
+// hitPlayer deals the damage from a monster to a player
+func (s *State) hitPlayer(mon *monster.Monster) {
+	// TODO bias the damage based on game difficulty
+	bias := 0
+	dmg := mon.BaseDamage()
+
+	if mon.Info.Attack > 0 {
+		if dmg+bias+8 > s.C.Stats.Ac || s.C.Stats.Ac <= 0 || rand.Intn(s.C.Stats.Ac) == 0 { // Check for special attack success
+			// TODO check for special attack
+			/*
+				if special() {
+					return
+				}
+			*/
+
+			bias -= 2
+		}
+	}
+
+	// No special attack, deal normal damage
+	if (dmg+bias) > s.C.Stats.Ac || s.C.Stats.Ac <= 0 || rand.Intn(s.C.Stats.Ac) == 0 {
+		s.Log(fmt.Sprintf("The %v hit you", mon.Name()))
+		if s.C.Stats.Ac < dmg {
+			s.C.LoseHP(dmg - s.C.Stats.Ac)
+		}
+	}
+
+	s.Log(fmt.Sprintf("The %s missed", mon.Name()))
 }

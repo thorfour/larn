@@ -327,3 +327,15 @@ func (c *Character) Heal(hp int) {
 		c.Stats.Hp = c.Stats.MaxHP
 	}
 }
+
+// LoseHP decreases the HP of character
+func (c *Character) LoseHP(dmg int) {
+	if dmg <= 0 {
+		return
+	}
+	if uint(dmg) > c.Stats.Hp {
+		c.Stats.Hp = 0
+		return
+	}
+	c.Stats.Hp -= uint(dmg)
+}

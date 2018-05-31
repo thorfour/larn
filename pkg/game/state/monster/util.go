@@ -191,3 +191,6 @@ var monsterData = map[int]MonsterType{
 
 // NameFromID returns the monsters name from a monster ID
 func NameFromID(id int) string { return monsterData[id].Name }
+
+// Genocided returns true if the monster has been genocided
+func Genocided(id int) bool { return monsterData[id].Genocided == 1 }

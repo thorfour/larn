@@ -19,9 +19,10 @@ const (
 )
 
 var (
-	NoItemErr           = fmt.Errorf("You don't have item")
-	AlreadyDisplacedErr = fmt.Errorf("There's something here already")
-	DidntWork           = fmt.Errorf("  It didn't seem to work")
+	// ErrAlreadyDisplacedErr indicates player can't move to location
+	ErrAlreadyDisplacedErr = fmt.Errorf("There's something here already")
+	// ErrDidntWork player failed to cast a spell
+	ErrDidntWork = fmt.Errorf("  It didn't seem to work")
 )
 
 type logring []string
@@ -46,6 +47,7 @@ type State struct {
 	timeUsed uint
 }
 
+// New returns a new state and prints the welcome screen
 func New() *State {
 	glog.V(1).Info("Creating new state")
 	s := new(State)
@@ -67,7 +69,7 @@ func New() *State {
 func (s *State) Drop(e rune) (items.Item, error) {
 	defer s.update()
 	if _, ok := s.maps.Displaced().(maps.Empty); !ok { // Check if player is already displacing an object
-		return nil, AlreadyDisplacedErr
+		return nil, ErrAlreadyDisplacedErr
 	}
 
 	item, err := s.C.DropItem(e)
@@ -93,10 +95,16 @@ func (s *State) Move(d character.Direction) bool {
 	defer s.update()
 
 	// Move the character
-	moved := s.maps.Move(d, s.C)
+	moved, attacked := s.maps.Move(d, s.C)
 
+	// The move results in an attack
+	if attacked {
+		s.playerAttack(d)
+		return false
+	}
+
+	// If the character is displacing something add it to the status log
 	if moved {
-		// If the character is displacing something add it to the status log
 		switch t := s.maps.Displaced().(type) {
 		case *items.GoldPile:
 			t.PickUp(s.C.Stats) // auto-pick up gold
@@ -175,7 +183,7 @@ func (s *State) Cast(spell string) error {
 		}
 
 		if s.Active["stp"] != nil { // can't cast spells when time is stopped
-			return DidntWork
+			return ErrDidntWork
 		}
 	}
 
@@ -478,9 +486,18 @@ func (s *State) hitPlayer(mon *monster.Monster) {
 	if (dmg+bias) > s.C.Stats.Ac || s.C.Stats.Ac <= 0 || rand.Intn(s.C.Stats.Ac) == 0 {
 		s.Log(fmt.Sprintf("The %v hit you", mon.Name()))
 		if s.C.Stats.Ac < dmg {
-			s.C.LoseHP(dmg - s.C.Stats.Ac)
+			s.C.Damage(dmg - s.C.Stats.Ac)
 		}
 	}
 
 	s.Log(fmt.Sprintf("The %s missed", mon.Name()))
+}
+
+// playerAttack deals damage to a monster
+func (s *State) playerAttack(d character.Direction) {
+	// Get the monster at the attempted location
+	// Deal damage to the monster
+	// remove monster if it died
+	// increase/decrease stats for character
+	// drop loot
 }

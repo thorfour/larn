@@ -328,14 +328,15 @@ func (c *Character) Heal(hp int) {
 	}
 }
 
-// LoseHP decreases the HP of character
-func (c *Character) LoseHP(dmg int) {
+// Damage decreases the HP of character
+func (c *Character) Damage(dmg int) bool {
 	if dmg <= 0 {
-		return
+		return false
 	}
 	if uint(dmg) > c.Stats.Hp {
 		c.Stats.Hp = 0
-		return
+		return true
 	}
 	c.Stats.Hp -= uint(dmg)
+	return false
 }

@@ -6,6 +6,7 @@ import (
 
 	"github.com/golang/glog"
 	"github.com/thorfour/larn/pkg/game/state/items"
+	"github.com/thorfour/larn/pkg/game/state/monster"
 	"github.com/thorfour/larn/pkg/io"
 )
 
@@ -15,10 +16,12 @@ const (
 	maxVolcano = 13 // 3 volcanos. 10 dungeons
 )
 
+// TODO maps functions should operate on a Coordinate interface
+
 // newMap is a wrapper of newLevel, it creates the level and places objects in the level.
 func newMap(lvl uint) [][]io.Runeable {
 	m := newLevel(lvl) // Create the level
-	treasureRoom(m)
+	treasureRoom(m)    // TODO need to fill treasure rooms
 
 	seed := time.Now().UnixNano()
 	glog.V(1).Infof("Map Seed: %v", seed)
@@ -219,9 +222,7 @@ func emptyAdjacent(c Coordinate, lvl [][]io.Runeable) int {
 }
 
 func randMapCoord() Coordinate {
-	x := uint(rand.Intn(width-1) + 1)
-	y := uint(rand.Intn(height-1) + 1)
-	return Coordinate{x, y}
+	return Coordinate{rand.Intn(width-1) + 1, rand.Intn(height-1) + 1}
 }
 
 // walkToEmpty takes coordincate c and randomly walks till it finds an empty location
@@ -233,8 +234,8 @@ func walkToEmpty(c Coordinate, lvl [][]io.Runeable) Coordinate {
 		case Empty:
 			return c
 		}
-		xadj := uint(rand.Intn(3) - 2) // [-1,1]
-		yadj := uint(rand.Intn(3) - 2) // [-1,1]
+		xadj := rand.Intn(3) - 2 // [-1,1]
+		yadj := rand.Intn(3) - 2 // [-1,1]
 		if xadj > 0 {
 			c.X += xadj
 		} else {
@@ -457,4 +458,24 @@ func makeRoom(w, h, x, y, glyph int, m [][]io.Runeable) {
 			}
 		}
 	}
+}
+
+// spawnMonsters will add monsters to a given dungeon level. If fresh is set, it will spawn a new set instead of an additive amount
+// returns the list of monsters that were added
+func spawnMonsters(m [][]io.Runeable, lvl uint, fresh bool) []*monster.Monster {
+	num := (int(lvl) >> 1) + 1
+	if fresh {
+		num += rand.Intn(12) + 1
+	}
+
+	var monsterList []*monster.Monster
+
+	// spawn num monsters
+	for i := 0; i < num; i++ {
+		mon := monster.New(monster.MonsterFromLevel(int(lvl)))
+		monsterList = append(monsterList, mon)
+		placeObject(randMapCoord(), mon, m)
+	}
+
+	return monsterList
 }

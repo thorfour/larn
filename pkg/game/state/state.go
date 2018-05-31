@@ -9,6 +9,7 @@ import (
 	"github.com/thorfour/larn/pkg/game/state/character"
 	"github.com/thorfour/larn/pkg/game/state/items"
 	"github.com/thorfour/larn/pkg/game/state/maps"
+	"github.com/thorfour/larn/pkg/game/state/monster"
 	"github.com/thorfour/larn/pkg/io"
 )
 
@@ -251,7 +252,7 @@ func (s *State) IdentTrap() {
 	defer s.update()
 
 	// Get adjacent spaces
-	adj := s.maps.Adjacent(s.C)
+	adj := s.maps.Adjacent(maps.Coordinate{s.C.Location().X, s.C.Location().Y})
 
 	// Check all loc for traps
 	var found bool
@@ -278,6 +279,15 @@ func (s *State) IdentTrap() {
 
 // update function to handle time passage, spell decay and monster movement
 func (s *State) update() {
+	glog.V(3).Infof("Updating game state")
+	if f, ok := s.Active["stp"]; ok {
+		f()
+		return // time stop only thing to do is decay that spell
+	}
+
+	// Move monsters
+	s.moveMonsters()
+
 	// increase the time used
 	s.timeUsed++
 
@@ -285,6 +295,192 @@ func (s *State) update() {
 	for k := range s.Active {
 		s.Active[k]()
 	}
+}
 
-	// TODO move monsters
+func (s *State) moveMonsters() {
+	glog.V(4).Infof("Move monsters")
+
+	// Hold monsters, monsters don't move
+	if _, ok := s.Active["hld"]; ok {
+		return
+	}
+
+	// TODO check for aggravate monsters
+	// TODO check for stealth
+
+	// Create a window from the current players position
+	// c1 is the bottom left coordindate of a square, and c2 is the top right
+	c := s.C.Location()
+	c1 := maps.Coordinate{int(c.X) - 5, int(c.Y) - 3}
+	c2 := maps.Coordinate{int(c.X) + 6, int(c.X) + 4}
+
+	// Get a list of all monsters that appear in that window
+	monsters := s.monstersInWindow(c1, c2)
+
+	// Move all monsters in the window
+	for _, m := range monsters {
+		s.monsterMove(m)
+	}
+}
+
+// TODO this window is still far to large
+// monstersInWindow returns the list of coordinates of monsters withing a given section of the map
+/*
+	------c2
+	|      |
+	|      |
+	|      |
+	c1------
+*/
+// c1 is the lower left corner of a square and c2 is the upper right corner of a square
+func (s *State) monstersInWindow(c1, c2 maps.Coordinate) []maps.Coordinate {
+	glog.V(5).Infof("monster window: %v, %v", c1, c2)
+
+	level := s.maps.CurrentMap()
+	var ml []maps.Coordinate
+
+	// Walk through the window checking each space for a monster
+	for i := c1.Y; i <= c2.Y; i++ {
+		for j := c1.X; j <= c2.X; j++ {
+
+			// Current coordinate within the window
+			c := maps.Coordinate{j, i}
+
+			// First always check if the coordinate is within the map
+			if !s.maps.ValidCoordinate(c) {
+				continue
+			}
+
+			// Check if there is a monster at the coordinate
+			if _, ok := level[c.Y][c.X].(*monster.Monster); ok {
+				glog.V(6).Infof("monster %s found at %v", string(level[c.Y][c.X].Rune()), c)
+				ml = append(ml, c) // add the monsters coordinate to the list
+			}
+		}
+	}
+	return ml
+}
+
+func (s *State) monsterMove(m maps.Coordinate) {
+	level := s.maps.CurrentMap()
+
+	// Cast map location to a monster (this should never fail)
+	mon := level[m.Y][m.X].(*monster.Monster)
+
+	// Slow monsters only move every other tick
+	if s.timeUsed&1 == 1 {
+		switch mon.ID() {
+		case monster.Troglodyte:
+			fallthrough
+		case monster.Hobgoblin:
+			fallthrough
+		case monster.Metamorph:
+			fallthrough
+		case monster.Xvart:
+			fallthrough
+		case monster.Invisiblestalker:
+			fallthrough
+		case monster.Icelizard:
+			return
+		}
+	}
+
+	glog.V(5).Infof("moving monster %s", string(level[m.Y][m.X].Rune()))
+
+	// all spaces surrounding monster
+	adj := s.maps.AdjacentCoords(m)
+
+	// TODO handle scared monsters (randomly select valid location to move)
+	// TODO handle intelligent monsters (they can navigate maze)
+
+	//
+	// Dumb monster movement (greedy)
+	//
+
+	// If the monster is already adjacent to the player attack player instead
+	if s.maps.Distance(maps.Coordinate(s.C.Location()), m) == 1 {
+		s.attackPlayer(mon)
+		return
+	}
+
+	// For each space calculate the space closest to the player
+	minD := 10000
+	var minC maps.Coordinate
+	for _, c := range adj {
+		if _, ok := level[c.Y][c.X].(maps.Displaceable); !ok { // Invalid movement location
+			glog.Infof("not displaceable %v", c)
+			continue
+		}
+
+		if d := s.maps.Distance(maps.Coordinate(s.C.Location()), c); d < minD {
+			minD = d
+			minC = c
+		}
+	}
+
+	glog.V(6).Infof("min coordinate %v. %v away from %v", minC, minD, m)
+
+	// Perform the move
+	level[m.Y][m.X] = mon.Displaced
+	mon.Displaced = level[minC.Y][minC.X]
+	level[minC.Y][minC.X] = mon
+}
+
+// attackPlayer attempts an attack on the player from the monster
+func (s *State) attackPlayer(mon *monster.Monster) {
+	// TODO check for negatespirit or spirit pro against poltergeis and naga
+	// TODO cubeundead or undeadpro against vampire, wraith, zombie
+
+	// if blind don't print monster name
+	mName := mon.Name()
+	if _, ok := s.Active["blind"]; ok {
+		mName = "monster"
+	}
+
+	// If character is invisble chance to miss
+	if _, ok := s.Active["invsibility"]; ok {
+		if rand.Intn(33) < 20 {
+			s.Log(fmt.Sprintf("The %s misses wildly", mName))
+			return
+		}
+	}
+
+	if _, ok := s.Active["charm"]; ok {
+		if rand.Intn(30)+5*mon.Info.Lvl-int(s.C.Stats.Cha) < 30 {
+			s.Log(fmt.Sprintf("The %s is awestruct at your magnificence!", mName))
+			return
+		}
+	}
+
+	s.hitPlayer(mon)
+}
+
+// hitPlayer deals the damage from a monster to a player
+func (s *State) hitPlayer(mon *monster.Monster) {
+	// TODO bias the damage based on game difficulty
+	bias := 0
+	dmg := mon.BaseDamage()
+
+	if mon.Info.Attack > 0 {
+		if dmg+bias+8 > s.C.Stats.Ac || s.C.Stats.Ac <= 0 || rand.Intn(s.C.Stats.Ac) == 0 { // Check for special attack success
+			// TODO check for special attack
+			/*
+				if special() {
+					return
+				}
+			*/
+
+			bias -= 2
+		}
+	}
+
+	// No special attack, deal normal damage
+	if (dmg+bias) > s.C.Stats.Ac || s.C.Stats.Ac <= 0 || rand.Intn(s.C.Stats.Ac) == 0 {
+		s.Log(fmt.Sprintf("The %v hit you", mon.Name()))
+		if s.C.Stats.Ac < dmg {
+			s.C.LoseHP(dmg - s.C.Stats.Ac)
+		}
+	}
+
+	s.Log(fmt.Sprintf("The %s missed", mon.Name()))
 }

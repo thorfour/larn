@@ -68,8 +68,8 @@ type Displaceable interface {
 
 // Coordinate is a map coordinate. (0,0) is the top left corner
 type Coordinate struct {
-	X uint
-	Y uint
+	X int
+	Y int
 }
 
 // Empty represents an empty map location

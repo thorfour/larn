@@ -1,8 +1,11 @@
 package maps
 
 import (
+	"math"
+
 	"github.com/golang/glog"
 	"github.com/thorfour/larn/pkg/game/state/character"
+	"github.com/thorfour/larn/pkg/game/state/monster"
 	"github.com/thorfour/larn/pkg/io"
 )
 
@@ -14,11 +17,12 @@ const (
 
 // Maps is the collection of all the levels in the game
 type Maps struct {
-	mazes     [][][]io.Runeable // slice of all mazes in the game
-	entrance  []Coordinate      // list of all entrances in each maze (i.e where a ladder from the previous maze drops you)
-	active    [][]io.Runeable   // current active maze
-	displaced io.Runeable       // object the player is currently standing on TODO should be moved to the character type
-	current   int               // index of the active maze. active = mazes[current]
+	monsters  [][]*monster.Monster // list of all monsters on all levels
+	mazes     [][][]io.Runeable    // slice of all mazes in the game
+	entrance  []Coordinate         // list of all entrances in each maze (i.e where a ladder from the previous maze drops you)
+	active    [][]io.Runeable      // current active maze
+	displaced io.Runeable          // object the player is currently standing on TODO should be moved to the character type
+	current   int                  // index of the active maze. active = mazes[current]
 }
 
 // EnterLevel moves a character from one level to the next by way of entrance or stairs
@@ -34,17 +38,24 @@ func New(c *character.Character) *Maps {
 	glog.V(2).Infof("Generating new maps")
 
 	m := new(Maps)
+	m.monsters = make([][]*monster.Monster, maxVolcano)
 	for i := uint(0); i < maxVolcano; i++ {
 
-		m.mazes = append(m.mazes, newMap(i))
+		nm := newMap(i) // create the new map with items
 
-		if i == 1 { // dungeon 0 has an entrance
-			m.mazes[i][height-1][width/2] = (Empty{})
+		switch i {
+		case homeLevel:
+		case 1: // dungeon 0 has an entrance
+			nm[height-1][width/2] = (Empty{})
 			m.entrance = append(m.entrance, Coordinate{width / 2, height - 2})
-		} else {
+			m.monsters[i] = spawnMonsters(nm, i, true) // spawn monsters onto the map
+		default:
 			// Set the entrace for the maze to a random location
-			m.entrance = append(m.entrance, walkToEmpty(randMapCoord(), m.mazes[i]))
+			m.entrance = append(m.entrance, walkToEmpty(randMapCoord(), nm))
+			m.monsters[i] = spawnMonsters(nm, i, true) // spawn monsters onto the map
 		}
+
+		m.mazes = append(m.mazes, nm)
 	}
 	m.active = m.mazes[homeLevel]
 	m.SpawnCharacter(m.entrance[homeLevel], c)
@@ -160,7 +171,7 @@ func (m *Maps) SetCurrent(lvl int) {
 func (m *Maps) setVisible(c *character.Character) {
 
 	coord := c.Location()
-	adj := append(adjacent(Coordinate{uint(coord.X), uint(coord.Y)}, false), diagonal(Coordinate{uint(coord.X), uint(coord.Y)}, false)...)
+	adj := append(adjacent(Coordinate{coord.X, coord.Y}, false), diagonal(Coordinate{coord.X, coord.Y}, false)...)
 	for _, l := range adj {
 		switch m.active[l.Y][l.X].(type) {
 		case Visible:
@@ -182,7 +193,7 @@ func (m *Maps) AddDisplaced(i io.Runeable) {
 // function to vaporize walls at adjacent locations
 func (m *Maps) VaporizeAdjacent(c *character.Character) {
 	coord := c.Location()
-	adj := append(adjacent(Coordinate{uint(coord.X), uint(coord.Y)}, true), diagonal(Coordinate{uint(coord.X), uint(coord.Y)}, true)...)
+	adj := append(adjacent(Coordinate{coord.X, coord.Y}, true), diagonal(Coordinate{coord.X, coord.Y}, true)...)
 	for _, l := range adj { // set all to empty
 		switch m.active[l.Y][l.X].(type) {
 		case *Wall: // only vaporize walls
@@ -191,13 +202,16 @@ func (m *Maps) VaporizeAdjacent(c *character.Character) {
 	}
 }
 
-// Adjacent returns all adjacent spaces to the character
-func (m *Maps) Adjacent(c *character.Character) []io.Runeable {
+// AdjacentCoords returns all adjacent coordinates to the location
+func (m *Maps) AdjacentCoords(c Coordinate) []Coordinate {
+	return append(adjacent(c, false), diagonal(c, false)...)
+}
 
-	loc := Coordinate{uint(c.Location().X), uint(c.Location().Y)}
+// Adjacent returns all adjacent spaces to the location
+func (m *Maps) Adjacent(c Coordinate) []io.Runeable {
 
 	// get adjacent locations to the player
-	coords := append(adjacent(loc, false), diagonal(loc, false)...)
+	coords := m.AdjacentCoords(c)
 
 	var adj []io.Runeable
 	lvl := m.CurrentMap()
@@ -208,4 +222,17 @@ func (m *Maps) Adjacent(c *character.Character) []io.Runeable {
 	}
 
 	return adj
+}
+
+// LevelMonsters returns the list of monsters on the current level
+func (m *Maps) LevelMonsters() []*monster.Monster { return m.monsters[m.current] }
+
+// ValidCoordindate returns true if the coordinate provided is within the map boundaries
+func (m *Maps) ValidCoordinate(c Coordinate) bool {
+	return c.X < width && c.X >= 0 && c.Y < height && c.Y >= 0
+}
+
+// Distance returns the distance between coordinates
+func (m *Maps) Distance(c0, c1 Coordinate) int {
+	return int(math.Abs(float64(c0.X-c1.X)) + math.Abs(float64(c0.Y-c1.Y)))
 }

@@ -114,6 +114,11 @@ func (g *Game) run() error {
 			return g.err
 		}
 
+		// Check for player death
+		if g.GameOver() {
+			return nil // TODO show scores
+		}
+
 		// Get next input
 		e := <-g.input
 
@@ -410,4 +415,12 @@ func (g *Game) help() func(termbox.Event) {
 			i++
 		}
 	}
+}
+
+// GameOver returns true if the game has ended
+func (g *Game) GameOver() bool {
+	if DEBUG {
+		return false
+	}
+	return g.currentState.C.Stats.Hp == 0
 }

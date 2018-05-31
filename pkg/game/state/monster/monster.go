@@ -17,6 +17,11 @@ type Monster struct {
 	Displaced  io.Runeable // the object currently displaced by this monster
 }
 
+// Level returns the monsters level
+func (m *Monster) Level() int {
+	return 1 // TODO keep an actual level for the monster
+}
+
 // Rune implements the io.Runeable interface
 func (m *Monster) Rune() rune {
 	if m.Visibility {

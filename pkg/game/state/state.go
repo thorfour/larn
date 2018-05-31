@@ -427,33 +427,33 @@ func (s *State) monsterMove(m maps.Coordinate) {
 }
 
 // attackPlayer attempts an attack on the player from the monster
-func (s *State) attackPlayer(mon monster.Monster) {
+func (s *State) attackPlayer(mon *monster.Monster) {
 	// TODO check for negatespirit or spirit pro against poltergeis and naga
 	// TODO cubeundead or undeadpro against vampire, wraith, zombie
 
 	// if blind don't print monster name
 	mName := mon.Name()
-	if s.Active["blind"] {
+	if _, ok := s.Active["blind"]; ok {
 		mName = "monster"
 	}
 
 	// If character is invisble chance to miss
-	if s.Active["invsibility"] {
+	if _, ok := s.Active["invsibility"]; ok {
 		if rand.Intn(33) < 20 {
 			s.Log(fmt.Sprintf("The %s misses wildly", mName))
 			return
 		}
 	}
 
-	if s.Active["charm"] {
-		if rand.Intn(30)+5*mon.Level()-s.C.Stats.Cha < 30 {
+	if _, ok := s.Active["charm"]; ok {
+		if rand.Intn(30)+5*mon.Level()-int(s.C.Stats.Cha) < 30 {
 			s.Log(fmt.Sprintf("The %s is awestruct at your magnificence!", mName))
 			return
 		}
 	}
 
 	// TODO bias the damage based on game difficulty
-	bias := 0
+	//bias := 0
 
 	s.Log(fmt.Sprintf("The %v hit you", mon.Name())) // TODO this needs to be calculated
 }

@@ -507,6 +507,7 @@ func (s *State) playerAttack(d character.Direction) {
 	case *monster.Monster: // nominal case
 		// Deal damage to the monster
 		dead = s.hitMonster(mon)
+		s.Log(fmt.Sprintf("The %s died", mon.Name()))
 	default:
 		glog.Errorf("Attacked non attackable object %v", m)
 		return
@@ -514,7 +515,6 @@ func (s *State) playerAttack(d character.Direction) {
 
 	// remove monster if it died
 	if dead {
-		glog.V(3).Info(fmt.Sprintf("Monster %v died", m.Rune()))
 		s.maps.RemoveAt(maps.Coordinate{X: mLoc.X, Y: mLoc.Y})
 		// TODO handle replacing whatever the monster had displaced
 		// TODO handle any monster drops

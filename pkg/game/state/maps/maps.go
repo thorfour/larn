@@ -215,7 +215,7 @@ func (m *Maps) AddDisplaced(i io.Runeable) {
 	m.displaced = i
 }
 
-// function to vaporize walls at adjacent locations
+// VaporizeAdjacent to vaporize walls at adjacent locations
 func (m *Maps) VaporizeAdjacent(c *character.Character) {
 	coord := c.Location()
 	adj := append(adjacent(Coordinate{coord.X, coord.Y}, true), diagonal(Coordinate{coord.X, coord.Y}, true)...)

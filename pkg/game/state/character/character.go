@@ -8,6 +8,7 @@ import (
 	termbox "github.com/nsf/termbox-go"
 	"github.com/thorfour/larn/pkg/game/state/items"
 	"github.com/thorfour/larn/pkg/game/state/stats"
+	"github.com/thorfour/larn/pkg/game/state/types"
 	"github.com/thorfour/larn/pkg/io"
 )
 
@@ -17,8 +18,6 @@ var (
 	Inexperienced   = fmt.Errorf("  Nothing happens. You seem Inexperienced at this")
 	DidntWork       = fmt.Errorf("  It didn't work!")
 )
-
-type Direction uint8
 
 type action int
 
@@ -30,35 +29,18 @@ const (
 )
 
 const (
-	Up Direction = iota
-	Down
-	Left
-	Right
-	UpLeft
-	UpRight
-	DownLeft
-	DownRight
-	Here
-)
-
-const (
 	characterFG   = termbox.ColorRed
 	characterBG   = termbox.ColorRed
 	characterRune = '&'
 )
 
 type Character struct {
-	loc       Coordinate
+	loc       types.Coordinate
 	armor     []items.Armor  // Currently worn armor
 	weapon    []items.Weapon // Currently wielded weapon(s)
 	inventory []items.Item
 	Stats     *stats.Stats
 	Displaced io.Runeable // object character is currently on top of
-}
-
-type Coordinate struct {
-	X int
-	Y int
 }
 
 func (c *Character) Init() {
@@ -93,12 +75,12 @@ func (c *Character) Bg() termbox.Attribute {
 }
 
 // MoveCharacter the character in the given direction 1 space
-func (c *Character) MoveCharacter(d Direction) Coordinate {
-	c.loc.Move(d)
+func (c *Character) MoveCharacter(d types.Direction) types.Coordinate {
+	c.loc = types.Move(c.loc, d)
 	return c.loc
 }
 
-func (c *Character) Location() Coordinate {
+func (c *Character) Location() types.Coordinate {
 	return c.loc
 }
 
@@ -106,32 +88,6 @@ func (c *Character) Location() Coordinate {
 func (c *Character) Teleport(x, y int) {
 	c.loc.X = x
 	c.loc.Y = y
-}
-
-func (c *Coordinate) Move(d Direction) {
-	switch d {
-	case Up:
-		c.Y--
-	case Down:
-		c.Y++
-	case Left:
-		c.X--
-	case Right:
-		c.X++
-	case UpLeft:
-		c.Y--
-		c.X--
-	case UpRight:
-		c.Y--
-		c.X++
-	case DownLeft:
-		c.Y++
-		c.X--
-	case DownRight:
-		c.Y++
-		c.X++
-	case Here:
-	}
 }
 
 // Wield has the character wield a weapon

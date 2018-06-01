@@ -66,12 +66,6 @@ type Displaceable interface {
 	Displace() bool
 }
 
-// Coordinate is a map coordinate. (0,0) is the top left corner
-type Coordinate struct {
-	X int
-	Y int
-}
-
 // Empty represents an empty map location
 type Empty struct {
 	visible bool

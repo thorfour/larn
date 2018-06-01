@@ -7,6 +7,7 @@ import (
 	"github.com/golang/glog"
 	"github.com/thorfour/larn/pkg/game/state/items"
 	"github.com/thorfour/larn/pkg/game/state/monster"
+	"github.com/thorfour/larn/pkg/game/state/types"
 	"github.com/thorfour/larn/pkg/io"
 )
 
@@ -58,46 +59,46 @@ func newLevel(lvl uint) [][]io.Runeable {
 	// Carve out the passageways
 	if lvl != homeLevel {
 		//carve(level)
-		eat(Coordinate{1, 1}, level) // original larn
+		eat(types.Coordinate{1, 1}, level) // original larn
 	}
 
 	return level
 }
 
 // eat is the way orginal larn ate through the map of walls to create a maze
-func eat(c Coordinate, lvl [][]io.Runeable) {
+func eat(c types.Coordinate, lvl [][]io.Runeable) {
 	dir := rand.Intn(4) + 1  // pick a random direction // TODO THOR use a time seed
 	for try := 2; try > 0; { // try all directions twice
 		switch dir {
 		case 1: // West
-			if c.X <= 2 || !isWall(Coordinate{c.X - 1, c.Y}, lvl) || !isWall(Coordinate{c.X - 2, c.Y}, lvl) { // Only eat if at least the next 2 are walls
+			if c.X <= 2 || !isWall(types.Coordinate{c.X - 1, c.Y}, lvl) || !isWall(types.Coordinate{c.X - 2, c.Y}, lvl) { // Only eat if at least the next 2 are walls
 				break
 			}
 			lvl[c.Y][c.X-1] = Empty{}
 			lvl[c.Y][c.X-2] = Empty{}
-			eat(Coordinate{c.X - 2, c.Y}, lvl)
+			eat(types.Coordinate{c.X - 2, c.Y}, lvl)
 		case 2: // East
-			if c.X >= width-3 || !isWall(Coordinate{c.X + 1, c.Y}, lvl) || !isWall(Coordinate{c.X + 2, c.Y}, lvl) { // Only eat if at least the next 2 are walls
+			if c.X >= width-3 || !isWall(types.Coordinate{c.X + 1, c.Y}, lvl) || !isWall(types.Coordinate{c.X + 2, c.Y}, lvl) { // Only eat if at least the next 2 are walls
 				break
 			}
 
 			lvl[c.Y][c.X+1] = Empty{}
 			lvl[c.Y][c.X+2] = Empty{}
-			eat(Coordinate{c.X + 2, c.Y}, lvl)
+			eat(types.Coordinate{c.X + 2, c.Y}, lvl)
 		case 3: // South
-			if c.Y <= 2 || !isWall(Coordinate{c.X, c.Y - 1}, lvl) || !isWall(Coordinate{c.X, c.Y - 2}, lvl) { // Only eat if at least the next 2 are walls
+			if c.Y <= 2 || !isWall(types.Coordinate{c.X, c.Y - 1}, lvl) || !isWall(types.Coordinate{c.X, c.Y - 2}, lvl) { // Only eat if at least the next 2 are walls
 				break
 			}
 			lvl[c.Y-1][c.X] = Empty{}
 			lvl[c.Y-2][c.X] = Empty{}
-			eat(Coordinate{c.X, c.Y - 2}, lvl)
+			eat(types.Coordinate{c.X, c.Y - 2}, lvl)
 		case 4: // North
-			if c.Y >= height-3 || !isWall(Coordinate{c.X, c.Y + 1}, lvl) || !isWall(Coordinate{c.X, c.Y + 2}, lvl) { // Only eat if at least the next 2 are walls
+			if c.Y >= height-3 || !isWall(types.Coordinate{c.X, c.Y + 1}, lvl) || !isWall(types.Coordinate{c.X, c.Y + 2}, lvl) { // Only eat if at least the next 2 are walls
 				break
 			}
 			lvl[c.Y+1][c.X] = Empty{}
 			lvl[c.Y+2][c.X] = Empty{}
-			eat(Coordinate{c.X, c.Y + 2}, lvl)
+			eat(types.Coordinate{c.X, c.Y + 2}, lvl)
 		default:
 			panic("Unknown direction")
 		}
@@ -113,7 +114,7 @@ func eat(c Coordinate, lvl [][]io.Runeable) {
 func carve(lvl [][]io.Runeable) {
 
 	// Pick a random wall and add it to walls list
-	walls := []Coordinate{randMapCoord()}
+	walls := []types.Coordinate{randMapCoord()}
 
 	// Keep carving till the walls list is empty
 	for len(walls) != 0 {
@@ -138,9 +139,9 @@ func carve(lvl [][]io.Runeable) {
 }
 
 // adjacentWalls returns all adjacent walls in a map
-func adjacentWalls(c Coordinate, lvl [][]io.Runeable) []Coordinate {
+func adjacentWalls(c types.Coordinate, lvl [][]io.Runeable) []types.Coordinate {
 	adj := adjacent(c, true)
-	var cords []Coordinate
+	var cords []types.Coordinate
 	for _, s := range adj {
 		switch lvl[s.Y][s.X].(type) {
 		case *Wall:
@@ -153,8 +154,8 @@ func adjacentWalls(c Coordinate, lvl [][]io.Runeable) []Coordinate {
 
 // getAdjacent returns orthogonally adjacent coordinates in a map, that are valid coordinates
 // mapEdge indicates to include the edge of the map as well
-func adjacent(w Coordinate, mapEdge bool) []Coordinate {
-	var adj []Coordinate
+func adjacent(w types.Coordinate, mapEdge bool) []types.Coordinate {
+	var adj []types.Coordinate
 	min := 0
 	maxW := width - 1
 	maxH := height - 1
@@ -164,16 +165,16 @@ func adjacent(w Coordinate, mapEdge bool) []Coordinate {
 		maxH = height - 2
 	}
 	if int(w.X)+1 <= maxW {
-		adj = append(adj, Coordinate{w.X + 1, w.Y})
+		adj = append(adj, types.Coordinate{w.X + 1, w.Y})
 	}
 	if int(w.X)-1 >= min {
-		adj = append(adj, Coordinate{w.X - 1, w.Y})
+		adj = append(adj, types.Coordinate{w.X - 1, w.Y})
 	}
 	if int(w.Y)+1 <= maxH {
-		adj = append(adj, Coordinate{w.X, w.Y + 1})
+		adj = append(adj, types.Coordinate{w.X, w.Y + 1})
 	}
 	if int(w.Y)-1 >= min {
-		adj = append(adj, Coordinate{w.X, w.Y - 1})
+		adj = append(adj, types.Coordinate{w.X, w.Y - 1})
 	}
 
 	return adj
@@ -181,8 +182,8 @@ func adjacent(w Coordinate, mapEdge bool) []Coordinate {
 
 // diagonal returns the diagonally adjacent coordinates in a map that are valid coordinates
 // if mapEdge is true it wont include the map edge
-func diagonal(w Coordinate, mapEdge bool) []Coordinate {
-	var adj []Coordinate
+func diagonal(w types.Coordinate, mapEdge bool) []types.Coordinate {
+	var adj []types.Coordinate
 	min := 0
 	maxW := width - 1
 	maxH := height - 1
@@ -192,23 +193,23 @@ func diagonal(w Coordinate, mapEdge bool) []Coordinate {
 		maxH = height - 2
 	}
 	if int(w.X)+1 <= maxW && int(w.Y)+1 <= maxH {
-		adj = append(adj, Coordinate{w.X + 1, w.Y + 1})
+		adj = append(adj, types.Coordinate{w.X + 1, w.Y + 1})
 	}
 	if int(w.X)-1 >= min && int(w.Y)-1 >= min {
-		adj = append(adj, Coordinate{w.X - 1, w.Y - 1})
+		adj = append(adj, types.Coordinate{w.X - 1, w.Y - 1})
 	}
 	if int(w.Y)+1 <= maxH && int(w.X)-1 >= min {
-		adj = append(adj, Coordinate{w.X - 1, w.Y + 1})
+		adj = append(adj, types.Coordinate{w.X - 1, w.Y + 1})
 	}
 	if int(w.Y)-1 >= min && int(w.X)+1 <= maxW {
-		adj = append(adj, Coordinate{w.X + 1, w.Y - 1})
+		adj = append(adj, types.Coordinate{w.X + 1, w.Y - 1})
 	}
 
 	return adj
 }
 
 // emptyAdjacent returns the number of adjacent spaces that are empty
-func emptyAdjacent(c Coordinate, lvl [][]io.Runeable) int {
+func emptyAdjacent(c types.Coordinate, lvl [][]io.Runeable) int {
 	adj := adjacent(c, true)
 	count := 0
 	for _, s := range adj {
@@ -221,12 +222,12 @@ func emptyAdjacent(c Coordinate, lvl [][]io.Runeable) int {
 	return count
 }
 
-func randMapCoord() Coordinate {
-	return Coordinate{rand.Intn(width-1) + 1, rand.Intn(height-1) + 1}
+func randMapCoord() types.Coordinate {
+	return types.Coordinate{rand.Intn(width-1) + 1, rand.Intn(height-1) + 1}
 }
 
 // walkToEmpty takes coordincate c and randomly walks till it finds an empty location
-func walkToEmpty(c Coordinate, lvl [][]io.Runeable) Coordinate {
+func walkToEmpty(c types.Coordinate, lvl [][]io.Runeable) types.Coordinate {
 
 	// Random walk till and empty room is found
 	for {
@@ -277,7 +278,7 @@ func placeMultipleObjects(n int, f func() io.Runeable, lvl [][]io.Runeable) {
 }
 
 // placeObject places an object in a maze at arandom open location
-func placeObject(c Coordinate, o io.Runeable, lvl [][]io.Runeable) (Coordinate, io.Runeable) {
+func placeObject(c types.Coordinate, o io.Runeable, lvl [][]io.Runeable) (types.Coordinate, io.Runeable) {
 
 	glog.V(6).Infof("Placing %s", string(o.Rune()))
 
@@ -398,7 +399,7 @@ func placeRareObject(prob int, o io.Runeable, lvl [][]io.Runeable) {
 }
 
 // isWall returns true if the coordinate c is a wall on map lvl
-func isWall(c Coordinate, lvl [][]io.Runeable) bool {
+func isWall(c types.Coordinate, lvl [][]io.Runeable) bool {
 	switch lvl[c.Y][c.X].(type) {
 	case *Wall:
 		return true

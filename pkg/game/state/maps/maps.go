@@ -20,7 +20,7 @@ const (
 type Maps struct {
 	monsters [][]*monster.Monster // list of all monsters on all levels
 	mazes    [][][]io.Runeable    // slice of all mazes in the game
-	entrance []Coordinate         // list of all entrances in each maze (i.e where a ladder from the previous maze drops you)
+	entrance []types.Coordinate   // list of all entrances in each maze (i.e where a ladder from the previous maze drops you)
 	active   [][]io.Runeable      // current active maze
 	current  int                  // index of the active maze. active = mazes[current]
 }
@@ -47,7 +47,7 @@ func New(c *character.Character) *Maps {
 		case homeLevel:
 		case 1: // dungeon 0 has an entrance
 			nm[height-1][width/2] = (Empty{})
-			m.entrance = append(m.entrance, Coordinate{width / 2, height - 2})
+			m.entrance = append(m.entrance, types.Coordinate{width / 2, height - 2})
 			m.monsters[i] = spawnMonsters(nm, i, true) // spawn monsters onto the map
 		default:
 			// Set the entrace for the maze to a random location
@@ -75,7 +75,7 @@ func (m *Maps) RemoveCharacter(c *character.Character) {
 }
 
 // SpawnCharacter places the character on the home level
-func (m *Maps) SpawnCharacter(coord Coordinate, c *character.Character) {
+func (m *Maps) SpawnCharacter(coord types.Coordinate, c *character.Character) {
 
 	// Place the character on the map
 	l, d := placeObject(coord, c, m.active)
@@ -100,7 +100,7 @@ func (c *cell) Y() int { return c.y }
 
 // Move a character on the map. First bool indiactes if the character moved. Second bool indicates if the character attacked.
 // They will never both be set
-func (m *Maps) Move(d character.Direction, c *character.Character) (bool, bool) {
+func (m *Maps) Move(d types.Direction, c *character.Character) (bool, bool) {
 
 	// Validate the move
 	if !m.validMove(d, c) {
@@ -134,21 +134,20 @@ func (m *Maps) Move(d character.Direction, c *character.Character) (bool, bool) 
 }
 
 // validMove returns true if the move is allowed (i.e not off the edge, not into a wall
-func (m *Maps) validMove(d character.Direction, c *character.Character) bool {
+func (m *Maps) validMove(d types.Direction, c *character.Character) bool {
 
 	// Make the move and check its validity
-	current := c.Location()
-	current.Move(d)
+	newLoc := types.Move(c.Location(), d)
 
-	glog.V(6).Infof("ValidMove: (%v,%v)", current.X, current.Y)
+	glog.V(6).Infof("ValidMove: (%v,%v)", newLoc.X, newLoc.Y)
 
 	// Ensure the character isn't going off the grid, tron
-	inBounds := m.ValidCoordinate(Coordinate{current.X, current.Y})
+	inBounds := m.ValidCoordinate(newLoc)
 
 	// Ensure the character is going onto an empty location
 	isDisplaceable := false
 	if inBounds {
-		switch m.active[current.Y][current.X].(type) {
+		switch m.active[newLoc.Y][newLoc.X].(type) {
 		case Displaceable:
 			isDisplaceable = true
 		}
@@ -158,15 +157,14 @@ func (m *Maps) validMove(d character.Direction, c *character.Character) bool {
 }
 
 // isAttack returns true if the move would result in attacking a monster
-func (m *Maps) isAttack(d character.Direction, c *character.Character) bool {
+func (m *Maps) isAttack(d types.Direction, c *character.Character) bool {
 
 	// Make the move and check its validity
-	current := c.Location()
-	current.Move(d)
+	newLoc := types.Move(c.Location(), d)
 
 	// Check if the character would be attacking a monster
-	if m.ValidCoordinate(Coordinate{current.X, current.Y}) {
-		switch m.active[current.Y][current.X].(type) {
+	if m.ValidCoordinate(newLoc) {
+		switch m.active[newLoc.Y][newLoc.X].(type) {
 		case types.Attackable:
 			return true
 		}
@@ -185,7 +183,7 @@ func (m *Maps) SetCurrent(lvl int) {
 func (m *Maps) setVisible(c *character.Character) {
 
 	coord := c.Location()
-	adj := append(adjacent(Coordinate{coord.X, coord.Y}, false), diagonal(Coordinate{coord.X, coord.Y}, false)...)
+	adj := append(adjacent(coord, false), diagonal(coord, false)...)
 	for _, l := range adj {
 		switch m.active[l.Y][l.X].(type) {
 		case Visible:
@@ -195,14 +193,14 @@ func (m *Maps) setVisible(c *character.Character) {
 }
 
 // RemoveAt removes the object at the given coordinate (i.e a monster died)
-func (m *Maps) RemoveAt(c Coordinate) {
+func (m *Maps) RemoveAt(c types.Coordinate) {
 	m.active[c.Y][c.X] = Empty{}
 }
 
 // VaporizeAdjacent to vaporize walls at adjacent locations
 func (m *Maps) VaporizeAdjacent(c *character.Character) {
 	coord := c.Location()
-	adj := append(adjacent(Coordinate{coord.X, coord.Y}, true), diagonal(Coordinate{coord.X, coord.Y}, true)...)
+	adj := append(adjacent(coord, true), diagonal(coord, true)...)
 	for _, l := range adj { // set all to empty
 		switch m.active[l.Y][l.X].(type) {
 		case *Wall: // only vaporize walls
@@ -212,12 +210,12 @@ func (m *Maps) VaporizeAdjacent(c *character.Character) {
 }
 
 // AdjacentCoords returns all adjacent coordinates to the location
-func (m *Maps) AdjacentCoords(c Coordinate) []Coordinate {
+func (m *Maps) AdjacentCoords(c types.Coordinate) []types.Coordinate {
 	return append(adjacent(c, false), diagonal(c, false)...)
 }
 
 // Adjacent returns all adjacent spaces to the location
-func (m *Maps) Adjacent(c Coordinate) []io.Runeable {
+func (m *Maps) Adjacent(c types.Coordinate) []io.Runeable {
 
 	// get adjacent locations to the player
 	coords := m.AdjacentCoords(c)
@@ -237,17 +235,17 @@ func (m *Maps) Adjacent(c Coordinate) []io.Runeable {
 func (m *Maps) LevelMonsters() []*monster.Monster { return m.monsters[m.current] }
 
 // ValidCoordinate returns true if the coordinate provided is within the map boundaries
-func (m *Maps) ValidCoordinate(c Coordinate) bool {
+func (m *Maps) ValidCoordinate(c types.Coordinate) bool {
 	return c.X < width && c.X >= 0 && c.Y < height && c.Y >= 0
 }
 
 // Distance returns the distance between coordinates
-func (m *Maps) Distance(c0, c1 Coordinate) int {
+func (m *Maps) Distance(c0, c1 types.Coordinate) int {
 	return int(math.Abs(float64(c0.X-c1.X)) + math.Abs(float64(c0.Y-c1.Y)))
 }
 
 // At returns whatever is at the given location on the active map
-func (m *Maps) At(c Coordinate) io.Runeable {
+func (m *Maps) At(c types.Coordinate) io.Runeable {
 	return m.active[c.Y][c.X]
 }
 

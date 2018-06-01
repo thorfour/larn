@@ -10,6 +10,7 @@ import (
 	"github.com/thorfour/larn/pkg/game/state/items"
 	"github.com/thorfour/larn/pkg/game/state/maps"
 	"github.com/thorfour/larn/pkg/game/state/monster"
+	"github.com/thorfour/larn/pkg/game/state/types"
 	"github.com/thorfour/larn/pkg/io"
 )
 
@@ -91,7 +92,7 @@ func (s *State) CurrentMap() [][]io.Runeable {
 }
 
 // Move is for character movement
-func (s *State) Move(d character.Direction) bool {
+func (s *State) Move(d types.Direction) bool {
 	defer s.update()
 
 	// Move the character
@@ -260,7 +261,7 @@ func (s *State) IdentTrap() {
 	defer s.update()
 
 	// Get adjacent spaces
-	adj := s.maps.Adjacent(maps.Coordinate{s.C.Location().X, s.C.Location().Y})
+	adj := s.maps.Adjacent(s.C.Location())
 
 	// Check all loc for traps
 	var found bool
@@ -319,8 +320,8 @@ func (s *State) moveMonsters() {
 	// Create a window from the current players position
 	// c1 is the bottom left coordindate of a square, and c2 is the top right
 	c := s.C.Location()
-	c1 := maps.Coordinate{int(c.X) - 5, int(c.Y) - 3}
-	c2 := maps.Coordinate{int(c.X) + 6, int(c.X) + 4}
+	c1 := types.Coordinate{int(c.X) - 5, int(c.Y) - 3}
+	c2 := types.Coordinate{int(c.X) + 6, int(c.X) + 4}
 
 	// Get a list of all monsters that appear in that window
 	monsters := s.monstersInWindow(c1, c2)
@@ -341,18 +342,18 @@ func (s *State) moveMonsters() {
 	c1------
 */
 // c1 is the lower left corner of a square and c2 is the upper right corner of a square
-func (s *State) monstersInWindow(c1, c2 maps.Coordinate) []maps.Coordinate {
+func (s *State) monstersInWindow(c1, c2 types.Coordinate) []types.Coordinate {
 	glog.V(5).Infof("monster window: %v, %v", c1, c2)
 
 	level := s.maps.CurrentMap()
-	var ml []maps.Coordinate
+	var ml []types.Coordinate
 
 	// Walk through the window checking each space for a monster
 	for i := c1.Y; i <= c2.Y; i++ {
 		for j := c1.X; j <= c2.X; j++ {
 
 			// Current coordinate within the window
-			c := maps.Coordinate{j, i}
+			c := types.Coordinate{j, i}
 
 			// First always check if the coordinate is within the map
 			if !s.maps.ValidCoordinate(c) {
@@ -369,7 +370,7 @@ func (s *State) monstersInWindow(c1, c2 maps.Coordinate) []maps.Coordinate {
 	return ml
 }
 
-func (s *State) monsterMove(m maps.Coordinate) {
+func (s *State) monsterMove(m types.Coordinate) {
 	level := s.maps.CurrentMap()
 
 	// Cast map location to a monster (this should never fail)
@@ -406,21 +407,21 @@ func (s *State) monsterMove(m maps.Coordinate) {
 	//
 
 	// If the monster is already adjacent to the player attack player instead
-	if s.maps.Distance(maps.Coordinate(s.C.Location()), m) == 1 {
+	if s.maps.Distance(types.Coordinate(s.C.Location()), m) == 1 {
 		s.attackPlayer(mon)
 		return
 	}
 
 	// For each space calculate the space closest to the player
 	minD := 10000
-	var minC maps.Coordinate
+	var minC types.Coordinate
 	for _, c := range adj {
 		if _, ok := level[c.Y][c.X].(maps.Displaceable); !ok { // Invalid movement location
 			glog.Infof("not displaceable %v", c)
 			continue
 		}
 
-		if d := s.maps.Distance(maps.Coordinate(s.C.Location()), c); d < minD {
+		if d := s.maps.Distance(s.C.Location(), c); d < minD {
 			minD = d
 			minC = c
 		}
@@ -494,21 +495,20 @@ func (s *State) hitPlayer(mon *monster.Monster) {
 }
 
 // playerAttack deals damage to a monster
-func (s *State) playerAttack(d character.Direction) {
+func (s *State) playerAttack(d types.Direction) {
 
 	// Get monster location NOTE: this isn't moving the character, just calculating the coordinate
-	mLoc := s.C.Location()
-	mLoc.Move(d)
+	mLoc := types.Move(s.C.Location(), d)
 
 	// Get the monster at the attempted location
-	m := s.maps.At(maps.Coordinate{X: mLoc.X, Y: mLoc.Y})
+	m := s.maps.At(mLoc)
 	switch mon := m.(type) {
 	case *monster.Monster: // nominal case
 		// Deal damage to the monster
 		dead := s.hitMonster(mon)
 		if dead {
 			s.Log(fmt.Sprintf("The %s died", mon.Name()))
-			s.maps.RemoveAt(maps.Coordinate{X: mLoc.X, Y: mLoc.Y})
+			s.maps.RemoveAt(mLoc)
 			s.maps.CurrentMap()[mLoc.Y][mLoc.X] = mon.Displaced
 			// TODO handle any monster drops
 			// TODO increase/decrease stats for character

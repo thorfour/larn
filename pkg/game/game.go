@@ -7,8 +7,8 @@ import (
 	termbox "github.com/nsf/termbox-go"
 	"github.com/thorfour/larn/pkg/game/data"
 	"github.com/thorfour/larn/pkg/game/state"
-	"github.com/thorfour/larn/pkg/game/state/character"
 	"github.com/thorfour/larn/pkg/game/state/items"
+	"github.com/thorfour/larn/pkg/game/state/types"
 	"github.com/thorfour/larn/pkg/io"
 )
 
@@ -135,44 +135,44 @@ func (g *Game) defaultHandler(e termbox.Event) {
 
 	switch e.Ch {
 	case 'H': // run left
-		g.runAction(character.Left)
+		g.runAction(types.Left)
 	case 'J': // run down
-		g.runAction(character.Down)
+		g.runAction(types.Down)
 	case 'K': // run up
-		g.runAction(character.Up)
+		g.runAction(types.Up)
 	case 'L': // run right
-		g.runAction(character.Right)
+		g.runAction(types.Right)
 	case 'Y': // run northwest
-		g.runAction(character.UpLeft)
+		g.runAction(types.UpLeft)
 	case 'U': // run northeast
-		g.runAction(character.UpRight)
+		g.runAction(types.UpRight)
 	case 'B': // run southwest
-		g.runAction(character.DownLeft)
+		g.runAction(types.DownLeft)
 	case 'N': // run southeast
-		g.runAction(character.DownRight)
+		g.runAction(types.DownRight)
 	case 'h': // move left
-		g.currentState.Move(character.Left)
+		g.currentState.Move(types.Left)
 		g.render(display(g.currentState))
 	case 'j': // move down
-		g.currentState.Move(character.Down)
+		g.currentState.Move(types.Down)
 		g.render(display(g.currentState))
 	case 'k': // move up
-		g.currentState.Move(character.Up)
+		g.currentState.Move(types.Up)
 		g.render(display(g.currentState))
 	case 'l': // move right
-		g.currentState.Move(character.Right)
+		g.currentState.Move(types.Right)
 		g.render(display(g.currentState))
 	case 'y': // move northwest
-		g.currentState.Move(character.UpLeft)
+		g.currentState.Move(types.UpLeft)
 		g.render(display(g.currentState))
 	case 'u': // move northeast
-		g.currentState.Move(character.UpRight)
+		g.currentState.Move(types.UpRight)
 		g.render(display(g.currentState))
 	case 'b': // move southwest
-		g.currentState.Move(character.DownLeft)
+		g.currentState.Move(types.DownLeft)
 		g.render(display(g.currentState))
 	case 'n': // move southeast
-		g.currentState.Move(character.DownRight)
+		g.currentState.Move(types.DownRight)
 		g.render(display(g.currentState))
 	case ',': // Pick up the item
 		g.currentState.PickUp()
@@ -233,7 +233,7 @@ func (g *Game) render(display [][]io.Runeable) {
 	g.err = io.RenderNewGrid(display)
 }
 
-func (g *Game) renderCharacter(c character.Coordinate) {
+func (g *Game) renderCharacter(c types.Coordinate) {
 	if g.err != nil {
 		return
 	}
@@ -241,7 +241,7 @@ func (g *Game) renderCharacter(c character.Coordinate) {
 	g.err = io.RenderCell(c.X, c.Y, '&', termbox.ColorGreen, termbox.ColorGreen)
 }
 
-func (g *Game) runAction(d character.Direction) {
+func (g *Game) runAction(d types.Direction) {
 	for moved := g.currentState.Move(d); moved; moved = g.currentState.Move(d) {
 		g.render(display(g.currentState))
 	}

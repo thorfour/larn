@@ -6,6 +6,7 @@ import (
 	"github.com/golang/glog"
 	"github.com/thorfour/larn/pkg/game/state/character"
 	"github.com/thorfour/larn/pkg/game/state/monster"
+	"github.com/thorfour/larn/pkg/game/state/types"
 	"github.com/thorfour/larn/pkg/io"
 )
 
@@ -98,11 +99,13 @@ type cell struct {
 func (c *cell) X() int { return c.x }
 func (c *cell) Y() int { return c.y }
 
-func (m *Maps) Move(d character.Direction, c *character.Character) bool {
+// Move a character on the map. First bool indiactes if the character moved. Second bool indicates if the character attacked.
+// They will never both be set
+func (m *Maps) Move(d character.Direction, c *character.Character) (bool, bool) {
 
 	// Validate the move
 	if !m.validMove(d, c) {
-		return false
+		return false, m.isAttack(d, c)
 	}
 
 	old := c.Location()
@@ -117,7 +120,7 @@ func (m *Maps) Move(d character.Direction, c *character.Character) bool {
 		m.RemoveCharacter(c)
 		m.SetCurrent(homeLevel)
 		m.SpawnCharacter(m.entrance[homeLevel], c)
-		return true
+		return true, false
 	}
 
 	// Save the newly displaced item
@@ -128,7 +131,7 @@ func (m *Maps) Move(d character.Direction, c *character.Character) bool {
 
 	m.setVisible(c)
 
-	return true
+	return true, false
 }
 
 // validMove returns true if the move is allowed (i.e not off the edge, not into a wall
@@ -141,7 +144,7 @@ func (m *Maps) validMove(d character.Direction, c *character.Character) bool {
 	glog.V(6).Infof("ValidMove: (%v,%v)", current.X, current.Y)
 
 	// Ensure the character isn't going off the grid, tron
-	inBounds := current.X >= 0 && current.X < width && current.Y >= 0 && current.Y < height
+	inBounds := m.ValidCoordinate(Coordinate{current.X, current.Y})
 
 	// Ensure the character is going onto an empty location
 	isDisplaceable := false
@@ -153,6 +156,23 @@ func (m *Maps) validMove(d character.Direction, c *character.Character) bool {
 	}
 
 	return inBounds && isDisplaceable
+}
+
+// isAttack returns true if the move would result in attacking a monster
+func (m *Maps) isAttack(d character.Direction, c *character.Character) bool {
+
+	// Make the move and check its validity
+	current := c.Location()
+	current.Move(d)
+
+	// Check if the character would be attacking a monster
+	if m.ValidCoordinate(Coordinate{current.X, current.Y}) {
+		switch m.active[current.Y][current.X].(type) {
+		case types.Attackable:
+			return true
+		}
+	}
+	return false
 }
 
 // Displaced returns the displaced object
@@ -185,12 +205,17 @@ func (m *Maps) RemoveDisplaced() {
 	m.displaced = Empty{m.current == homeLevel} // Set displaced to empty, so it gets replaced when the player moves
 }
 
+// RemoveAt removes the object at the given coordinate (i.e a monster died)
+func (m *Maps) RemoveAt(c Coordinate) {
+	m.active[c.Y][c.X] = Empty{}
+}
+
 // AddDisplaced adds a displaced item to the map. (i.e the player dropped an item)
 func (m *Maps) AddDisplaced(i io.Runeable) {
 	m.displaced = i
 }
 
-// function to vaporize walls at adjacent locations
+// VaporizeAdjacent to vaporize walls at adjacent locations
 func (m *Maps) VaporizeAdjacent(c *character.Character) {
 	coord := c.Location()
 	adj := append(adjacent(Coordinate{coord.X, coord.Y}, true), diagonal(Coordinate{coord.X, coord.Y}, true)...)
@@ -227,7 +252,7 @@ func (m *Maps) Adjacent(c Coordinate) []io.Runeable {
 // LevelMonsters returns the list of monsters on the current level
 func (m *Maps) LevelMonsters() []*monster.Monster { return m.monsters[m.current] }
 
-// ValidCoordindate returns true if the coordinate provided is within the map boundaries
+// ValidCoordinate returns true if the coordinate provided is within the map boundaries
 func (m *Maps) ValidCoordinate(c Coordinate) bool {
 	return c.X < width && c.X >= 0 && c.Y < height && c.Y >= 0
 }
@@ -235,4 +260,9 @@ func (m *Maps) ValidCoordinate(c Coordinate) bool {
 // Distance returns the distance between coordinates
 func (m *Maps) Distance(c0, c1 Coordinate) int {
 	return int(math.Abs(float64(c0.X-c1.X)) + math.Abs(float64(c0.Y-c1.Y)))
+}
+
+// At returns whatever is at the given location on the active map
+func (m *Maps) At(c Coordinate) io.Runeable {
+	return m.active[c.Y][c.X]
 }

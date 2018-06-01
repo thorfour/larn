@@ -11,6 +11,8 @@ type Stats struct {
 	MaxHP        uint            // maximum health points
 	Hp           uint            // remaining health points
 	Str          uint            // strength
+	StrExtra     int             // extra strength
+	MoreDmg      int             // more damage
 	Intelligence uint            // intelligence
 	Wisdom       uint            // wisdom
 	Con          uint            // constitution

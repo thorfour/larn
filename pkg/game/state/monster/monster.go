@@ -4,7 +4,6 @@ import (
 	"math/rand"
 
 	termbox "github.com/nsf/termbox-go"
-	"github.com/thorfour/larn/pkg/game/state/character"
 	"github.com/thorfour/larn/pkg/io"
 )
 
@@ -40,8 +39,15 @@ func (m *Monster) Fg() termbox.Attribute { return termbox.ColorDefault }
 func (m *Monster) Visible(v bool) { m.Visibility = v }
 
 // Damage implements the Monster interface
-func (m *Monster) Damage(c *character.Character) {
-	// TODO
+func (m *Monster) Damage(dmg int) bool {
+	if dmg >= m.Info.Hitpoints { // check if damage would drop hp to 0
+		m.Info.Hitpoints = 0
+		return true
+	}
+
+	// Deal damage
+	m.Info.Hitpoints -= dmg
+	return false
 }
 
 // Name returns the name of the monster

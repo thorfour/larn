@@ -8,6 +8,7 @@ import (
 	termbox "github.com/nsf/termbox-go"
 	"github.com/thorfour/larn/pkg/game/state/items"
 	"github.com/thorfour/larn/pkg/game/state/stats"
+	"github.com/thorfour/larn/pkg/io"
 )
 
 var (
@@ -52,6 +53,7 @@ type Character struct {
 	weapon    []items.Weapon // Currently wielded weapon(s)
 	inventory []items.Item
 	Stats     *stats.Stats
+	Displaced io.Runeable // object character is currently on top of
 }
 
 type Coordinate struct {

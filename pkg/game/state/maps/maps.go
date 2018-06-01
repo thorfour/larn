@@ -18,12 +18,11 @@ const (
 
 // Maps is the collection of all the levels in the game
 type Maps struct {
-	monsters  [][]*monster.Monster // list of all monsters on all levels
-	mazes     [][][]io.Runeable    // slice of all mazes in the game
-	entrance  []Coordinate         // list of all entrances in each maze (i.e where a ladder from the previous maze drops you)
-	active    [][]io.Runeable      // current active maze
-	displaced io.Runeable          // object the player is currently standing on TODO should be moved to the character type
-	current   int                  // index of the active maze. active = mazes[current]
+	monsters [][]*monster.Monster // list of all monsters on all levels
+	mazes    [][][]io.Runeable    // slice of all mazes in the game
+	entrance []Coordinate         // list of all entrances in each maze (i.e where a ladder from the previous maze drops you)
+	active   [][]io.Runeable      // current active maze
+	current  int                  // index of the active maze. active = mazes[current]
 }
 
 // EnterLevel moves a character from one level to the next by way of entrance or stairs
@@ -71,8 +70,8 @@ func (m *Maps) CurrentMap() [][]io.Runeable {
 // RemoveCharacter is used for when a character leaves a map
 func (m *Maps) RemoveCharacter(c *character.Character) {
 	l := c.Location()
-	m.active[l.Y][l.X] = m.displaced
-	m.displaced = nil
+	m.active[l.Y][l.X] = c.Displaced
+	c.Displaced = nil
 }
 
 // SpawnCharacter places the character on the home level
@@ -81,8 +80,8 @@ func (m *Maps) SpawnCharacter(coord Coordinate, c *character.Character) {
 	// Place the character on the map
 	l, d := placeObject(coord, c, m.active)
 
-	// Save the displaced element
-	m.displaced = d
+	// Save the displaced element for the character
+	c.Displaced = d
 
 	// Set the character to the location
 	c.Teleport(int(l.X), int(l.Y))
@@ -112,7 +111,7 @@ func (m *Maps) Move(d character.Direction, c *character.Character) (bool, bool) 
 	new := c.MoveCharacter(d)
 
 	// Reset the displaced
-	m.active[old.Y][old.X] = m.displaced
+	m.active[old.Y][old.X] = c.Displaced
 
 	// Check if they character moved to the exit of the dungeon
 	if m.current == 1 && new.Y == height-1 {
@@ -124,7 +123,7 @@ func (m *Maps) Move(d character.Direction, c *character.Character) (bool, bool) 
 	}
 
 	// Save the newly displaced item
-	m.displaced = m.active[new.Y][new.X]
+	c.Displaced = m.active[new.Y][new.X]
 
 	// Set the character to the location
 	m.active[new.Y][new.X] = c
@@ -175,11 +174,6 @@ func (m *Maps) isAttack(d character.Direction, c *character.Character) bool {
 	return false
 }
 
-// Displaced returns the displaced object
-func (m *Maps) Displaced() io.Runeable {
-	return m.displaced
-}
-
 // SetCurrent sets the current map level to display (i.e the character moved between levels)
 func (m *Maps) SetCurrent(lvl int) {
 	glog.V(2).Infof("Setting current level %v", lvl)
@@ -200,19 +194,9 @@ func (m *Maps) setVisible(c *character.Character) {
 	}
 }
 
-// RemoveDisplaced removes the displaced object on the map (i.e the player picked up an item)
-func (m *Maps) RemoveDisplaced() {
-	m.displaced = Empty{m.current == homeLevel} // Set displaced to empty, so it gets replaced when the player moves
-}
-
 // RemoveAt removes the object at the given coordinate (i.e a monster died)
 func (m *Maps) RemoveAt(c Coordinate) {
 	m.active[c.Y][c.X] = Empty{}
-}
-
-// AddDisplaced adds a displaced item to the map. (i.e the player dropped an item)
-func (m *Maps) AddDisplaced(i io.Runeable) {
-	m.displaced = i
 }
 
 // VaporizeAdjacent to vaporize walls at adjacent locations
@@ -265,4 +249,9 @@ func (m *Maps) Distance(c0, c1 Coordinate) int {
 // At returns whatever is at the given location on the active map
 func (m *Maps) At(c Coordinate) io.Runeable {
 	return m.active[c.Y][c.X]
+}
+
+// NewEmptyTile returns a new Empty map tile
+func (m *Maps) NewEmptyTile() Empty {
+	return Empty{m.current == homeLevel}
 }

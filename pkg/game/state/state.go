@@ -68,7 +68,7 @@ func New() *State {
 // Drop drops an item where the player is standing, returns false if the player is already standing on an item
 func (s *State) Drop(e rune) (items.Item, error) {
 	defer s.update()
-	if _, ok := s.maps.Displaced().(maps.Empty); !ok { // Check if player is already displacing an object
+	if _, ok := s.C.Displaced.(maps.Empty); !ok { // Check if player is already displacing an object
 		return nil, ErrAlreadyDisplacedErr
 	}
 
@@ -76,7 +76,7 @@ func (s *State) Drop(e rune) (items.Item, error) {
 	if err != nil {
 		return nil, err
 	}
-	s.maps.AddDisplaced(item)
+	s.C.Displaced = item
 	return item, nil
 }
 
@@ -105,10 +105,10 @@ func (s *State) Move(d character.Direction) bool {
 
 	// If the character is displacing something add it to the status log
 	if moved {
-		switch t := s.maps.Displaced().(type) {
+		switch t := s.C.Displaced.(type) {
 		case *items.GoldPile:
 			t.PickUp(s.C.Stats) // auto-pick up gold
-			s.maps.RemoveDisplaced()
+			s.C.Displaced = s.maps.NewEmptyTile()
 			s.Log(t.Log())
 		case maps.Loggable:
 			s.Log(t.Log())
@@ -123,7 +123,7 @@ func (s *State) Enter() {
 	glog.V(2).Infof("Enter request")
 
 	// Check if character is standing on an enterable object
-	switch t := s.maps.Displaced().(type) {
+	switch t := s.C.Displaced.(type) {
 	case maps.Enterable:
 		s.maps.EnterLevel(s.C, t.Enter())
 	}
@@ -134,11 +134,11 @@ func (s *State) PickUp() {
 	defer s.update()
 	glog.V(2).Info("PickUp request")
 
-	i, ok := s.maps.Displaced().(items.Item)
+	i, ok := s.C.Displaced.(items.Item)
 	if ok {
 		i.PickUp(s.C.Stats)
 		s.C.AddItem(i)
-		s.maps.RemoveDisplaced()
+		s.C.Displaced = s.maps.NewEmptyTile()
 	}
 }
 

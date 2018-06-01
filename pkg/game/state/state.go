@@ -502,24 +502,22 @@ func (s *State) playerAttack(d character.Direction) {
 
 	// Get the monster at the attempted location
 	m := s.maps.At(maps.Coordinate{X: mLoc.X, Y: mLoc.Y})
-	dead := false
 	switch mon := m.(type) {
 	case *monster.Monster: // nominal case
 		// Deal damage to the monster
-		dead = s.hitMonster(mon)
-		s.Log(fmt.Sprintf("The %s died", mon.Name()))
+		dead := s.hitMonster(mon)
+		if dead {
+			s.Log(fmt.Sprintf("The %s died", mon.Name()))
+			s.maps.RemoveAt(maps.Coordinate{X: mLoc.X, Y: mLoc.Y})
+			s.maps.CurrentMap()[mLoc.Y][mLoc.X] = mon.Displaced
+			// TODO handle any monster drops
+			// TODO increase/decrease stats for character
+		}
 	default:
 		glog.Errorf("Attacked non attackable object %v", m)
 		return
 	}
 
-	// remove monster if it died
-	if dead {
-		s.maps.RemoveAt(maps.Coordinate{X: mLoc.X, Y: mLoc.Y})
-		// TODO handle replacing whatever the monster had displaced
-		// TODO handle any monster drops
-		// TODO increase/decrease stats for character
-	}
 }
 
 // hitMonster handles a charachter attempting to hit a monster

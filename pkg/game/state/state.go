@@ -514,6 +514,7 @@ func (s *State) playerAttack(d character.Direction) {
 
 	// remove monster if it died
 	if dead {
+		glog.V(3).Info(fmt.Sprintf("Monster %v died", m.Rune()))
 		s.maps.RemoveAt(maps.Coordinate{X: mLoc.X, Y: mLoc.Y})
 		// TODO handle replacing whatever the monster had displaced
 		// TODO handle any monster drops
@@ -536,6 +537,7 @@ func (s *State) hitMonster(m *monster.Monster) bool {
 		if dmg < 9999 {
 			dmg = rand.Intn(dmg) + 1
 		}
+		glog.V(4).Infof("Monster %v took %v damage", m.Rune(), dmg)
 		dead = m.Damage(dmg)
 	} else {
 		s.Log(fmt.Sprintf("You missed the %s", m.Name()))

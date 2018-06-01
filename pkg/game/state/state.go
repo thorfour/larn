@@ -50,7 +50,7 @@ type State struct {
 }
 
 // New returns a new state and prints the welcome screen
-func New() *State {
+func New(diff int) *State {
 	glog.V(1).Info("Creating new state")
 	s := new(State)
 	s.C = new(character.Character)
@@ -58,6 +58,7 @@ func New() *State {
 	s.Active = make(map[string]func())
 	s.rng = rand.New(rand.NewSource(time.Now().UnixNano()))
 	s.maps = maps.New(s.C)
+	s.difficulty = diff
 
 	// Display the welcome string at the bottom
 	for i := 0; i < logLength-1; i++ {

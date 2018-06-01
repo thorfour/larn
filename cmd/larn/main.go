@@ -7,6 +7,11 @@ import (
 
 	"github.com/golang/glog"
 	"github.com/thorfour/larn/pkg/game"
+	"github.com/thorfour/larn/pkg/game/data"
+)
+
+var (
+	difficulty = flag.Int("d", 0, "sets the game difficulty")
 )
 
 func init() {
@@ -16,7 +21,9 @@ func init() {
 
 func main() {
 	defer flushLogs() // To ensure logs are flushed
-	if err := game.New().Start(); err != nil {
+	if err := game.New(&data.Settings{
+		Difficulty: *difficulty,
+	}).Start(); err != nil {
 		glog.Fatalf("game exited with error: %v", err)
 	}
 }

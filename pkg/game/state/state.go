@@ -40,16 +40,17 @@ func (log logring) add(s string) logring {
 
 // State holds all current game state
 type State struct {
-	StatLog  logring
-	C        *character.Character
-	Active   map[string]func()
-	maps     *maps.Maps
-	rng      *rand.Rand
-	timeUsed uint
+	StatLog    logring
+	C          *character.Character
+	Active     map[string]func()
+	maps       *maps.Maps
+	rng        *rand.Rand
+	timeUsed   uint
+	difficulty int
 }
 
 // New returns a new state and prints the welcome screen
-func New() *State {
+func New(diff int) *State {
 	glog.V(1).Info("Creating new state")
 	s := new(State)
 	s.C = new(character.Character)
@@ -57,6 +58,7 @@ func New() *State {
 	s.Active = make(map[string]func())
 	s.rng = rand.New(rand.NewSource(time.Now().UnixNano()))
 	s.maps = maps.New(s.C)
+	s.difficulty = diff
 
 	// Display the welcome string at the bottom
 	for i := 0; i < logLength-1; i++ {
@@ -466,12 +468,10 @@ func (s *State) attackPlayer(mon *monster.Monster) {
 
 // hitPlayer deals the damage from a monster to a player
 func (s *State) hitPlayer(mon *monster.Monster) {
-	// TODO bias the damage based on game difficulty
-	bias := 0
 	dmg := mon.BaseDamage()
 
 	if mon.Info.Attack > 0 {
-		if dmg+bias+8 > s.C.Stats.Ac || s.C.Stats.Ac <= 0 || rand.Intn(s.C.Stats.Ac) == 0 { // Check for special attack success
+		if dmg+s.difficulty+8 > s.C.Stats.Ac || s.C.Stats.Ac <= 0 || rand.Intn(s.C.Stats.Ac) == 0 { // Check for special attack success
 			// TODO check for special attack
 			/*
 				if special() {
@@ -479,12 +479,12 @@ func (s *State) hitPlayer(mon *monster.Monster) {
 				}
 			*/
 
-			bias -= 2
+			s.difficulty -= 2
 		}
 	}
 
 	// No special attack, deal normal damage
-	if (dmg+bias) > s.C.Stats.Ac || s.C.Stats.Ac <= 0 || rand.Intn(s.C.Stats.Ac) == 0 {
+	if (dmg+s.difficulty) > s.C.Stats.Ac || s.C.Stats.Ac <= 0 || rand.Intn(s.C.Stats.Ac) == 0 {
 		s.Log(fmt.Sprintf("The %v hit you", mon.Name()))
 		if s.C.Stats.Ac < dmg {
 			s.C.Damage(dmg - s.C.Stats.Ac)
@@ -527,9 +527,8 @@ func (s *State) hitMonster(m *monster.Monster) bool {
 		return dead
 	}
 
-	bias := 0 // TODO add game difficulty bias
 	tmp := m.Info.Armor + int(s.C.Stats.Level) + int(s.C.Stats.Dex) + s.C.Stats.Wc/4 - 12
-	if rand.Intn(20) < tmp-bias || rand.Intn(71) < 5 { // some random chance to hit
+	if rand.Intn(20) < tmp-s.difficulty || rand.Intn(71) < 5 { // some random chance to hit
 		s.Log(fmt.Sprintf("You hit the %s", m.Name()))
 		dmg := s.hits(1)
 		if dmg < 9999 {
@@ -563,8 +562,7 @@ func (s *State) hits(n int) int {
 	}
 
 	c := s.C.Stats
-	bias := 0 // TODO determine bias from game difficulty
-	dmg := n * ((c.Wc >> 1) + int(c.Str) + c.StrExtra - bias - 12 + c.MoreDmg)
+	dmg := n * ((c.Wc >> 1) + int(c.Str) + c.StrExtra - s.difficulty - 12 + c.MoreDmg)
 	if dmg >= 1 {
 		return dmg
 	}

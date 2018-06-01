@@ -7,7 +7,7 @@ type Settings struct {
 	// UserID unique id of the user
 	UserID uint64
 	// Difficulty current game difficulty
-	Difficulty uint
+	Difficulty int
 	// FromSaveFile if the current game was loaded from a save file
 	FromSaveFile bool
 }

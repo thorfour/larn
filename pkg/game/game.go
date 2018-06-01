@@ -37,7 +37,7 @@ const (
 
 // Game holds all current game information
 type Game struct {
-	settings     data.Settings
+	settings     *data.Settings
 	currentState *state.State
 
 	// input channel from keyboard
@@ -57,9 +57,10 @@ func saveFilePresent() (bool, string) {
 }
 
 // New initializes a game state
-func New() *Game {
-	glog.V(1).Info("Creating new game")
+func New(s *data.Settings) *Game {
+	glog.V(1).Infof("Creating new game with %v difficulty", s.Difficulty)
 	g := new(Game)
+	g.settings = s
 	g.inputHandler = g.defaultHandler
 	g.input = make(chan termbox.Event, internalKeyBufferSize)
 
@@ -73,7 +74,7 @@ func New() *Game {
 	// g.settings
 
 	// Generate starting game state
-	g.currentState = state.New()
+	g.currentState = state.New(g.settings.Difficulty)
 
 	return g
 }

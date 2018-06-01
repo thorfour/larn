@@ -8,10 +8,5 @@
 
 ## Installing
 
-### Using go
-
-`go install github.com/thorfour/larn/cmd/larn`
-
-### Download from releases
-
-There are no current releases.
+- Download from release 
+- `go install github.com/thorfour/larn/cmd/larn`

@@ -205,6 +205,11 @@ func (m *Maps) RemoveDisplaced() {
 	m.displaced = Empty{m.current == homeLevel} // Set displaced to empty, so it gets replaced when the player moves
 }
 
+// RemoveAt removes the object at the given coordinate (i.e a monster died)
+func (m *Maps) RemoveAt(c Coordinate) {
+	m.active[c.Y][c.X] = Empty{}
+}
+
 // AddDisplaced adds a displaced item to the map. (i.e the player dropped an item)
 func (m *Maps) AddDisplaced(i io.Runeable) {
 	m.displaced = i
@@ -255,4 +260,9 @@ func (m *Maps) ValidCoordinate(c Coordinate) bool {
 // Distance returns the distance between coordinates
 func (m *Maps) Distance(c0, c1 Coordinate) int {
 	return int(math.Abs(float64(c0.X-c1.X)) + math.Abs(float64(c0.Y-c1.Y)))
+}
+
+// At returns whatever is at the given location on the active map
+func (m *Maps) At(c Coordinate) io.Runeable {
+	return m.active[c.Y][c.X]
 }

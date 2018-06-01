@@ -182,7 +182,7 @@ func (s *State) Cast(spell string) error {
 			return err
 		}
 
-		if s.Active["stp"] != nil { // can't cast spells when time is stopped
+		if s.EffectActive("stp") {
 			return ErrDidntWork
 		}
 	}
@@ -309,7 +309,7 @@ func (s *State) moveMonsters() {
 	glog.V(4).Infof("Move monsters")
 
 	// Hold monsters, monsters don't move
-	if _, ok := s.Active["hld"]; ok {
+	if s.EffectActive("hld") {
 		return
 	}
 
@@ -441,19 +441,19 @@ func (s *State) attackPlayer(mon *monster.Monster) {
 
 	// if blind don't print monster name
 	mName := mon.Name()
-	if _, ok := s.Active["blind"]; ok {
+	if s.EffectActive("blind") {
 		mName = "monster"
 	}
 
 	// If character is invisble chance to miss
-	if _, ok := s.Active["invsibility"]; ok {
+	if s.EffectActive("invsibility") {
 		if rand.Intn(33) < 20 {
 			s.Log(fmt.Sprintf("The %s misses wildly", mName))
 			return
 		}
 	}
 
-	if _, ok := s.Active["charm"]; ok {
+	if s.EffectActive("charm") {
 		if rand.Intn(30)+5*mon.Info.Lvl-int(s.C.Stats.Cha) < 30 {
 			s.Log(fmt.Sprintf("The %s is awestruct at your magnificence!", mName))
 			return
@@ -495,9 +495,79 @@ func (s *State) hitPlayer(mon *monster.Monster) {
 
 // playerAttack deals damage to a monster
 func (s *State) playerAttack(d character.Direction) {
+
+	// Get monster location NOTE: this isn't moving the character, just calculating the coordinate
+	mLoc := s.C.Location()
+	mLoc.Move(d)
+
 	// Get the monster at the attempted location
-	// Deal damage to the monster
+	m := s.maps.At(maps.Coordinate{X: mLoc.X, Y: mLoc.Y})
+	dead := false
+	switch mon := m.(type) {
+	case *monster.Monster: // nominal case
+		// Deal damage to the monster
+		dead = s.hitMonster(mon)
+	default:
+		glog.Errorf("Attacked non attackable object %v", m)
+		return
+	}
+
 	// remove monster if it died
-	// increase/decrease stats for character
-	// drop loot
+	if dead {
+		s.maps.RemoveAt(maps.Coordinate{X: mLoc.X, Y: mLoc.Y})
+		// TODO handle replacing whatever the monster had displaced
+		// TODO handle any monster drops
+		// TODO increase/decrease stats for character
+	}
+}
+
+// hitMonster handles a charachter attempting to hit a monster
+func (s *State) hitMonster(m *monster.Monster) bool {
+	dead := false
+	if s.EffectActive("stp") { // time is stopped
+		return dead
+	}
+
+	bias := 0 // TODO add game difficulty bias
+	tmp := m.Info.Armor + int(s.C.Stats.Level) + int(s.C.Stats.Dex) + s.C.Stats.Wc/4 - 12
+	if rand.Intn(20) < tmp-bias || rand.Intn(71) < 5 { // some random chance to hit
+		s.Log(fmt.Sprintf("You hit the %s", m.Name()))
+		dmg := s.hits(1)
+		if dmg < 9999 {
+			dmg = rand.Intn(dmg) + 1
+		}
+		dead = m.Damage(dmg)
+	} else {
+		s.Log(fmt.Sprintf("You missed the %s", m.Name()))
+	}
+
+	// TODO handle dulled weapons
+	// TODO handle turning vampires back into bats
+	return dead
+}
+
+// EffectActive returns a bool indicating if the effect is currently active
+func (s *State) EffectActive(e string) bool {
+	_, ok := s.Active[e]
+	return ok
+}
+
+// hits returns the damage dealt for the given number of hits
+func (s *State) hits(n int) int {
+	if n <= 0 || n > 20 { // out of range
+		return 0
+	}
+
+	if lanceofdeath := false; lanceofdeath { // TODO determine if player is wieleding lance of death
+		return 10000
+	}
+
+	c := s.C.Stats
+	bias := 0 // TODO determine bias from game difficulty
+	dmg := n * ((c.Wc >> 1) + int(c.Str) + c.StrExtra - bias - 12 + c.MoreDmg)
+	if dmg >= 1 {
+		return dmg
+	}
+
+	return n
 }

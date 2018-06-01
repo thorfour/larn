@@ -5,8 +5,8 @@ type Attackable interface {
 	Damage(int) bool // take damage and return if dead
 }
 
-// Coordinate represents a map coordinate
-type Coordinate interface {
-	X() int
-	Y() int
+// Coordinate represents a cartesian map coordinate
+type Coordinate struct {
+	X int
+	Y int
 }

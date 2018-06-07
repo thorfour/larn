@@ -12,6 +12,11 @@ import (
 	"github.com/thorfour/larn/pkg/io"
 )
 
+const (
+	// MaxLevel is the max level a character can acheive
+	MaxLevel = 100
+)
+
 var (
 	NoSpellsErr     = fmt.Errorf("You don't have any spells!")
 	NothingHappened = fmt.Errorf("  Nothing Happened")
@@ -328,4 +333,25 @@ func (c *Character) removeArmor(i int) {
 // removeWeapon removes a weapon form the wielded list
 func (c *Character) removeWeapon(i int) {
 	c.weapon = append(c.weapon[:i], c.weapon[i+1:]...)
+}
+
+// GainExperience has the character gain experience (ususally from slaying monsters)
+func (c *Character) GainExperience(e int) bool {
+	c.Stats.Exp += uint(e)
+	levelGained := false
+	for c.Stats.Exp >= uint(skill[c.Stats.Level]) && c.Stats.Level < MaxLevel {
+		tmp := c.Stats.Con // TODO should take game difficulty into account
+		c.Stats.Level++
+		levelGained = true
+		c.Stats.MaxHP += uint(rand.Intn(3) + 1 + rand.Intn(int(tmp)) + 1)
+		c.Stats.MaxSpells += uint(rand.Intn(3))
+		if c.Stats.Level < 7 { // - hardgame TODO
+			c.Stats.MaxHP += c.Stats.Con >> 2
+		}
+	}
+
+	// update player title
+	c.Stats.Title = titles[c.Stats.Level-1]
+
+	return levelGained
 }

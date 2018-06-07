@@ -509,10 +509,12 @@ func (s *State) playerAttack(d types.Direction) {
 		dead := s.hitMonster(mon)
 		if dead {
 			s.Log(fmt.Sprintf("The %s died", mon.Name()))
-			s.maps.RemoveAt(mLoc)
-			s.maps.CurrentMap()[mLoc.Y][mLoc.X] = mon.Displaced
-			s.monsterDrop(mLoc, mon)
-			// TODO increase/decrease stats for character
+			s.maps.RemoveAt(mLoc)                               // remove the mosnter at the location
+			s.maps.CurrentMap()[mLoc.Y][mLoc.X] = mon.Displaced // replace the any items displaced by the monster
+			s.monsterDrop(mLoc, mon)                            // have the monster drop gold/items
+			if s.C.GainExperience(mon.Info.Experience) {
+				s.Log(fmt.Sprintf("Welcome to level %d", s.C.Stats.Level))
+			}
 		}
 	default:
 		glog.Errorf("Attacked non attackable object %v", m)

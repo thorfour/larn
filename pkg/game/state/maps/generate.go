@@ -346,8 +346,8 @@ func placeMapObjects(lvl uint, m [][]io.Runeable) {
 			placeMultipleObjects(rand.Intn(2), func() io.Runeable { return &items.Gem{Stone: items.Sapphire, Value: rand.Intn(3*int(lvl)+1) + 2} }, m)
 		}
 
-		placeMultipleObjects(rand.Intn(4)+4, func() io.Runeable { return &items.Potion{} }, m)
-		placeMultipleObjects(rand.Intn(5)+4, func() io.Runeable { return &items.Scroll{} }, m)
+		placeMultipleObjects(rand.Intn(4)+4, func() io.Runeable { return items.NewPotion() }, m)
+		placeMultipleObjects(rand.Intn(5)+4, func() io.Runeable { return items.NewScroll() }, m)
 		placeMultipleObjects(rand.Intn(12)+12, func() io.Runeable {
 			return &items.GoldPile{Amount: 12*rand.Intn(int(lvl+1)) + (int(lvl) << 3) + 10}
 		}, m)

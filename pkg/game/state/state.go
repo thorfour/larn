@@ -576,7 +576,7 @@ func (s *State) monsterDrop(c types.Coordinate, m *monster.Monster) {
 	gp := &items.GoldPile{Amount: m.Info.Gold}
 	gp.Visible(true)
 
-	var drop items.Item
+	var drop []items.Item
 	switch m.ID() {
 	case monster.Orc:
 		fallthrough
@@ -597,18 +597,21 @@ func (s *State) monsterDrop(c types.Coordinate, m *monster.Monster) {
 	case monster.Gnomeking:
 		fallthrough
 	case monster.Reddragon:
-		drop = items.CreateItem(s.maps.CurrentLevel())
+		drop = items.CreateItems(s.maps.CurrentLevel())
 	case monster.Leprechaun:
 		if rand.Intn(101) >= 75 {
-			drop = items.CreateGem()
+			drop = append(drop, items.CreateGem())
 		}
-		if rand.Intn(5) == 0 {
-			drop = items.CreateItem(s.maps.CurrentLevel())
+		if rand.Intn(5) == 0 { //NOTE: recursively drop for a Leprechaun
+			s.monsterDrop(c, m)
 		}
 	}
 
+	// TODO for the recursive drops there shouldn't be multiple gold drops
 	s.drop(c, gp)
-	s.drop(c, drop)
+	for i := range drop {
+		s.drop(c, drop[i])
+	}
 }
 
 // dropAdjacent finds a location to drop an item

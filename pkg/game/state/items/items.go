@@ -1,6 +1,8 @@
 package items
 
 import (
+	"math/rand"
+
 	termbox "github.com/nsf/termbox-go"
 	"github.com/thorfour/larn/pkg/game/state/stats"
 	"github.com/thorfour/larn/pkg/io"
@@ -75,8 +77,16 @@ func (n *NoStats) PickUp(_ *stats.Stats) {}
 // Drop implements the Item interface
 func (n *NoStats) Drop(_ *stats.Stats) {}
 
-// CreateItem creates a random item based on the given level
-func CreateItem(l int) Item {
-	// TODO
-	return nil
+// CreateItems creates a random item based on the given level
+func CreateItems(l int) []Item {
+	itemCount := 1
+	for i := rand.Intn(101); i < 8; i = rand.Intn(101) { // Chance to create multiple items
+		itemCount++
+	}
+
+	var created []Item
+	for i := 0; i < itemCount; i++ {
+		// TODO create the item
+	}
+	return created
 }

@@ -1,25 +1,37 @@
 package items
 
 import (
+	"math/rand"
 	"strconv"
 
 	"github.com/thorfour/larn/pkg/game/state/stats"
 )
 
+// WeaponType indicate the type of weapon
 type WeaponType int
 
 const weaponRune = ')'
 
 const (
+	// SunSword weapon
 	SunSword WeaponType = iota
+	// TwoHandedSword weapon
 	TwoHandedSword
+	// Spear weapon
 	Spear
+	// Dagger weapon
 	Dagger
+	// BattleAxe weapon
 	BattleAxe
+	// LongSword weapon
 	LongSword
+	// Flail weapon
 	Flail
+	// LanceOfDeath weapon
 	LanceOfDeath
+	// SwordOfSlashing weapon
 	SwordOfSlashing
+	// BessmansHammer weapon
 	BessmansHammer
 )
 
@@ -63,9 +75,8 @@ type WeaponClass struct {
 func (a *WeaponClass) Rune() rune {
 	if a.Visibility {
 		return weaponRune
-	} else {
-		return invisibleRune
 	}
+	return invisibleRune
 }
 
 // Log implements the Loggable interface
@@ -110,8 +121,46 @@ func (a *WeaponClass) Disarm(c *stats.Stats) {
 }
 
 // GetNewWeapon returns a new default weapon of the given type
-func GetNewWeapon(id WeaponType) *WeaponClass {
+func GetNewWeapon(id WeaponType, l int) *WeaponClass {
+	attr := 0
+	switch id {
+	case Dagger:
+		x := rand.Intn(13)
+		switch {
+		case x < 3:
+		case x < 7:
+			attr = 1
+		case x < 9:
+			attr = 2
+		case x < 11:
+			attr = 3
+		case x < 12:
+			attr = 4
+		default:
+			attr = 5
+		}
+	case Spear:
+		fallthrough
+	case BattleAxe:
+		fallthrough
+	case TwoHandedSword:
+		attr = rand.Intn(l/3 + 1)
+	case Flail:
+		attr = rand.Intn(l/2 + 1)
+	case LongSword:
+		x := rand.Intn(13)
+		switch {
+		case x < 6:
+		case x < 11:
+			attr = 1
+		case x < 12:
+			attr = 2
+		case x < 13:
+			attr = 3
+		}
+	}
 	return &WeaponClass{
-		Type: id,
+		Type:      id,
+		Attribute: attr,
 	}
 }

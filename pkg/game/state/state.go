@@ -95,6 +95,7 @@ func (s *State) CurrentMap() [][]io.Runeable {
 
 // Move is for character movement
 func (s *State) Move(d types.Direction) bool {
+	defer s.maps.SetVisible(s.C)
 	defer s.update()
 
 	// Move the character
@@ -508,10 +509,12 @@ func (s *State) playerAttack(d types.Direction) {
 		dead := s.hitMonster(mon)
 		if dead {
 			s.Log(fmt.Sprintf("The %s died", mon.Name()))
-			s.maps.RemoveAt(mLoc)
-			s.maps.CurrentMap()[mLoc.Y][mLoc.X] = mon.Displaced
-			// TODO handle any monster drops
-			// TODO increase/decrease stats for character
+			s.maps.RemoveAt(mLoc)                               // remove the mosnter at the location
+			s.maps.CurrentMap()[mLoc.Y][mLoc.X] = mon.Displaced // replace the any items displaced by the monster
+			s.monsterDrop(mLoc, mon)                            // have the monster drop gold/items
+			if s.C.GainExperience(mon.Info.Experience) {
+				s.Log(fmt.Sprintf("Welcome to level %d", s.C.Stats.Level))
+			}
 		}
 	default:
 		glog.Errorf("Attacked non attackable object %v", m)
@@ -568,4 +571,72 @@ func (s *State) hits(n int) int {
 	}
 
 	return n
+}
+
+// monsterDrop performs a item/gold drop from a slain monster at a given location.
+// NOTE: in OG larn the items were always dropped next to the player. This version drops next to the monster
+func (s *State) monsterDrop(c types.Coordinate, m *monster.Monster) {
+	amt := m.Info.Gold
+	if amt > 0 {
+		amt = rand.Intn(amt) + amt
+	}
+	gp := &items.GoldPile{Amount: amt}
+	if gp.Amount > 0 {
+		s.drop(c, gp) // drop gold pile
+	}
+
+	var drop []items.Item
+	switch m.ID() {
+	case monster.Orc:
+		fallthrough
+	case monster.Nymph:
+		fallthrough
+	case monster.Elf:
+		fallthrough
+	case monster.Troglodyte:
+		fallthrough
+	case monster.Troll:
+		fallthrough
+	case monster.Rothe:
+		fallthrough
+	case monster.Violetfungi:
+		fallthrough
+	case monster.Platinumdragon:
+		fallthrough
+	case monster.Gnomeking:
+		fallthrough
+	case monster.Reddragon:
+		drop = items.CreateItems(s.maps.CurrentLevel())
+	case monster.Leprechaun:
+		if rand.Intn(101) >= 75 {
+			drop = append(drop, items.CreateGem())
+		}
+		for i := rand.Intn(5); i == 0; i = rand.Intn(5) {
+			if rand.Intn(101) >= 75 {
+				drop = append(drop, items.CreateGem())
+			}
+		}
+	}
+	for i := range drop { // drop items
+		s.drop(c, drop[i])
+	}
+}
+
+// dropAdjacent finds a location to drop an item
+func (s *State) drop(c types.Coordinate, drop io.Runeable) {
+	// Drop in location if coordinate is empty
+	if _, ok := s.maps.CurrentMap()[c.Y][c.X].(maps.Empty); ok {
+		s.maps.CurrentMap()[c.Y][c.X] = drop
+		return
+	}
+
+	// Look for empty adjacent locations to drop
+	for _, a := range s.maps.Adjacent(c) {
+		if _, ok := a.(maps.Empty); ok {
+			s.maps.CurrentMap()[c.Y][c.X] = drop
+			return
+		}
+	}
+
+	// NOTE: If we couldn't find a place to drop then nothing gets dropped
 }

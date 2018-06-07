@@ -1,16 +1,26 @@
 package types
 
+// Direction cardinal direction
 type Direction uint8
 
 const (
+	// Up direction
 	Up Direction = iota
+	// Down direction
 	Down
+	// Left direction
 	Left
+	// Right direction
 	Right
+	// UpLeft direction
 	UpLeft
+	// UpRight direction
 	UpRight
+	// DownLeft direction
 	DownLeft
+	// DownRight direction
 	DownRight
+	// Here direction
 	Here
 )
 

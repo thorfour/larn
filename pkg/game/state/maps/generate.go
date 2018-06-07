@@ -22,7 +22,9 @@ const (
 // newMap is a wrapper of newLevel, it creates the level and places objects in the level.
 func newMap(lvl uint) [][]io.Runeable {
 	m := newLevel(lvl) // Create the level
-	treasureRoom(m)    // TODO need to fill treasure rooms
+	if lvl > 1 {       // Treausre rooms starting on level 2 of the dungeon
+		treasureRoom(m) // TODO need to fill treasure rooms
+	}
 
 	seed := time.Now().UnixNano()
 	glog.V(1).Infof("Map Seed: %v", seed)
@@ -346,8 +348,8 @@ func placeMapObjects(lvl uint, m [][]io.Runeable) {
 			placeMultipleObjects(rand.Intn(2), func() io.Runeable { return &items.Gem{Stone: items.Sapphire, Value: rand.Intn(3*int(lvl)+1) + 2} }, m)
 		}
 
-		placeMultipleObjects(rand.Intn(4)+4, func() io.Runeable { return &items.Potion{} }, m)
-		placeMultipleObjects(rand.Intn(5)+4, func() io.Runeable { return &items.Scroll{} }, m)
+		placeMultipleObjects(rand.Intn(4)+4, func() io.Runeable { return items.NewPotion() }, m)
+		placeMultipleObjects(rand.Intn(5)+4, func() io.Runeable { return items.NewScroll() }, m)
 		placeMultipleObjects(rand.Intn(12)+12, func() io.Runeable {
 			return &items.GoldPile{Amount: 12*rand.Intn(int(lvl+1)) + (int(lvl) << 3) + 10}
 		}, m)

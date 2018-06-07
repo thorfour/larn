@@ -153,7 +153,7 @@ func (c *Character) TakeOff() error {
 	}
 
 	// Move all armor into inventory
-	for i := range c.armor {
+	for i := 0; i < len(c.armor); i++ {
 		c.inventory = append(c.inventory, c.armor[i])
 		c.removeArmor(i)
 	}
@@ -237,6 +237,7 @@ func (c *Character) item(e rune, a action) (items.Item, error) {
 				return t, nil
 			case WieldAction:
 				if it, ok := t.(items.Weapon); ok { // Ensure the item is a weapon
+					c.disarm()
 					c.wield(it)
 					c.removeInv(i)
 					return it, nil
@@ -312,6 +313,17 @@ func (c *Character) Damage(dmg int) bool {
 func (c *Character) wield(w items.Weapon) {
 	w.Wield(c.Stats)               // Wield the weapon
 	c.weapon = append(c.weapon, w) // Add item to weapons
+}
+
+// disarm removes all weapons a character is wielding (does not remove shields)
+func (c *Character) disarm() {
+	for i := range c.weapon {
+		if _, ok := c.weapon[i].(*items.Shield); !ok {
+			c.weapon[i].Disarm(c.Stats)
+			c.removeWeapon(i)
+			c.inventory = append(c.inventory, c.weapon[i])
+		}
+	}
 }
 
 // wear performs the wear action and adds the armor to the list of worn items

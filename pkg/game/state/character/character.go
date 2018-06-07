@@ -63,8 +63,13 @@ func (c *Character) Init(d int) {
 	c.Stats.Cha = 12
 
 	if d <= 0 { // 0 difficulty games the plaer starts with leather armor and dagger
-		c.wield(items.GetNewWeapon(items.Dagger))
-		c.wear(items.GetNewArmor(items.Leather))
+		w := items.GetNewWeapon(items.Dagger, 0)
+		w.Attribute = 0
+		c.wield(w)
+		a := items.NewArmor(items.Leather, 0)
+		a.Attribute = 0
+		c.wear(a)
+
 	}
 }
 

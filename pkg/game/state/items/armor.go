@@ -1,6 +1,7 @@
 package items
 
 import (
+	"math/rand"
 	"strconv"
 
 	"github.com/thorfour/larn/pkg/game/state/stats"
@@ -96,9 +97,64 @@ func (a *ArmorClass) TakeOff(c *stats.Stats) {
 	c.Ac -= (armorBase[a.Type] + a.Attribute)
 }
 
-// GetNewArmor returns a new defauly armor of type id
-func GetNewArmor(id ArmorType) *ArmorClass {
+// NewArmor returns a new defauly armor of type id
+func NewArmor(id ArmorType, l int) *ArmorClass {
+	attr := 0
+	switch id {
+	case StuddedLeather:
+		fallthrough
+	case SplintMail:
+		fallthrough
+	case RingMail:
+		attr = rand.Intn(l/2 + 1)
+	case Leather:
+		x := rand.Intn(15) // TODO this should adjust for game difficulty
+		switch {
+		case x < 5:
+		case x < 7:
+			attr = 1
+		case x < 9:
+			attr = 2
+		case x < 11:
+			attr = 3
+		case x < 12:
+			attr = 4
+		case x < 13:
+			attr = 5
+		case x < 14:
+			attr = 6
+		case x < 15:
+			attr = 7
+		}
+	case ChainMail:
+		x := rand.Intn(10)
+		switch {
+		case x < 3:
+		case x < 6:
+			attr = 1
+		case x < 8:
+			attr = 2
+		case x < 9:
+			attr = 3
+		default:
+			attr = 4
+		}
+	case PlateMail:
+		x := rand.Intn(10)
+		switch {
+		case x < 4:
+		case x < 6:
+			attr = 1
+		case x < 8:
+			attr = 2
+		case x < 9:
+			attr = 3
+		default:
+			attr = 4
+		}
+	}
 	return &ArmorClass{
-		Type: id,
+		Type:      id,
+		Attribute: attr,
 	}
 }

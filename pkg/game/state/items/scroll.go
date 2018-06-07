@@ -153,7 +153,7 @@ func (s *Scroll) String() string {
 // NewScroll returns a random scroll
 func NewScroll() *Scroll {
 	return &Scroll{
-		ID: scprob[rand.Intn(81)],
+		ID: scprob[rand.Intn(len(scprob))],
 	}
 }
 

@@ -151,6 +151,6 @@ func ForgetPotion(p PotionID) {
 // NewPotion randomly returns a new potion
 func NewPotion() *Potion {
 	return &Potion{
-		ID: potprob[rand.Intn(41)],
+		ID: potprob[rand.Intn(len(potprob))],
 	}
 }

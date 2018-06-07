@@ -576,18 +576,54 @@ func (s *State) monsterDrop(c types.Coordinate, m *monster.Monster) {
 	gp := &items.GoldPile{Amount: m.Info.Gold}
 	gp.Visible(true)
 
-	// TODO determine if there's an item drop
+	var drop items.Item
+	switch m.ID() {
+	case monster.Orc:
+		fallthrough
+	case monster.Nymph:
+		fallthrough
+	case monster.Elf:
+		fallthrough
+	case monster.Troglodyte:
+		fallthrough
+	case monster.Troll:
+		fallthrough
+	case monster.Rothe:
+		fallthrough
+	case monster.Violetfungi:
+		fallthrough
+	case monster.Platinumdragon:
+		fallthrough
+	case monster.Gnomeking:
+		fallthrough
+	case monster.Reddragon:
+		drop = items.CreateItem(s.maps.CurrentLevel())
+	case monster.Leprechaun:
+		if rand.Intn(101) >= 75 {
+			drop = items.CreateGem()
+		}
+		if rand.Intn(5) == 0 {
+			drop = items.CreateItem(s.maps.CurrentLevel())
+		}
+	}
 
-	// If the monster wasn't displacing anything, drop it where it was slain
+	s.drop(c, gp)
+	s.drop(c, drop)
+}
+
+// dropAdjacent finds a location to drop an item
+func (s *State) drop(c types.Coordinate, drop io.Runeable) {
+	// Drop in location if coordinate is empty
 	if _, ok := s.maps.CurrentMap()[c.Y][c.X].(maps.Empty); ok {
-		s.maps.CurrentMap()[c.Y][c.X] = gp
+		s.maps.CurrentMap()[c.Y][c.X] = drop
 		return
 	}
 
-	// Look for locations around monster to drop
+	// Look for empty adjacent locations to drop
 	for _, a := range s.maps.Adjacent(c) {
 		if _, ok := a.(maps.Empty); ok {
-			s.maps.CurrentMap()[c.Y][c.X] = gp
+			s.maps.CurrentMap()[c.Y][c.X] = drop
+			return
 		}
 	}
 

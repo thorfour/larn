@@ -179,6 +179,9 @@ func (m *Maps) SetCurrent(lvl int) {
 	m.active = m.mazes[m.current]
 }
 
+// CurrentLevel returns the current level the character is on
+func (m *Maps) CurrentLevel() int { return m.current }
+
 // setVisible changes the visibilty of surrounding objects
 func (m *Maps) setVisible(c *character.Character) {
 

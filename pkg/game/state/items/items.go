@@ -72,5 +72,11 @@ type NoStats struct{}
 // PickUp implements the Item interface
 func (n *NoStats) PickUp(_ *stats.Stats) {}
 
-// PickUp implements the Item interface
+// Drop implements the Item interface
 func (n *NoStats) Drop(_ *stats.Stats) {}
+
+// CreateItem creates a random item based on the given level
+func CreateItem(l int) Item {
+	// TODO
+	return nil
+}

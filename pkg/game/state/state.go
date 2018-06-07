@@ -95,6 +95,7 @@ func (s *State) CurrentMap() [][]io.Runeable {
 
 // Move is for character movement
 func (s *State) Move(d types.Direction) bool {
+	defer s.maps.SetVisible(s.C)
 	defer s.update()
 
 	// Move the character
@@ -573,8 +574,14 @@ func (s *State) hits(n int) int {
 // monsterDrop performs a item/gold drop from a slain monster at a given location.
 // NOTE: in OG larn the items were always dropped next to the player. This version drops next to the monster
 func (s *State) monsterDrop(c types.Coordinate, m *monster.Monster) {
-	gp := &items.GoldPile{Amount: m.Info.Gold}
-	gp.Visible(true)
+	amt := m.Info.Gold
+	if amt > 0 {
+		amt = rand.Intn(amt) + amt
+	}
+	gp := &items.GoldPile{Amount: amt}
+	if gp.Amount > 0 {
+		s.drop(c, gp) // drop gold pile
+	}
 
 	var drop []items.Item
 	switch m.ID() {
@@ -608,8 +615,6 @@ func (s *State) monsterDrop(c types.Coordinate, m *monster.Monster) {
 			}
 		}
 	}
-
-	s.drop(c, gp)         // drop gold pile
 	for i := range drop { // drop items
 		s.drop(c, drop[i])
 	}

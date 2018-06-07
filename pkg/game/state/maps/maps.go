@@ -86,7 +86,7 @@ func (m *Maps) SpawnCharacter(coord types.Coordinate, c *character.Character) {
 	// Set the character to the location
 	c.Teleport(int(l.X), int(l.Y))
 
-	m.setVisible(c)
+	m.SetVisible(c)
 }
 
 type cell struct {
@@ -127,8 +127,6 @@ func (m *Maps) Move(d types.Direction, c *character.Character) (bool, bool) {
 
 	// Set the character to the location
 	m.active[new.Y][new.X] = c
-
-	m.setVisible(c)
 
 	return true, false
 }
@@ -182,8 +180,8 @@ func (m *Maps) SetCurrent(lvl int) {
 // CurrentLevel returns the current level the character is on
 func (m *Maps) CurrentLevel() int { return m.current }
 
-// setVisible changes the visibilty of surrounding objects
-func (m *Maps) setVisible(c *character.Character) {
+// SetVisible changes the visibilty of surrounding objects
+func (m *Maps) SetVisible(c *character.Character) {
 
 	coord := c.Location()
 	adj := append(adjacent(coord, false), diagonal(coord, false)...)

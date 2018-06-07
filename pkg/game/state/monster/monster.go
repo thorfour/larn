@@ -8,11 +8,13 @@ import (
 )
 
 const (
+	// InvisibleRune is the invisible rune
 	InvisibleRune = ' '
 )
 
+// Monster is a in-game monster
 type Monster struct {
-	Id         int         // the lookup id for the monster
+	id         int         // the lookup id for the monster
 	Info       MonsterType // The monstertype unique to this monster
 	Visibility bool        // if the player can see where this monster is
 	Displaced  io.Runeable // the object currently displaced by this monster
@@ -27,7 +29,7 @@ func (m *Monster) Rune() rune {
 }
 
 // ID implements the monster interface
-func (m *Monster) ID() int { return m.Id }
+func (m *Monster) ID() int { return m.id }
 
 // Bg implements the io.Runeable interface
 func (m *Monster) Bg() termbox.Attribute { return termbox.ColorDefault }
@@ -51,12 +53,12 @@ func (m *Monster) Damage(dmg int) bool {
 }
 
 // Name returns the name of the monster
-func (m *Monster) Name() string { return NameFromID(m.Id) }
+func (m *Monster) Name() string { return NameFromID(m.id) }
 
 // New returns a new Monster from a monster id
 func New(monster int) *Monster {
 	return &Monster{
-		Id:        monster,
+		id:        monster,
 		Info:      monsterData[monster],
 		Displaced: Empty{},
 	}
@@ -67,6 +69,7 @@ type Empty struct {
 	visible bool
 }
 
+// Visible sets the visibility of the monster
 func (e Empty) Visible(v bool) { e.visible = v }
 
 // Displace implementes the Displaceable interface
@@ -76,9 +79,8 @@ func (e Empty) Displace() bool { return true }
 func (e Empty) Rune() rune {
 	if e.visible {
 		return '.'
-	} else {
-		return ' '
 	}
+	return ' '
 }
 
 // Fg implements the io.Runeable interface
@@ -89,13 +91,13 @@ func (e Empty) Bg() termbox.Attribute { return termbox.ColorDefault }
 
 // BaseDamage returns the base damage of a monster
 func (m *Monster) BaseDamage() int {
-	switch m.Id {
+	switch m.id {
 	case Bat: // bats deal a base of 1 always
 		return 1
 	default:
 		d := m.Info.Dmg
 		if d < 1 {
-			d += 1
+			d++
 		} else {
 			d += rand.Intn(d)
 		}

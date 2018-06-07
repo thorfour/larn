@@ -37,7 +37,7 @@ var weaponBase = map[WeaponType]int{
 	LanceOfDeath:    19,
 }
 
-// Map of all the displayable armor names
+// Map of all the displayable weapon names
 var weaponName = map[WeaponType]string{
 	SunSword:        "sun sword",
 	TwoHandedSword:  "two handed sword",
@@ -51,10 +51,10 @@ var weaponName = map[WeaponType]string{
 	BessmansHammer:  "Bessman's flailing hammer",
 }
 
-// WeaponClass satisfies the item interface as well as the Armor Interface
+// WeaponClass satisfies the item interface as well as the Weapon Interface
 type WeaponClass struct {
-	Type      WeaponType // the type of armor
-	Attribute int        // the attributes of the armor that add/subtract from the class
+	Type      WeaponType // the type of weapon
+	Attribute int        // the attributes of the weapon that add/subtract from the class
 	DefaultItem
 	NoStats
 }
@@ -107,4 +107,11 @@ func (a *WeaponClass) Disarm(c *stats.Stats) {
 		c.Intelligence += 10 // hammers make you stupid
 	}
 	c.Wc -= (weaponBase[a.Type] + a.Attribute)
+}
+
+// GetNewWeapon returns a new default weapon of the given type
+func GetNewWeapon(id WeaponType) *WeaponClass {
+	return &WeaponClass{
+		Type: id,
+	}
 }

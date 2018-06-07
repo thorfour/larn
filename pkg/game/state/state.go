@@ -53,12 +53,12 @@ type State struct {
 func New(diff int) *State {
 	glog.V(1).Info("Creating new state")
 	s := new(State)
+	s.difficulty = diff
 	s.C = new(character.Character)
-	s.C.Init()
+	s.C.Init(s.difficulty)
 	s.Active = make(map[string]func())
 	s.rng = rand.New(rand.NewSource(time.Now().UnixNano()))
 	s.maps = maps.New(s.C)
-	s.difficulty = diff
 
 	// Display the welcome string at the bottom
 	for i := 0; i < logLength-1; i++ {
@@ -201,8 +201,6 @@ func (s *State) Cast(spell string) error {
 		s.Active[sp.Code] = nil
 	case "hel": // healing
 		s.C.Heal(20 + int(s.C.Stats.Level<<1))
-	case "sca": // scare monsters
-		fallthrough
 	case "hld": // hold monsters
 		s.decay(sp.Code, rand.Intn(10)+int(s.C.Stats.Level), func() {})
 	case "stp": // time stop
@@ -230,6 +228,8 @@ func (s *State) Cast(spell string) error {
 			s.C.Stats.Ac += 2 // protection field +2
 		}
 		s.decay(sp.Code, 250, func() { s.C.Stats.Ac -= 2 })
+	case "sca": // scare monsters
+		fallthrough
 	case "cld":
 		fallthrough
 	case "ssp":

@@ -22,7 +22,9 @@ const (
 // newMap is a wrapper of newLevel, it creates the level and places objects in the level.
 func newMap(lvl uint) [][]io.Runeable {
 	m := newLevel(lvl) // Create the level
-	treasureRoom(m)    // TODO need to fill treasure rooms
+	if lvl > 1 {       // Treausre rooms starting on level 2 of the dungeon
+		treasureRoom(m) // TODO need to fill treasure rooms
+	}
 
 	seed := time.Now().UnixNano()
 	glog.V(1).Infof("Map Seed: %v", seed)

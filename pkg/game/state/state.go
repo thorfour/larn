@@ -201,8 +201,6 @@ func (s *State) Cast(spell string) error {
 		s.Active[sp.Code] = nil
 	case "hel": // healing
 		s.C.Heal(20 + int(s.C.Stats.Level<<1))
-	case "sca": // scare monsters
-		fallthrough
 	case "hld": // hold monsters
 		s.decay(sp.Code, rand.Intn(10)+int(s.C.Stats.Level), func() {})
 	case "stp": // time stop
@@ -230,6 +228,8 @@ func (s *State) Cast(spell string) error {
 			s.C.Stats.Ac += 2 // protection field +2
 		}
 		s.decay(sp.Code, 250, func() { s.C.Stats.Ac -= 2 })
+	case "sca": // scare monsters
+		fallthrough
 	case "cld":
 		fallthrough
 	case "ssp":

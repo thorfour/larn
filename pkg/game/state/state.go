@@ -571,14 +571,25 @@ func (s *State) hits(n int) int {
 }
 
 // monsterDrop performs a item/gold drop from a slain monster at a given location.
+// NOTE: in OG larn the items were always dropped next to the player. This version drops next to the monster
 func (s *State) monsterDrop(c types.Coordinate, m *monster.Monster) {
+	gp := &items.GoldPile{Amount: m.Info.Gold}
+	gp.Visible(true)
+
+	// TODO determine if there's an item drop
 
 	// If the monster wasn't displacing anything, drop it where it was slain
 	if _, ok := s.maps.CurrentMap()[c.Y][c.X].(maps.Empty); ok {
-		gp := &items.GoldPile{Amount: m.Info.Gold}
-		gp.Visible(true)
 		s.maps.CurrentMap()[c.Y][c.X] = gp
+		return
 	}
 
-	// TODO search surrounding aread to drop location
+	// Look for locations around monster to drop
+	for _, a := range s.maps.Adjacent(c) {
+		if _, ok := a.(maps.Empty); ok {
+			s.maps.CurrentMap()[c.Y][c.X] = gp
+		}
+	}
+
+	// NOTE: If we couldn't find a place to drop then nothing gets dropped
 }

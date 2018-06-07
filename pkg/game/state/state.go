@@ -602,14 +602,15 @@ func (s *State) monsterDrop(c types.Coordinate, m *monster.Monster) {
 		if rand.Intn(101) >= 75 {
 			drop = append(drop, items.CreateGem())
 		}
-		if rand.Intn(5) == 0 { //NOTE: recursively drop for a Leprechaun
-			s.monsterDrop(c, m)
+		for i := rand.Intn(5); i == 0; i = rand.Intn(5) {
+			if rand.Intn(101) >= 75 {
+				drop = append(drop, items.CreateGem())
+			}
 		}
 	}
 
-	// TODO for the recursive drops there shouldn't be multiple gold drops
-	s.drop(c, gp)
-	for i := range drop {
+	s.drop(c, gp)         // drop gold pile
+	for i := range drop { // drop items
 		s.drop(c, drop[i])
 	}
 }

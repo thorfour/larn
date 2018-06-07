@@ -87,6 +87,36 @@ func CreateItems(l int) []Item {
 	var created []Item
 	for i := 0; i < itemCount; i++ {
 		// TODO create the item
+		tmp := 33
+		if l > 6 {
+			tmp = 41
+		} else if l > 4 {
+			tmp = 39
+		}
+		tmp = rand.Intn(tmp)
+		switch {
+		case tmp < 4: // scroll
+			created = append(created, NewScroll())
+		case tmp < 8: // potion
+			created = append(created, NewPotion())
+		case tmp < 12: // gold
+			created = append(created, &GoldPile{})
+		case tmp < 16: // book
+		case tmp < 19: // dagger
+		case tmp < 22: // leather armor
+		case tmp < 25: // regen ring, shield, 2 hand sword
+		case tmp < 27: // prot ring, dex ring
+		case tmp < 28: // energy ring
+		case tmp < 30: // str ring, cleverness ring
+		case tmp < 32: // ring mail, flail
+		case tmp < 34: // spear, battleaxe
+		case tmp < 37: // belt, studded leather, splint
+		case tmp < 38: // fortune cookie
+		case tmp < 39: // chain mail
+		case tmp < 40: // plate mail
+		case tmp < 41: // longsword
+
+		}
 	}
 	return created
 }

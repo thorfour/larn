@@ -10,6 +10,7 @@ const (
 	goldPileRune = '*'
 )
 
+// GoldPile represents a pile of gold
 type GoldPile struct {
 	Amount int
 	DefaultItem
@@ -19,9 +20,8 @@ type GoldPile struct {
 func (g *GoldPile) Rune() rune {
 	if g.Visibility {
 		return goldPileRune
-	} else {
-		return invisibleRune
 	}
+	return invisibleRune
 }
 
 // Log implements the Disaplceable interface
@@ -36,3 +36,6 @@ func (g *GoldPile) PickUp(s *stats.Stats) {
 
 // Drop implements the item interface
 func (g *GoldPile) Drop(s *stats.Stats) {}
+
+// String implementes the item interface
+func (g *GoldPile) String() string { return "" }

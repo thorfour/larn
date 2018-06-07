@@ -70,9 +70,6 @@ func New(s *data.Settings) *Game {
 		return g
 	}
 
-	// TODO setup game settings
-	// g.settings
-
 	// Generate starting game state
 	g.currentState = state.New(g.settings.Difficulty)
 

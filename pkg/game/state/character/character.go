@@ -43,7 +43,8 @@ type Character struct {
 	Displaced io.Runeable // object character is currently on top of
 }
 
-func (c *Character) Init() {
+// Init a character. Takes game difficulty which determines the characters starting items
+func (c *Character) Init(d int) {
 	c.Stats = new(stats.Stats)
 	c.Stats.Special = make(map[int]bool)
 	c.Stats.KnownSpells = make(map[string]bool)
@@ -60,6 +61,11 @@ func (c *Character) Init() {
 	c.Stats.Con = 12
 	c.Stats.Dex = 12
 	c.Stats.Cha = 12
+
+	if d <= 0 { // 0 difficulty games the plaer starts with leather armor and dagger
+		c.wield(items.GetNewWeapon(items.Dagger))
+		c.wear(items.GetNewArmor(items.Leather))
+	}
 }
 
 func (c *Character) Rune() rune {
@@ -139,7 +145,7 @@ func (c *Character) TakeOff() error {
 	// Move all armor into inventory
 	for i := range c.armor {
 		c.inventory = append(c.inventory, c.armor[i])
-		c.armor = append(c.armor[:i], c.armor[i+1:]...)
+		c.removeArmor(i)
 	}
 
 	return nil
@@ -159,6 +165,7 @@ func (c *Character) Read(e rune) ([]string, error) {
 	return i.(items.Readable).Read(c.Stats), nil
 }
 
+// item performs an item action on an item the character is carrying
 func (c *Character) item(e rune, a action) (items.Item, error) {
 	label := 'a'
 	for i, w := range c.weapon {
@@ -167,19 +174,17 @@ func (c *Character) item(e rune, a action) (items.Item, error) {
 			case ReadAction:
 				return nil, fmt.Errorf("You can't read that!")
 			case DropAction:
-				c.weapon = append(c.weapon[:i], c.weapon[i+1:]...)
+				c.removeWeapon(i)
 				w.Disarm(c.Stats)
 				return w, nil
 			case WieldAction:
 				return w, nil
 			case WearAction:
 				if t, ok := w.(items.Armor); ok { // Ensure the item is armor
-					t.Wear(c.Stats)              // wear the armor
-					c.armor = append(c.armor, t) // Add item to armor
+					c.wear(t)
 					return t, nil
-				} else {
-					return nil, fmt.Errorf("You can't wear that!")
 				}
+				return nil, fmt.Errorf("You can't wear that!")
 			}
 		}
 		label++
@@ -191,17 +196,15 @@ func (c *Character) item(e rune, a action) (items.Item, error) {
 			case ReadAction:
 				return nil, fmt.Errorf("You can't read that!")
 			case DropAction:
-				c.armor = append(c.armor[:i], c.armor[i+1:]...)
+				c.removeArmor(i)
 				ar.TakeOff(c.Stats)
 				return ar, nil
 			case WieldAction:
 				if t, ok := ar.(items.Weapon); ok { // Ensure the item is a weapon
-					t.Wield(c.Stats)               // Wield the weapon
-					c.weapon = append(c.weapon, t) // Add item to weapons
+					c.wield(t)
 					return t, nil
-				} else {
-					return nil, fmt.Errorf("You can't wield item %s!", string(e))
 				}
+				return nil, fmt.Errorf("You can't wield item %s!", string(e))
 			case WearAction:
 				return ar, nil
 			}
@@ -214,32 +217,28 @@ func (c *Character) item(e rune, a action) (items.Item, error) {
 			switch a {
 			case ReadAction:
 				if _, ok := t.(items.Readable); ok { // Ensure item is readable
-					c.inventory = append(c.inventory[:i], c.inventory[i+1:]...) // Remove the item from inventory
+					c.removeInv(i)
 					return t, nil
 				}
 				return nil, fmt.Errorf("You can't read that!")
 			case DropAction:
-				c.inventory = append(c.inventory[:i], c.inventory[i+1:]...)
+				c.removeInv(i)
 				t.Drop(c.Stats)
 				return t, nil
 			case WieldAction:
 				if it, ok := t.(items.Weapon); ok { // Ensure the item is a weapon
-					it.Wield(c.Stats)                                           // Wield the weapon
-					c.weapon = append(c.weapon, it)                             // Add item to weapons
-					c.inventory = append(c.inventory[:i], c.inventory[i+1:]...) // Remove item from inventory
+					c.wield(it)
+					c.removeInv(i)
 					return it, nil
-				} else {
-					return nil, fmt.Errorf("You can't wield item %s!", string(e))
 				}
+				return nil, fmt.Errorf("You can't wield item %s!", string(e))
 			case WearAction:
 				if it, ok := t.(items.Armor); ok { // Ensure the item is armor
-					it.Wear(c.Stats)                                            // wear the armor
-					c.armor = append(c.armor, it)                               // Add item to armor
-					c.inventory = append(c.inventory[:i], c.inventory[i+1:]...) // Remove item from inventory
+					c.wear(it)
+					c.removeInv(i)
 					return it, nil
-				} else {
-					return nil, fmt.Errorf("You can't wear that!")
 				}
+				return nil, fmt.Errorf("You can't wear that!")
 			}
 		}
 		label++
@@ -297,4 +296,31 @@ func (c *Character) Damage(dmg int) bool {
 	}
 	c.Stats.Hp -= uint(dmg)
 	return false
+}
+
+// wield performs the wield action and adds the weapon to list of wielded items
+func (c *Character) wield(w items.Weapon) {
+	w.Wield(c.Stats)               // Wield the weapon
+	c.weapon = append(c.weapon, w) // Add item to weapons
+}
+
+// wear performs the wear action and adds the armor to the list of worn items
+func (c *Character) wear(a items.Armor) {
+	a.Wear(c.Stats)              // Wear the armor
+	c.armor = append(c.armor, a) // Add item to worn armor
+}
+
+// removeInv removes an item from the inventory
+func (c *Character) removeInv(i int) {
+	c.inventory = append(c.inventory[:i], c.inventory[i+1:]...)
+}
+
+// removeArmor removes armor from the armor list
+func (c *Character) removeArmor(i int) {
+	c.armor = append(c.armor[:i], c.armor[i+1:]...)
+}
+
+// removeWeapon removes a weapon form the wielded list
+func (c *Character) removeWeapon(i int) {
+	c.weapon = append(c.weapon[:i], c.weapon[i+1:]...)
 }

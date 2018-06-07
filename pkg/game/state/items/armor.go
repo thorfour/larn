@@ -6,18 +6,27 @@ import (
 	"github.com/thorfour/larn/pkg/game/state/stats"
 )
 
+// ArmorType indicates the type of armor
 type ArmorType int
 
 const armorRune = '['
 
 const (
+	// Leather armor
 	Leather ArmorType = iota
+	// StuddedLeather armor
 	StuddedLeather
+	// RingMail armor
 	RingMail
+	// ChainMail armor
 	ChainMail
+	// SplintMail armor
 	SplintMail
+	// PlateMail armor
 	PlateMail
+	// PlateArmor armor
 	PlateArmor
+	// StainlessPlateArmor armor
 	StainlessPlateArmor
 )
 
@@ -57,9 +66,8 @@ type ArmorClass struct {
 func (a *ArmorClass) Rune() rune {
 	if a.Visibility {
 		return armorRune
-	} else {
-		return invisibleRune
 	}
+	return invisibleRune
 }
 
 // Log implements the Loggable interface
@@ -86,4 +94,11 @@ func (a *ArmorClass) Wear(c *stats.Stats) {
 // TakeOff implements the Armor interface
 func (a *ArmorClass) TakeOff(c *stats.Stats) {
 	c.Ac -= (armorBase[a.Type] + a.Attribute)
+}
+
+// GetNewArmor returns a new defauly armor of type id
+func GetNewArmor(id ArmorType) *ArmorClass {
+	return &ArmorClass{
+		Type: id,
+	}
 }

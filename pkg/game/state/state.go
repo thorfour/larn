@@ -53,12 +53,12 @@ type State struct {
 func New(diff int) *State {
 	glog.V(1).Info("Creating new state")
 	s := new(State)
+	s.difficulty = diff
 	s.C = new(character.Character)
-	s.C.Init()
+	s.C.Init(s.difficulty)
 	s.Active = make(map[string]func())
 	s.rng = rand.New(rand.NewSource(time.Now().UnixNano()))
 	s.maps = maps.New(s.C)
-	s.difficulty = diff
 
 	// Display the welcome string at the bottom
 	for i := 0; i < logLength-1; i++ {

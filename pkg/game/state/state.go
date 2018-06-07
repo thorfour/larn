@@ -510,7 +510,7 @@ func (s *State) playerAttack(d types.Direction) {
 			s.Log(fmt.Sprintf("The %s died", mon.Name()))
 			s.maps.RemoveAt(mLoc)
 			s.maps.CurrentMap()[mLoc.Y][mLoc.X] = mon.Displaced
-			// TODO handle any monster drops
+			s.monsterDrop(mLoc, mon)
 			// TODO increase/decrease stats for character
 		}
 	default:
@@ -568,4 +568,17 @@ func (s *State) hits(n int) int {
 	}
 
 	return n
+}
+
+// monsterDrop performs a item/gold drop from a slain monster at a given location.
+func (s *State) monsterDrop(c types.Coordinate, m *monster.Monster) {
+
+	// If the monster wasn't displacing anything, drop it where it was slain
+	if _, ok := s.maps.CurrentMap()[c.Y][c.X].(maps.Empty); ok {
+		gp := &items.GoldPile{Amount: m.Info.Gold}
+		gp.Visible(true)
+		s.maps.CurrentMap()[c.Y][c.X] = gp
+	}
+
+	// TODO search surrounding aread to drop location
 }

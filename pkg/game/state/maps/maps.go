@@ -45,6 +45,7 @@ func New(c *character.Character) *Maps {
 
 		switch i {
 		case homeLevel:
+			m.entrance = append(m.entrance, walkToEmpty(randMapCoord(), nm)) // TODO change this to be next to the dungeon entrance
 		case 1: // dungeon 0 has an entrance
 			nm[height-1][width/2] = (Empty{})
 			m.entrance = append(m.entrance, types.Coordinate{width / 2, height - 2})
@@ -76,6 +77,7 @@ func (m *Maps) RemoveCharacter(c *character.Character) {
 
 // SpawnCharacter places the character on the home level
 func (m *Maps) SpawnCharacter(coord types.Coordinate, c *character.Character) {
+	glog.V(2).Infof("Spawning Character: %v", coord)
 
 	// Place the character on the map
 	l, d := placeObject(coord, c, m.active)

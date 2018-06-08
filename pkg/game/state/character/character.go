@@ -31,6 +31,7 @@ const (
 	WieldAction
 	WearAction
 	ReadAction
+	TakeOffAction
 )
 
 const (
@@ -41,10 +42,8 @@ const (
 
 type Character struct {
 	loc       types.Coordinate
-	armor     []items.Armor  // Currently worn armor
-	weapon    []items.Weapon // Currently wielded weapon(s)
-	inventory []items.Item
 	Stats     *stats.Stats
+	inv       *Inventory
 	Displaced io.Runeable // object character is currently on top of
 }
 
@@ -66,15 +65,19 @@ func (c *Character) Init(d int) {
 	c.Stats.Con = 12
 	c.Stats.Dex = 12
 	c.Stats.Cha = 12
+	c.inv = NewInventory()
 
 	if d <= 0 { // 0 difficulty games the plaer starts with leather armor and dagger
 		w := items.GetNewWeapon(items.Dagger, 0)
 		w.Attribute = 0
-		c.wield(w)
+		if err := c.Wield(c.inv.AddItem(w, c.Stats)); err != nil {
+			glog.Fatal("Uanble to wield starting weapon")
+		}
 		a := items.NewArmor(items.Leather, 0)
 		a.Attribute = 0
-		c.wear(a)
-
+		if err := c.Wear(c.inv.AddItem(a, c.Stats)); err != nil {
+			glog.Fatal("Unable to wear starting armor")
+		}
 	}
 }
 
@@ -113,52 +116,25 @@ func (c *Character) Wield(e rune) error {
 }
 
 // AddItem adds an item to the players inventory
-func (c *Character) AddItem(i items.Item) {
-	c.inventory = append(c.inventory, i)
+func (c *Character) AddItem(i items.Item) rune {
+	// TODO check if character can carry any more
+	return c.inv.AddItem(i, c.Stats)
 }
 
 // DropItem removes an item from a characters inventory. Returns the item if there was no error
-// FIXME this isn't a stable removal. Items need to maintain their index
 func (c *Character) DropItem(e rune) (items.Item, error) {
-
-	i, err := c.item(e, DropAction)
-	if err != nil {
-		return nil, err
-	}
-
-	return i, nil
+	return c.item(e, DropAction)
 }
 
 // Inventory returns a list of displayable inventory items
 func (c *Character) Inventory() []string {
-	var inv []string
-	for _, i := range c.armor {
-		inv = append(inv, fmt.Sprintf("%v %v", i.String(), "(being worn)"))
-	}
-	for _, i := range c.weapon {
-		inv = append(inv, fmt.Sprintf("%v %v", i.String(), "(weapon in hand)"))
-	}
-	for _, i := range c.inventory {
-		inv = append(inv, i.String())
-	}
-
-	glog.V(4).Infof("Inventory: %v", inv)
-	return inv
+	return c.inv.List()
 }
 
 // TakeOff removes a characters armor
 func (c *Character) TakeOff() error {
-	if len(c.armor) == 0 {
-		return fmt.Errorf("no armor being worn")
-	}
-
-	// Move all armor into inventory
-	for i := range c.armor {
-		c.inventory = append(c.inventory, c.armor[i])
-		c.removeArmor(i)
-	}
-
-	return nil
+	_, err := c.item(none, TakeOffAction)
+	return err
 }
 
 // Wear has the character wear a weapon
@@ -177,84 +153,20 @@ func (c *Character) Read(e rune) ([]string, error) {
 
 // item performs an item action on an item the character is carrying
 func (c *Character) item(e rune, a action) (items.Item, error) {
-	label := 'a'
-	for i, w := range c.weapon {
-		if label == e {
-			switch a {
-			case ReadAction:
-				return nil, fmt.Errorf("You can't read that!")
-			case DropAction:
-				c.removeWeapon(i)
-				w.Disarm(c.Stats)
-				return w, nil
-			case WieldAction:
-				return w, nil
-			case WearAction:
-				if t, ok := w.(items.Armor); ok { // Ensure the item is armor
-					c.wear(t)
-					return t, nil
-				}
-				return nil, fmt.Errorf("You can't wear that!")
-			}
-		}
-		label++
+	switch a {
+	case ReadAction:
+		return c.inv.Read(e, c.Stats)
+	case DropAction:
+		return c.inv.Drop(e, c.Stats)
+	case WearAction:
+		return c.inv.Wear(e, c.Stats)
+	case WieldAction:
+		return c.inv.Wield(e, c.Stats)
+	case TakeOffAction:
+		return c.inv.TakeOff(e, c.Stats)
+	default:
+		return nil, fmt.Errorf("Invalid action %v", a)
 	}
-
-	for i, ar := range c.armor {
-		if label == e {
-			switch a {
-			case ReadAction:
-				return nil, fmt.Errorf("You can't read that!")
-			case DropAction:
-				c.removeArmor(i)
-				ar.TakeOff(c.Stats)
-				return ar, nil
-			case WieldAction:
-				if t, ok := ar.(items.Weapon); ok { // Ensure the item is a weapon
-					c.wield(t)
-					return t, nil
-				}
-				return nil, fmt.Errorf("You can't wield item %s!", string(e))
-			case WearAction:
-				return ar, nil
-			}
-		}
-		label++
-	}
-
-	for i, t := range c.inventory {
-		if label == e {
-			switch a {
-			case ReadAction:
-				if _, ok := t.(items.Readable); ok { // Ensure item is readable
-					c.removeInv(i)
-					return t, nil
-				}
-				return nil, fmt.Errorf("You can't read that!")
-			case DropAction:
-				c.removeInv(i)
-				t.Drop(c.Stats)
-				return t, nil
-			case WieldAction:
-				if it, ok := t.(items.Weapon); ok { // Ensure the item is a weapon
-					c.wield(it)
-					c.removeInv(i)
-					return it, nil
-				}
-				return nil, fmt.Errorf("You can't wield item %s!", string(e))
-			case WearAction:
-				if it, ok := t.(items.Armor); ok { // Ensure the item is armor
-					c.wear(it)
-					c.removeInv(i)
-					return it, nil
-				}
-				return nil, fmt.Errorf("You can't wear that!")
-			}
-		}
-		label++
-	}
-
-	return nil, fmt.Errorf("You don't have item %s!", string(e))
 }
 
 // Cast handles the bookkeeping for a character casting a spell
@@ -306,33 +218,6 @@ func (c *Character) Damage(dmg int) bool {
 	}
 	c.Stats.Hp -= uint(dmg)
 	return false
-}
-
-// wield performs the wield action and adds the weapon to list of wielded items
-func (c *Character) wield(w items.Weapon) {
-	w.Wield(c.Stats)               // Wield the weapon
-	c.weapon = append(c.weapon, w) // Add item to weapons
-}
-
-// wear performs the wear action and adds the armor to the list of worn items
-func (c *Character) wear(a items.Armor) {
-	a.Wear(c.Stats)              // Wear the armor
-	c.armor = append(c.armor, a) // Add item to worn armor
-}
-
-// removeInv removes an item from the inventory
-func (c *Character) removeInv(i int) {
-	c.inventory = append(c.inventory[:i], c.inventory[i+1:]...)
-}
-
-// removeArmor removes armor from the armor list
-func (c *Character) removeArmor(i int) {
-	c.armor = append(c.armor[:i], c.armor[i+1:]...)
-}
-
-// removeWeapon removes a weapon form the wielded list
-func (c *Character) removeWeapon(i int) {
-	c.weapon = append(c.weapon[:i], c.weapon[i+1:]...)
 }
 
 // GainExperience has the character gain experience (ususally from slaying monsters)

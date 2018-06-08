@@ -249,15 +249,13 @@ func (g *Game) runAction(d types.Direction) {
 // it will render the first inventory list, and subsequent calls the the function it returns will render the remaining pages
 func (g *Game) inventoryWrapper(callback func() func(termbox.Event)) func(termbox.Event) {
 	offset := 0
-	label := 'a' // first inventory item is labled as a)
 	s := g.currentState.Inventory()
 
 	generateInv := func() []string {
 		var inv []string
 		inv = append(inv, "") // empty string at the top
 		for i := 0; i < invMaxDisplay && offset < len(s); i++ {
-			inv = append(inv, fmt.Sprintf("%s) %v", string(label), s[offset]))
-			label++
+			inv = append(inv, fmt.Sprintf("%v", s[offset]))
 			offset++
 		}
 		inv = append(inv, g.currentState.TimeStr())             // add the elapsed time

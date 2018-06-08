@@ -36,6 +36,9 @@ var store = [][]forsale{
 		{"o", 10000, 1, &items.WeaponClass{Type: items.TwoHandedSword}},
 		{"p", 50000, 1, &items.WeaponClass{Type: items.SunSword}},
 		{"q", 165000, 1, &items.WeaponClass{Type: items.LanceOfDeath}},
+		// Filler
+		{"r", -1, 0, nil},
+		{"s", -1, 0, nil},
 		// Rings
 		{"t", 1500, 1, &items.Ring{Type: items.Protection}},
 		{"u", 850, 1, &items.Ring{Type: items.Strength}},
@@ -68,9 +71,17 @@ func dndstorepage(n int) string {
 	for i, item := range store[n%len(store)] {
 		switch i % 2 { // 2 items per line
 		case 0:
-			fmt.Fprintf(w, "  %s) %s\t\t%v\t", item.index, item.Item, item.price)
+			if item.stock == 0 {
+				fmt.Fprint(w, "      \t\t \t")
+			} else {
+				fmt.Fprintf(w, "  %s) %s\t\t%v\t", item.index, item.Item, item.price)
+			}
 		case 1:
-			fmt.Fprintf(w, "  %s) %s\t\t%v\t\n", item.index, item.Item, item.price)
+			if item.stock == 0 {
+				fmt.Fprint(w, "      \t\t \t\n")
+			} else {
+				fmt.Fprintf(w, "  %s) %s\t\t%v\t\n", item.index, item.Item, item.price)
+			}
 		}
 	}
 

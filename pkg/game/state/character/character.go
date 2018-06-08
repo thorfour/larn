@@ -130,7 +130,7 @@ func (c *Character) Inventory() []string {
 // TakeOff removes a characters armor
 func (c *Character) TakeOff() error {
 	_, err := c.item(none, TakeOffAction)
-	return nil
+	return err
 }
 
 // Wear has the character wear a weapon

@@ -47,10 +47,11 @@ func (i *Inventory) List() []string {
 func (i *Inventory) AddItem(item items.Item, s *stats.Stats) rune {
 	slot := 'a' - 1
 	if len(i.unused) == 0 {
-		slot += len(i.inv)
+		slot += rune(len(i.inv))
+	} else {
+		slot = i.unused[0]
+		i.unused = i.unused[1:]
 	}
-
-	// TODO figure how to handle the "unusued" runes
 
 	i.inv[slot] = item
 	item.PickUp(s)
@@ -67,6 +68,7 @@ func (i *Inventory) Drop(r rune, s *stats.Stats) (items.Item, error) {
 
 	delete(i.inv, r)
 	i.unused = append(i.unused, r)
+	// TODO sort the list everytime a rune is added
 	item.Drop(s)
 
 	return item, nil
@@ -138,8 +140,7 @@ func (i *Inventory) Read(r rune, s *stats.Stats) (items.Item, error) {
 		return nil, fmt.Errorf("You don't have item %v", r)
 	}
 
-	b, ok := item.(items.Readable)
-	if !ok {
+	if _, ok := item.(items.Readable); !ok {
 		return nil, fmt.Errorf("You can't read that!")
 	}
 

@@ -7,5 +7,5 @@ import (
 
 func TestRender(t *testing.T) {
 
-	fmt.Println(dndstorepage(0))
+	fmt.Println(dndstorepage(0, 100))
 }

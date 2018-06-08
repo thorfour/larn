@@ -126,7 +126,7 @@ func dndStoreSplash() string {
 }
 
 // dndstorepage renders a given page in the DND store
-func dndstorepage(n int) string {
+func dndstorepage(n int, gold uint) string {
 	pg := dndStoreSplash() + "\n"
 	buf := bytes.NewBuffer(make([]byte, 100))
 	w := tabwriter.NewWriter(buf, 5, 0, 1, ' ', tabwriter.TabIndent)
@@ -149,5 +149,7 @@ func dndstorepage(n int) string {
 
 	w.Flush()
 
-	return pg + "\n" + string(buf.Bytes())
+	goldline := fmt.Sprintf("\n                                         You have %v gold pieces", gold)
+	helpline := "\n\n  Enter your transaction [space for next page, escape to leave]"
+	return pg + "\n" + string(buf.Bytes()) + goldline + helpline
 }

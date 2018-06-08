@@ -45,6 +45,11 @@ var store = [][]forsale{
 		{"y", 1250, 1, &items.Ring{Type: items.Damage}},
 		{"z", 2200, 1, &items.Ring{Type: items.Regen}},
 	},
+	{ // Page 2
+		{"a", 10000, 1, &items.Ring{Type: items.ExtraRegen}},
+		{"b", 2800, 1, &items.Belt{}},
+		{"c", 4000, 1, &items.Ring{Type: items.Dexterity}}, // TODO amulet of invisibility
+	},
 }
 
 // dndStoreSplash used to display the dnd store
@@ -60,7 +65,7 @@ func dndstorepage(n int) string {
 	pg := dndStoreSplash() + "\n"
 	buf := bytes.NewBuffer(make([]byte, 100))
 	w := tabwriter.NewWriter(buf, 5, 0, 1, ' ', tabwriter.TabIndent)
-	for i, item := range store[n] {
+	for i, item := range store[n%len(store)] {
 		switch i % 2 { // 2 items per line
 		case 0:
 			fmt.Fprintf(w, "  %s) %s\t\t%v\t", item.index, item.Item, item.price)

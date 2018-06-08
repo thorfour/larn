@@ -52,6 +52,32 @@ var store = [][]forsale{
 		{"a", 10000, 1, &items.Ring{Type: items.ExtraRegen}},
 		{"b", 2800, 1, &items.Belt{}},
 		{"c", 4000, 1, &items.Ring{Type: items.Dexterity}}, // TODO amulet of invisibility
+		// Filler
+		{"d", -1, 0, nil},
+		{"e", -1, 0, nil},
+		{"f", -1, 0, nil},
+		{"g", -1, 0, nil},
+		// Items
+		{"h", 5900, 1, &items.Chest{}},
+		{"i", 2000, 1, &items.Book{}},
+		{"j", 100, 1, &items.Cookie{}},
+		// Potions
+		{"k", 200, 1, &items.Potion{ID: items.Sleep, Store: true}},
+		{"l", 900, 1, &items.Potion{ID: items.Healing, Store: true}},
+		{"m", 5200, 1, &items.Potion{ID: items.RaiseLevel, Store: true}},
+		{"n", 1000, 1, &items.Potion{ID: items.IncreaseAbility, Store: true}},
+		{"o", 500, 1, &items.Potion{ID: items.GainWisdom, Store: true}},
+		{"p", 1500, 1, &items.Potion{ID: items.GainStrength, Store: true}},
+		{"q", 700, 1, &items.Potion{ID: items.IncreaseCharisma, Store: true}},
+		{"r", 300, 1, &items.Potion{ID: items.Dizziness, Store: true}},
+		{"s", 2000, 1, &items.Potion{ID: items.Learning, Store: true}},
+		{"t", 500, 1, &items.Potion{ID: items.ObjectDetection, Store: true}},
+		{"u", 800, 1, &items.Potion{ID: items.MonsterDetection, Store: true}},
+		{"v", 300, 1, &items.Potion{ID: items.Forgetfulness, Store: true}},
+		{"w", 200, 1, &items.Potion{ID: items.Water, Store: true}},
+		{"x", 400, 1, &items.Potion{ID: items.Blindness, Store: true}},
+		{"y", 350, 1, &items.Potion{ID: items.Confusion, Store: true}},
+		{"z", 5200, 1, &items.Potion{ID: items.Heroism, Store: true}},
 	},
 }
 

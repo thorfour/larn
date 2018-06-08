@@ -442,8 +442,8 @@ func (g *Game) dndStoreHandler() func(termbox.Event) {
 			g.inputHandler = g.defaultHandler
 			g.render(display(g.currentState))
 		case termbox.KeySpace: // Space key (next page)
-			g.renderSplash(dndstorepage(page))
 			page++
+			g.renderSplash(dndstorepage(page))
 		}
 	}
 }

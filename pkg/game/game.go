@@ -432,18 +432,3 @@ func (g *Game) enterAction() func(termbox.Event) {
 		return g.defaultHandler
 	}
 }
-
-func (g *Game) dndStoreHandler() func(termbox.Event) {
-	page := 0
-	g.renderSplash(dndstorepage(page, g.currentState.C.Stats.Gold))
-	return func(e termbox.Event) {
-		switch e.Key {
-		case termbox.KeyEsc: // Exit
-			g.inputHandler = g.defaultHandler
-			g.render(display(g.currentState))
-		case termbox.KeySpace: // Space key (next page)
-			page++
-			g.renderSplash(dndstorepage(page, g.currentState.C.Stats.Gold))
-		}
-	}
-}

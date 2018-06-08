@@ -4,7 +4,9 @@ import (
 	"bytes"
 	"fmt"
 	"text/tabwriter"
+	"time"
 
+	termbox "github.com/nsf/termbox-go"
 	"github.com/thorfour/larn/pkg/game/state/items"
 )
 
@@ -152,4 +154,108 @@ func dndstorepage(n int, gold uint) string {
 	goldline := fmt.Sprintf("\n                                         You have %v gold pieces", gold)
 	helpline := "\n\n  Enter your transaction [space for next page, escape to leave]"
 	return pg + "\n" + string(buf.Bytes()) + goldline + helpline
+}
+
+// purchase an item from the store
+func purchase(page int, k rune, gold *uint) (items.Item, error) {
+	for i, v := range store[page%len(store)] {
+		if v.index == string(k) { // Found the item to purchase
+			// Check if item is in stock
+			if store[page%len(store)][i].stock == 0 {
+				return nil, fmt.Errorf("Sorry, but we are out of that item.")
+			}
+
+			if *gold < uint(v.price) { // unable to purchase the item
+				return nil, fmt.Errorf("You don't have enough gold to pay for that!")
+			}
+
+			// Purchase the item
+			store[page%len(store)][i].stock--
+			item := store[page%len(store)][i].Item
+			return item, nil
+		}
+	}
+
+	return nil, fmt.Errorf("unable to purchase")
+}
+
+// dndStoreHandler inpout handler for the dnd store
+func (g *Game) dndStoreHandler() func(termbox.Event) {
+	page := 0
+	g.renderSplash(dndstorepage(page, g.currentState.C.Stats.Gold))
+	return func(e termbox.Event) {
+		switch e.Key {
+		case termbox.KeyEsc: // Exit
+			g.inputHandler = g.defaultHandler
+			g.render(display(g.currentState))
+		case termbox.KeySpace: // Space key (next page)
+			page++
+			g.renderSplash(dndstorepage(page, g.currentState.C.Stats.Gold))
+		default:
+			switch e.Ch {
+			case 'a':
+				fallthrough
+			case 'b':
+				fallthrough
+			case 'c':
+				fallthrough
+			case 'd':
+				fallthrough
+			case 'e':
+				fallthrough
+			case 'f':
+				fallthrough
+			case 'g':
+				fallthrough
+			case 'h':
+				fallthrough
+			case 'i':
+				fallthrough
+			case 'j':
+				fallthrough
+			case 'k':
+				fallthrough
+			case 'l':
+				fallthrough
+			case 'm':
+				fallthrough
+			case 'n':
+				fallthrough
+			case 'o':
+				fallthrough
+			case 'p':
+				fallthrough
+			case 'q':
+				fallthrough
+			case 'r':
+				fallthrough
+			case 's':
+				fallthrough
+			case 't':
+				fallthrough
+			case 'u':
+				fallthrough
+			case 'v':
+				fallthrough
+			case 'w':
+				fallthrough
+			case 'x':
+				fallthrough
+			case 'y':
+				fallthrough
+			case 'z':
+				// Attempt to purchase an item
+				item, err := purchase(page, e.Ch, &g.currentState.C.Stats.Gold)
+				if err != nil {
+					g.renderSplash(dndstorepage(page, g.currentState.C.Stats.Gold) + "\n\n  " + err.Error())
+					time.Sleep(time.Millisecond * 700) // Quick blink the message
+				} else {
+					r := g.currentState.C.AddItem(item)
+					g.renderSplash(dndstorepage(page, g.currentState.C.Stats.Gold) + "\n\n  " + fmt.Sprintf("You pick up: %s) %s", string(r), item))
+					time.Sleep(time.Millisecond * 700) // Quick blink the message
+				}
+				g.renderSplash(dndstorepage(page, g.currentState.C.Stats.Gold))
+			}
+		}
+	}
 }

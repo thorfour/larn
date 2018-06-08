@@ -109,6 +109,12 @@ var store = [][]forsale{
 		{"y", 10000, 1, &items.Scroll{ID: items.GemPerfection, Store: true}},
 		{"z", 5000, 1, &items.Scroll{ID: items.SpellExtension, Store: true}},
 	},
+	{ // Page 4
+		{"a", 3400, 1, &items.Scroll{ID: items.Identify, Store: true}},
+		{"b", 2200, 1, &items.Scroll{ID: items.RemoveCurse, Store: true}},
+		{"c", -1, 0, nil},
+		{"d", 6100, 1, &items.Scroll{ID: items.Pulverization, Store: true}},
+	},
 }
 
 // dndStoreSplash used to display the dnd store

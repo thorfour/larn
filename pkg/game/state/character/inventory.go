@@ -2,6 +2,8 @@ package character
 
 import (
 	"fmt"
+	"sort"
+	"strings"
 
 	"github.com/golang/glog"
 	"github.com/thorfour/larn/pkg/game/state/items"
@@ -19,24 +21,37 @@ type Inventory struct {
 	unused []rune
 }
 
+// NewInventory returns a new initialized inventory struct
+func NewInventory() *Inventory {
+	i := new(Inventory)
+	i.inv = make(map[rune]items.Item)
+	i.shield = none
+	i.weapon = none
+	i.armor = none
+
+	return i
+}
+
 // List returns all the items in the inventory
 func (i *Inventory) List() []string {
-	r := 'a'
 	var ret []string
-	for j := 0; j < len(i.inv); j++ {
+	for r := range i.inv {
 		switch r {
 		case i.weapon:
-			ret = append(ret, fmt.Sprintf("%s %s", i.inv[r], "(weapon in hand)"))
+			ret = append(ret, fmt.Sprintf("%s) %s %s", string(r), i.inv[r], "(weapon in hand)"))
 		case i.shield:
 			fallthrough
 		case i.armor:
-			ret = append(ret, fmt.Sprintf("%s %s", i.inv[r], "(being worn)"))
+			ret = append(ret, fmt.Sprintf("%s) %s %s", string(r), i.inv[r], "(being worn)"))
 		default:
-			ret = append(ret, i.inv[r].String())
+			ret = append(ret, fmt.Sprintf("%s) %s", string(r), i.inv[r].String()))
 		}
-
-		r++
 	}
+
+	// NOTE: since maps return random order, sort the return slice here
+	sort.Slice(ret, func(i, j int) bool {
+		return strings.Split(ret[i], " ")[0] < strings.Split(ret[j], " ")[0]
+	})
 
 	glog.V(4).Infof("Inventory: %v", ret)
 
@@ -63,12 +78,24 @@ func (i *Inventory) AddItem(item items.Item, s *stats.Stats) rune {
 func (i *Inventory) Drop(r rune, s *stats.Stats) (items.Item, error) {
 	item, ok := i.inv[r]
 	if !ok {
-		return nil, fmt.Errorf("You don't have item %v!", r)
+		return nil, fmt.Errorf("You don't have item %s!", string(r))
+	}
+
+	// Remove from wear/wield
+	switch r {
+	case i.shield:
+		fallthrough
+	case i.weapon:
+		i.Disarm(r, s)
+	case i.armor:
+		i.TakeOff(r, s)
 	}
 
 	delete(i.inv, r)
 	i.unused = append(i.unused, r)
-	// TODO sort the list everytime a rune is added
+	sort.Slice(i.unused, func(a, b int) bool {
+		return i.unused[a] < i.unused[b]
+	})
 	item.Drop(s)
 
 	return item, nil
@@ -78,12 +105,12 @@ func (i *Inventory) Drop(r rune, s *stats.Stats) (items.Item, error) {
 func (i *Inventory) Wield(r rune, s *stats.Stats) (items.Weapon, error) {
 	item, ok := i.inv[r]
 	if !ok {
-		return nil, fmt.Errorf("You don't have item %v", r)
+		return nil, fmt.Errorf("You don't have item %s", string(r))
 	}
 
 	w, ok := item.(items.Weapon)
 	if !ok {
-		return nil, fmt.Errorf("You can't wield item %v", r)
+		return nil, fmt.Errorf("You can't wield item %s", string(r))
 	}
 
 	// TODO check if two handed sword and shield
@@ -99,7 +126,7 @@ func (i *Inventory) Wield(r rune, s *stats.Stats) (items.Weapon, error) {
 func (i *Inventory) Wear(r rune, s *stats.Stats) (items.Armor, error) {
 	item, ok := i.inv[r]
 	if !ok {
-		return nil, fmt.Errorf("You don't have item %v", r)
+		return nil, fmt.Errorf("You don't have item %s", string(r))
 	}
 
 	if i.armor != none {
@@ -137,7 +164,7 @@ func (i *Inventory) TakeOff(_ rune, s *stats.Stats) (items.Armor, error) {
 func (i *Inventory) Read(r rune, s *stats.Stats) (items.Item, error) {
 	item, ok := i.inv[r]
 	if !ok {
-		return nil, fmt.Errorf("You don't have item %v", r)
+		return nil, fmt.Errorf("You don't have item %s", string(r))
 	}
 
 	if _, ok := item.(items.Readable); !ok {
@@ -146,4 +173,20 @@ func (i *Inventory) Read(r rune, s *stats.Stats) (items.Item, error) {
 
 	delete(i.inv, r)
 	return item, nil
+}
+
+// Disarm wielded weapon
+func (i *Inventory) Disarm(_ rune, s *stats.Stats) (items.Weapon, error) {
+	if i.weapon == none {
+		return nil, fmt.Errorf("You're not wielding anything")
+	}
+
+	w, ok := i.inv[i.weapon].(items.Weapon)
+	if !ok {
+		glog.Errorf("not wielding weapon: %s", w)
+	}
+	i.weapon = none
+	w.Disarm(s)
+
+	return w, nil
 }

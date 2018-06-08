@@ -66,6 +66,7 @@ func (c *Character) Init(d int) {
 	c.Stats.Dex = 12
 	c.Stats.Cha = 12
 	c.inv = new(Inventory)
+	c.inv.inv = make(map[rune]items.Item)
 
 	if d <= 0 { // 0 difficulty games the plaer starts with leather armor and dagger
 		w := items.GetNewWeapon(items.Dagger, 0)

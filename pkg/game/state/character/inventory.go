@@ -45,7 +45,7 @@ func (i *Inventory) List() []string {
 
 // AddItem adds a new item the the inventory and returns its assigned rune
 func (i *Inventory) AddItem(item items.Item, s *stats.Stats) rune {
-	slot := 'a' - 1
+	slot := 'a'
 	if len(i.unused) == 0 {
 		slot += rune(len(i.inv))
 	} else {

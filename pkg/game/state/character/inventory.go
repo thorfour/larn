@@ -26,13 +26,13 @@ func (i *Inventory) List() []string {
 	for j := 0; j < len(i.inv); j++ {
 		switch r {
 		case i.weapon:
-			ret = append(fmt.Sprintf("%s %s", i.inv[r], "(weapon in hand)"))
+			ret = append(ret, fmt.Sprintf("%s %s", i.inv[r], "(weapon in hand)"))
 		case i.shield:
 			fallthrough
 		case i.armor:
-			ret = append(fmt.Sprintf("%s %s", i.inv[r], "(being worn)"))
+			ret = append(ret, fmt.Sprintf("%s %s", i.inv[r], "(being worn)"))
 		default:
-			ret = append(inv[r])
+			ret = append(ret, i.inv[r].String())
 		}
 
 		r++
@@ -46,11 +46,13 @@ func (i *Inventory) List() []string {
 // AddItem adds a new item the the inventory and returns its assigned rune
 func (i *Inventory) AddItem(item items.Item, s *stats.Stats) rune {
 	slot := 'a' - 1
-	if len(unused) == 0 {
-		slot += len(inv)
+	if len(i.unused) == 0 {
+		slot += len(i.inv)
 	}
 
-	inv[slot] = item
+	// TODO figure how to handle the "unusued" runes
+
+	i.inv[slot] = item
 	item.PickUp(s)
 
 	return slot
@@ -64,6 +66,7 @@ func (i *Inventory) Drop(r rune, s *stats.Stats) (items.Item, error) {
 	}
 
 	delete(i.inv, r)
+	i.unused = append(i.unused, r)
 	item.Drop(s)
 
 	return item, nil
@@ -118,6 +121,10 @@ func (i *Inventory) TakeOff(_ rune, s *stats.Stats) (items.Armor, error) {
 		return nil, fmt.Errorf("You're not wearing anything")
 	}
 
+	a, ok := i.inv[i.armor].(items.Armor)
+	if !ok {
+		glog.Errorf("not wearing armor: %s", a)
+	}
 	i.armor = none
 	a.TakeOff(s)
 
@@ -133,9 +140,9 @@ func (i *Inventory) Read(r rune, s *stats.Stats) (items.Item, error) {
 
 	b, ok := item.(items.Readable)
 	if !ok {
-		return nil, fmt.Error("You can't read that!")
+		return nil, fmt.Errorf("You can't read that!")
 	}
 
 	delete(i.inv, r)
-	return b, nil
+	return item, nil
 }

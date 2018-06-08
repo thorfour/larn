@@ -122,15 +122,20 @@ func (s *State) Move(d types.Direction) bool {
 }
 
 // Enter is used for entering into a building or dungeon/volcano
-func (s *State) Enter() {
+func (s *State) Enter() int {
 	defer s.update()
 	glog.V(2).Infof("Enter request")
 
 	// Check if character is standing on an enterable object
-	switch t := s.C.Displaced.(type) {
-	case maps.Enterable:
+	if t, ok := s.C.Displaced.(maps.Enterable); ok {
+		lvl := t.Enter()
+		if lvl < 0 { // Special cases for stores
+			return lvl
+		}
 		s.maps.EnterLevel(s.C, t.Enter())
 	}
+
+	return 0
 }
 
 // PickUp will pick up the item the player is standing on

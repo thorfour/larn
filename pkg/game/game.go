@@ -8,6 +8,7 @@ import (
 	"github.com/thorfour/larn/pkg/game/data"
 	"github.com/thorfour/larn/pkg/game/state"
 	"github.com/thorfour/larn/pkg/game/state/items"
+	"github.com/thorfour/larn/pkg/game/state/maps"
 	"github.com/thorfour/larn/pkg/game/state/types"
 	"github.com/thorfour/larn/pkg/io"
 )
@@ -210,8 +211,7 @@ func (g *Game) defaultHandler(e termbox.Event) {
 		g.err = Quit // Set the error to quit
 		return
 	case 'E': // Enter the building
-		g.currentState.Enter()
-		g.render(display(g.currentState))
+		g.inputHandler = g.enterAction()
 	}
 }
 
@@ -419,4 +419,16 @@ func (g *Game) GameOver() bool {
 		return false
 	}
 	return g.currentState.C.Stats.Hp == 0
+}
+
+// enterAction to handle a user entering a dungeon or store
+func (g *Game) enterAction() func(termbox.Event) {
+
+	switch g.currentState.Enter() {
+	case maps.DndLvl:
+		return g.dndStoreHandler()
+	default:
+		g.render(display(g.currentState))
+		return g.defaultHandler
+	}
 }

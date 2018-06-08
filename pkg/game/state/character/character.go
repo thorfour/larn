@@ -67,6 +67,10 @@ func (c *Character) Init(d int) {
 	c.Stats.Cha = 12
 	c.inv = NewInventory()
 
+	if DEBUG { // Start with all the gold in a debug build
+		c.Stats.Gold = 10000000
+	}
+
 	if d <= 0 { // 0 difficulty games the plaer starts with leather armor and dagger
 		w := items.GetNewWeapon(items.Dagger, 0)
 		w.Attribute = 0

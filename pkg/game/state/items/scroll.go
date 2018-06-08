@@ -114,7 +114,8 @@ var knownScrolls map[ScrollID]bool
 
 // Scroll a player can read
 type Scroll struct {
-	ID ScrollID
+	ID    ScrollID
+	Store bool // indicats if this scroll is for purchase in the DND store (for name display purposes)
 	DefaultItem
 	NoStats
 }
@@ -139,12 +140,15 @@ func (s *Scroll) Rune() rune {
 
 // Log implements the Disaplceable interface
 func (s *Scroll) Log() string {
+	if knownScrolls[s.ID] {
+		return fmt.Sprintf("You have found a magic scroll of %s", idToName(s.ID))
+	}
 	return "You have found a magic scroll"
 }
 
 // String implements the Item interface
 func (s *Scroll) String() string {
-	if knownScrolls[s.ID] {
+	if knownScrolls[s.ID] || s.Store {
 		return fmt.Sprintf("a scroll of %s", idToName(s.ID))
 	}
 	return "a scroll"

@@ -112,7 +112,8 @@ var knownPotions map[PotionID]bool
 
 // Potion that a player may drink for an effect
 type Potion struct {
-	ID PotionID
+	ID    PotionID
+	Store bool // indicates if this potion is on display in the DND store (for name display purposes)
 	DefaultItem
 	NoStats
 }
@@ -135,6 +136,9 @@ func (p *Potion) Log() string {
 
 // String implements the Item interface
 func (p *Potion) String() string {
+	if knownPotions[p.ID] || p.Store {
+		return fmt.Sprintf("a potion of %s", potionname[p.ID])
+	}
 	return "a potion"
 }
 

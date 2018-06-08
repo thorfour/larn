@@ -303,13 +303,13 @@ func placeMapObjects(lvl uint, m [][]io.Runeable) {
 	// Place the stairs
 	if lvl == homeLevel {
 		placeObject(randMapCoord(), Entrance{dungeonRune, 1, dungeonStr}, m)          // Entrance to the dungeon
-		placeObject(randMapCoord(), Entrance{homeRune, homeLvl, homeStr}, m)          // players home
-		placeObject(randMapCoord(), Entrance{collegeRune, collegeLvl, collegeStr}, m) // college of larn
-		placeObject(randMapCoord(), Entrance{bankRune, bankLvl, bankStr}, m)          // 1st national bank of larn
+		placeObject(randMapCoord(), Entrance{homeRune, HomeLvl, homeStr}, m)          // players home
+		placeObject(randMapCoord(), Entrance{collegeRune, CollegeLvl, collegeStr}, m) // college of larn
+		placeObject(randMapCoord(), Entrance{bankRune, BankLvl, bankStr}, m)          // 1st national bank of larn
 		placeObject(randMapCoord(), Entrance{volRune, maxDungeon + 1, volStr}, m)     // volano shaft
-		placeObject(randMapCoord(), Entrance{dndRune, dndLvl, dndStr}, m)             // the DND store
-		placeObject(randMapCoord(), Entrance{tradeRune, tradeLvl, tradeStr}, m)       // the trading post
-		placeObject(randMapCoord(), Entrance{lrsRune, lrsLvl, lrsStr}, m)             // the larn revenue service
+		placeObject(randMapCoord(), Entrance{dndRune, DndLvl, dndStr}, m)             // the DND store
+		placeObject(randMapCoord(), Entrance{tradeRune, TradeLvl, tradeStr}, m)       // the trading post
+		placeObject(randMapCoord(), Entrance{lrsRune, LrsLvl, lrsStr}, m)             // the larn revenue service
 	} else {
 		// Place the stairs
 		if lvl != 1 { // Dungeon level 1 has an entrance/exit doesn't need stairs up

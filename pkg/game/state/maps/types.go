@@ -33,12 +33,12 @@ const (
 
 // Special levels for entrances
 const (
-	homeLvl    = -1
-	bankLvl    = -2
-	collegeLvl = -3
-	dndLvl     = -4
-	tradeLvl   = -5
-	lrsLvl     = -6
+	HomeLvl    = -1
+	BankLvl    = -2
+	CollegeLvl = -3
+	DndLvl     = -4
+	TradeLvl   = -5
+	LrsLvl     = -6
 )
 
 const (

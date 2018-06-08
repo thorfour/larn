@@ -79,6 +79,36 @@ var store = [][]forsale{
 		{"y", 350, 1, &items.Potion{ID: items.Confusion, Store: true}},
 		{"z", 5200, 1, &items.Potion{ID: items.Heroism, Store: true}},
 	},
+	{ // Page 3
+		// Potions
+		{"a", 900, 1, &items.Potion{ID: items.Sturdiness, Store: true}},
+		{"b", 2000, 1, &items.Potion{ID: items.GiantStrength, Store: true}},
+		{"c", 2200, 1, &items.Potion{ID: items.FireResistance, Store: true}},
+		{"d", 800, 1, &items.Potion{ID: items.TreasureFinding, Store: true}},
+		{"e", 3700, 1, &items.Potion{ID: items.InstantHealing, Store: true}},
+		{"f", 500, 1, &items.Potion{ID: items.Poison, Store: true}},
+		{"g", 1500, 1, &items.Potion{ID: items.SeeInvisible, Store: true}},
+		// Scrolls
+		{"h", 1500, 1, &items.Scroll{ID: items.EnchantArmor, Store: true}},
+		{"i", 1250, 1, &items.Scroll{ID: items.EnchantWeapon, Store: true}},
+		{"j", 600, 1, &items.Scroll{ID: items.Englightenment, Store: true}},
+		{"k", 100, 1, &items.Scroll{ID: items.Paper, Store: true}},
+		{"l", 1000, 1, &items.Scroll{ID: items.CreateMonster, Store: true}},
+		{"m", 2000, 1, &items.Scroll{ID: items.CreateItem, Store: true}},
+		{"n", 1100, 1, &items.Scroll{ID: items.Aggravate, Store: true}},
+		{"o", 5000, 1, &items.Scroll{ID: items.TimeWarp, Store: true}},
+		{"p", 2000, 1, &items.Scroll{ID: items.Teleportation, Store: true}},
+		{"q", 2500, 1, &items.Scroll{ID: items.ExpandedAwareness, Store: true}},
+		{"r", 200, 1, &items.Scroll{ID: items.HasteMonster, Store: true}},
+		{"s", 300, 1, &items.Scroll{ID: items.HealMonster, Store: true}},
+		{"t", 3400, 1, &items.Scroll{ID: items.SpiritProtection, Store: true}},
+		{"u", 3400, 1, &items.Scroll{ID: items.UndeadProtection, Store: true}},
+		{"v", 3000, 1, &items.Scroll{ID: items.Stealth, Store: true}},
+		{"w", 4000, 1, &items.Scroll{ID: items.MagicMapping, Store: true}},
+		{"x", 5000, 1, &items.Scroll{ID: items.HoldMonster, Store: true}},
+		{"y", 10000, 1, &items.Scroll{ID: items.GemPerfection, Store: true}},
+		{"z", 5000, 1, &items.Scroll{ID: items.SpellExtension, Store: true}},
+	},
 }
 
 // dndStoreSplash used to display the dnd store

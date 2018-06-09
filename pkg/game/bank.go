@@ -59,9 +59,11 @@ func (g *Game) bankHandler() func(termbox.Event) {
 			switch e.Ch {
 			case 'd': // deposit into bank
 				g.renderSplash(bankPage(int(g.currentState.C.Stats.Gold), nil) + howmuch())
+				g.inputHandler = g.accountHandler()
 				// TODO switch to a deposit handler
 			case 'w': // witdraw from the bank
 				g.renderSplash(bankPage(int(g.currentState.C.Stats.Gold), nil) + howmuch())
+				g.inputHandler = g.accountHandler()
 				// TODO switch to withdraw handler
 			case 's': // sell a stone
 				g.renderSplash(bankPage(int(g.currentState.C.Stats.Gold), nil))
@@ -72,5 +74,36 @@ func (g *Game) bankHandler() func(termbox.Event) {
 }
 
 func (g *Game) accountHandler() func(termbox.Event) {
-	return nil
+	var amt string
+	return func(e termbox.Event) {
+		switch e.Key {
+		case termbox.KeyEsc: // Exit
+			g.inputHandler = g.defaultHandler
+			g.render(display(g.currentState))
+		default:
+			switch e.Ch {
+			case '0':
+				fallthrough
+			case '1':
+				fallthrough
+			case '2':
+				fallthrough
+			case '3':
+				fallthrough
+			case '4':
+				fallthrough
+			case '5':
+				fallthrough
+			case '6':
+				fallthrough
+			case '7':
+				fallthrough
+			case '8':
+				fallthrough
+			case '9':
+				amt = amt + string(e.Ch)
+				g.renderSplash(bankPage(int(g.currentState.C.Stats.Gold), nil) + howmuch() + fmt.Sprintf(" %s", amt))
+			}
+		}
+	}
 }

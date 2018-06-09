@@ -247,11 +247,11 @@ func (c *Character) GainExperience(e int) bool {
 }
 
 // Gems returns the gems the playter currently is carrying
-func (c *Character) Gems() []*items.Gem {
-	var gems []*items.Gem
-	for _, item := range c.inv.inv {
+func (c *Character) Gems() map[rune]*items.Gem {
+	gems := make(map[rune]*items.Gem)
+	for r, item := range c.inv.inv {
 		if g, ok := item.(*items.Gem); ok {
-			gems = append(gems, g)
+			gems[r] = g
 		}
 	}
 

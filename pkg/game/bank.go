@@ -19,7 +19,7 @@ func bankSplash() string {
 	return `        Welcome to the First National Bank of Larn.`
 }
 
-func bankPage(gold int, stones []*items.Gem) string {
+func bankPage(gold int, stones map[rune]*items.Gem) string {
 	pg := bankSplash() + "\n\n"
 	var b []byte
 	buf := bytes.NewBuffer(b)
@@ -27,14 +27,15 @@ func bankPage(gold int, stones []*items.Gem) string {
 	fmt.Fprintln(w, "Gemstone\t\t\tAppraisal\t\tGemstone\t\t\tAppraisal")
 
 	// Display all stones
-	for i, s := range stones {
-		switch i % 2 {
+	j := 0
+	for r, s := range stones {
+		switch j % 2 {
 		case 0:
-			fmt.Fprintf(w, "%s\t\t\t%v\t\t", s.String(), s.Value)
+			fmt.Fprintf(w, "%s) %s\t\t\t%v\t\t", string(r), s.String(), s.Value)
 		case 1:
-			fmt.Fprintf(w, "%s\t\t\t%v\t\t\n", s.String(), s.Value)
+			fmt.Fprintf(w, "%s) %s\t\t\t%v\t\t\n", string(r), s.String(), s.Value)
 		}
-
+		j++
 	}
 
 	// Pad out the rest

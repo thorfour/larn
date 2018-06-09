@@ -3,8 +3,11 @@ package game
 import (
 	"bytes"
 	"fmt"
+	"strconv"
 	"text/tabwriter"
+	"time"
 
+	"github.com/golang/glog"
 	termbox "github.com/nsf/termbox-go"
 	"github.com/thorfour/larn/pkg/game/state/items"
 )
@@ -59,11 +62,11 @@ func (g *Game) bankHandler() func(termbox.Event) {
 			switch e.Ch {
 			case 'd': // deposit into bank
 				g.renderSplash(bankPage(int(g.currentState.C.Stats.Gold), nil) + howmuch())
-				g.inputHandler = g.accountHandler()
+				g.inputHandler = g.accountHandler(true)
 				// TODO switch to a deposit handler
 			case 'w': // witdraw from the bank
 				g.renderSplash(bankPage(int(g.currentState.C.Stats.Gold), nil) + howmuch())
-				g.inputHandler = g.accountHandler()
+				g.inputHandler = g.accountHandler(false)
 				// TODO switch to withdraw handler
 			case 's': // sell a stone
 				g.renderSplash(bankPage(int(g.currentState.C.Stats.Gold), nil))
@@ -73,7 +76,7 @@ func (g *Game) bankHandler() func(termbox.Event) {
 	}
 }
 
-func (g *Game) accountHandler() func(termbox.Event) {
+func (g *Game) accountHandler(deposit bool) func(termbox.Event) {
 	var amt string
 	return func(e termbox.Event) {
 		switch e.Key {
@@ -81,7 +84,27 @@ func (g *Game) accountHandler() func(termbox.Event) {
 			g.inputHandler = g.defaultHandler
 			g.render(display(g.currentState))
 		case termbox.KeyEnter: // Deposit/Withdraw
-			// TODO
+			n, err := strconv.Atoi(amt)
+			if err != nil {
+				glog.Errorf("unable to convert bank input to number: %s", amt)
+			}
+			if deposit {
+				if g.currentState.C.Stats.Gold < uint(n) {
+					g.renderSplash(bankPage(int(g.currentState.C.Stats.Gold), nil) + howmuch() + fmt.Sprintf(" %s\n", amt) + "  You don't have that much")
+					time.Sleep(time.Millisecond * 700)
+				} else {
+					account += n
+					g.currentState.C.Stats.Gold -= uint(n)
+				}
+			} else {
+				if account < n {
+					g.renderSplash(bankPage(int(g.currentState.C.Stats.Gold), nil) + howmuch() + fmt.Sprintf(" %s\n", amt) + "  You don't have that much in the bank!")
+					time.Sleep(time.Millisecond * 700)
+				} else {
+					account -= n
+					g.currentState.C.Stats.Gold += uint(n)
+				}
+			}
 			g.inputHandler = g.bankHandler()
 		default:
 			switch e.Ch {

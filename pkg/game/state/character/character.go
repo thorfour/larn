@@ -69,7 +69,7 @@ func (c *Character) Init(d int) {
 
 	if DEBUG { // Start with all the gold in a debug build
 		c.Stats.Gold = 10000000
-		c.inv.AddItem(&items.Gem{Stone: items.Diamond}, c.Stats) // add a diamond for debugging
+		c.inv.AddItem(&items.Gem{Stone: items.Diamond, Value: 1000}, c.Stats) // add a diamond for debugging
 	}
 
 	if d <= 0 { // 0 difficulty games the plaer starts with leather armor and dagger

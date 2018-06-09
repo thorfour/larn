@@ -427,6 +427,8 @@ func (g *Game) enterAction() func(termbox.Event) {
 	switch g.currentState.Enter() {
 	case maps.DndLvl:
 		return g.dndStoreHandler()
+	case maps.BankLvl:
+		return g.bankHandler()
 	default:
 		g.render(display(g.currentState))
 		return g.defaultHandler

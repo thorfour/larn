@@ -80,6 +80,9 @@ func (g *Game) accountHandler() func(termbox.Event) {
 		case termbox.KeyEsc: // Exit
 			g.inputHandler = g.defaultHandler
 			g.render(display(g.currentState))
+		case termbox.KeyEnter: // Deposit/Withdraw
+			// TODO
+			g.inputHandler = g.bankHandler()
 		default:
 			switch e.Ch {
 			case '0':

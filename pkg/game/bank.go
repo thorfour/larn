@@ -58,6 +58,11 @@ func howmuch() string {
 	return "  How much? [* for all]"
 }
 
+// whichstone helper string
+func whichstone() string {
+	return "  Which stone would you like to sell? [* for all]"
+}
+
 func (g *Game) bankHandler() func(termbox.Event) {
 	g.renderSplash(bankPage(int(g.currentState.C.Stats.Gold), g.currentState.C.Gems()))
 	return func(e termbox.Event) {
@@ -70,13 +75,11 @@ func (g *Game) bankHandler() func(termbox.Event) {
 			case 'd': // deposit into bank
 				g.renderSplash(bankPage(int(g.currentState.C.Stats.Gold), g.currentState.C.Gems()) + howmuch())
 				g.inputHandler = g.accountHandler(true)
-				// TODO switch to a deposit handler
 			case 'w': // witdraw from the bank
 				g.renderSplash(bankPage(int(g.currentState.C.Stats.Gold), g.currentState.C.Gems()) + howmuch())
 				g.inputHandler = g.accountHandler(false)
-				// TODO switch to withdraw handler
 			case 's': // sell a stone
-				g.renderSplash(bankPage(int(g.currentState.C.Stats.Gold), g.currentState.C.Gems()))
+				g.renderSplash(bankPage(int(g.currentState.C.Stats.Gold), g.currentState.C.Gems()) + whichstone())
 				// TODO switch to sell handler
 			}
 		}

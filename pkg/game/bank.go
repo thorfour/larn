@@ -79,8 +79,9 @@ func (g *Game) bankHandler() func(termbox.Event) {
 				g.renderSplash(bankPage(int(g.currentState.C.Stats.Gold), g.currentState.C.Gems()) + howmuch())
 				g.inputHandler = g.accountHandler(false)
 			case 's': // sell a stone
-				g.renderSplash(bankPage(int(g.currentState.C.Stats.Gold), g.currentState.C.Gems()) + whichstone())
-				// TODO switch to sell handler
+				stones := g.currentState.C.Gems()
+				g.renderSplash(bankPage(int(g.currentState.C.Stats.Gold), stones) + whichstone())
+				g.inputHandler = g.gemsaleHandler(stones)
 			}
 		}
 	}
@@ -147,6 +148,77 @@ func (g *Game) accountHandler(deposit bool) func(termbox.Event) {
 			case '9':
 				amt = amt + string(e.Ch)
 				g.renderSplash(bankPage(int(g.currentState.C.Stats.Gold), g.currentState.C.Gems()) + howmuch() + fmt.Sprintf(" %s", amt))
+			}
+		}
+	}
+}
+
+// gemsaleHandler handles selling a gemstone
+func (g *Game) gemsaleHandler(stones map[rune]*items.Gem) func(termbox.Event) {
+	return func(e termbox.Event) {
+		switch e.Key {
+		case termbox.KeyEsc: // Exit
+			g.inputHandler = g.defaultHandler
+			g.render(display(g.currentState))
+		default:
+			switch e.Ch {
+			case 'a':
+				fallthrough
+			case 'b':
+				fallthrough
+			case 'c':
+				fallthrough
+			case 'd':
+				fallthrough
+			case 'e':
+				fallthrough
+			case 'f':
+				fallthrough
+			case 'g':
+				fallthrough
+			case 'h':
+				fallthrough
+			case 'i':
+				fallthrough
+			case 'j':
+				fallthrough
+			case 'k':
+				fallthrough
+			case 'l':
+				fallthrough
+			case 'm':
+				fallthrough
+			case 'n':
+				fallthrough
+			case 'o':
+				fallthrough
+			case 'p':
+				fallthrough
+			case 'q':
+				fallthrough
+			case 'r':
+				fallthrough
+			case 's':
+				fallthrough
+			case 't':
+				fallthrough
+			case 'u':
+				fallthrough
+			case 'v':
+				fallthrough
+			case 'w':
+				fallthrough
+			case 'x':
+				fallthrough
+			case 'y':
+				fallthrough
+			case 'z':
+				if s, ok := stones[e.Ch]; ok {
+					delete(stones, e.Ch)            // remove the stone from the local stones
+					g.currentState.C.DropItem(e.Ch) // remove the stone from the players inventory
+					g.currentState.C.Stats.Gold += uint(s.Value)
+					g.renderSplash(bankPage(int(g.currentState.C.Stats.Gold), g.currentState.C.Gems()))
+				}
 			}
 		}
 	}

@@ -79,6 +79,14 @@ func (g *Game) bankHandler() func(termbox.Event) {
 func (g *Game) accountHandler(deposit bool) func(termbox.Event) {
 	var amt string
 	return func(e termbox.Event) {
+		if e.Ch == '*' { // Short circuit for a deposit/withdraw all action
+			if deposit {
+				amt = fmt.Sprintf("%v", g.currentState.C.Stats.Gold)
+			} else {
+				amt = fmt.Sprintf("%v", account)
+			}
+			e.Key = termbox.KeyEnter // To enter the next switch statement to deposit/withdraw
+		}
 		switch e.Key {
 		case termbox.KeyEsc: // Exit
 			g.inputHandler = g.defaultHandler

@@ -69,6 +69,7 @@ func (c *Character) Init(d int) {
 
 	if DEBUG { // Start with all the gold in a debug build
 		c.Stats.Gold = 10000000
+		c.inv.AddItem(&items.Gem{Stone: items.Diamond}, c.Stats) // add a diamond for debugging
 	}
 
 	if d <= 0 { // 0 difficulty games the plaer starts with leather armor and dagger
@@ -243,4 +244,16 @@ func (c *Character) GainExperience(e int) bool {
 	c.Stats.Title = titles[c.Stats.Level-1]
 
 	return levelGained
+}
+
+// Gems returns the gems the playter currently is carrying
+func (c *Character) Gems() []*items.Gem {
+	var gems []*items.Gem
+	for _, item := range c.inv.inv {
+		if g, ok := item.(*items.Gem); ok {
+			gems = append(gems, g)
+		}
+	}
+
+	return gems
 }

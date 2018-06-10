@@ -39,7 +39,7 @@ func bankPage(gold int, stones map[rune]*items.Gem) string {
 	}
 
 	// Pad out the rest
-	for i := 0; i < 16-len(stones); i++ {
+	for i := 0; i < 13-len(stones); i++ {
 		fmt.Fprintln(w)
 	}
 

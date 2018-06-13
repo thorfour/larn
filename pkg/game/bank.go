@@ -39,7 +39,7 @@ func bankPage(gold int, stones map[rune]*items.Gem) string {
 	}
 
 	// Pad out the rest
-	for i := 0; i < 16-len(stones); i++ {
+	for i := 0; i < 13-len(stones); i++ {
 		fmt.Fprintln(w)
 	}
 
@@ -147,7 +147,7 @@ func (g *Game) accountHandler(deposit bool) func(termbox.Event) {
 				fallthrough
 			case '9':
 				amt = amt + string(e.Ch)
-				g.renderSplash(bankPage(int(g.currentState.C.Stats.Gold), g.currentState.C.Gems()) + howmuch() + fmt.Sprintf(" %s", amt))
+				g.renderSplash(bankPage(int(g.currentState.C.Stats.Gold), g.currentState.C.Gems()) + howmuch() + amt)
 			}
 		}
 	}

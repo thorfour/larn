@@ -45,6 +45,7 @@ type State struct {
 	Active     map[string]func()
 	maps       *maps.Maps
 	rng        *rand.Rand
+	Taxes      int
 	timeUsed   uint
 	difficulty int
 }

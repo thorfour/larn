@@ -147,7 +147,7 @@ func (g *Game) accountHandler(deposit bool) func(termbox.Event) {
 				fallthrough
 			case '9':
 				amt = amt + string(e.Ch)
-				g.renderSplash(bankPage(int(g.currentState.C.Stats.Gold), g.currentState.C.Gems()) + howmuch() + fmt.Sprintf(" %s", amt))
+				g.renderSplash(bankPage(int(g.currentState.C.Stats.Gold), g.currentState.C.Gems()) + howmuch() + amt)
 			}
 		}
 	}

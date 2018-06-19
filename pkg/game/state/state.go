@@ -46,6 +46,7 @@ type State struct {
 	maps       *maps.Maps
 	rng        *rand.Rand
 	Taxes      int
+	Name       string
 	timeUsed   uint
 	difficulty int
 }
@@ -160,7 +161,12 @@ func (s *State) Inventory() []string {
 
 // TimeStr returns the current time elapsed in the game
 func (s *State) TimeStr() string {
-	return fmt.Sprintf("Elapsed time is %v. You have %v mobuls left", (s.timeUsed+99)/100+1, (timeLimit-s.timeUsed)/100)
+	return fmt.Sprintf("Elapsed time is %v. You have %v mobuls left", (s.timeUsed+99)/100+1, s.TimeLeft())
+}
+
+// TimeLeft returns the amount of time a user has left in mobuls
+func (s *State) TimeLeft() int {
+	return int((timeLimit - s.timeUsed) / 100)
 }
 
 // Read is for the player to read a scroll or book

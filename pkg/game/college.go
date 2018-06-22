@@ -4,9 +4,13 @@ import (
 	"bytes"
 	"fmt"
 	"text/tabwriter"
+	"time"
 
 	termbox "github.com/nsf/termbox-go"
 )
+
+// all courses cost 250
+const courseCost = 250
 
 type course struct {
 	name      string
@@ -26,6 +30,21 @@ var college = map[string]course{
 	"f": {"Faith for Today", true, 10},
 	"g": {"Contemporary Dance", true, 10},
 	"h": {"History of Larn", true, 5},
+}
+
+// takeCourse allows a user to take a course. Handles payment, mobuls, and college updates
+func takeCourse(c string, gold *uint) error {
+	if *gold <= courseCost {
+		return fmt.Errorf(" You don't have enough gold to pay for that!")
+	}
+
+	// TODO
+	return nil
+}
+
+// diploma returns the message of what the characrter learned from taking a given course
+func diploma(c string) string {
+	return "" // TODO
 }
 
 func collegePage(gold int) string {
@@ -77,7 +96,15 @@ func (g *Game) collegeHandler() func(termbox.Event) {
 				fallthrough
 			case 'h':
 				// Attempt to take a course
-
+				err := takeCourse(string(e.Ch), &g.currentState.C.Stats.Gold) // TODO consider mobuls?
+				if err != nil {
+					g.renderSplash(collegePage(int(g.currentState.C.Stats.Gold)) + "\n\n" + err.Error())
+					time.Sleep(700 * time.Millisecond) // Blink the message
+				} else {
+					g.renderSplash(collegePage(int(g.currentState.C.Stats.Gold)) + diploma(string(e.Ch)))
+					time.Sleep(700 * time.Millisecond) // Blink the message
+				}
+				g.renderSplash(collegePage(int(g.currentState.C.Stats.Gold)))
 			}
 		}
 	}

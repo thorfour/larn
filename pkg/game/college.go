@@ -14,6 +14,9 @@ type course struct {
 	mobuls    int
 }
 
+// used to order the map
+var order = []string{"a", "b", "c", "d", "e", "f", "g", "h"}
+
 var college = map[string]course{
 	"a": {"Fighters Training I", true, 10},
 	"b": {"Fighters Training II", true, 15},
@@ -31,7 +34,8 @@ func collegePage() string {
 	buf := bytes.NewBuffer(make([]byte, 100))
 	w := tabwriter.NewWriter(buf, 5, 0, 1, ' ', tabwriter.TabIndent)
 	fmt.Fprintf(w, "                 Course Name\t\t\t\tTime Needed\n\n")
-	for i, c := range college {
+	for _, i := range order {
+		c := college[i]
 		if c.available {
 			fmt.Fprintf(w, "            %s)  %s\t\t%v mobuls", i, c.name, c.mobuls)
 		} else {

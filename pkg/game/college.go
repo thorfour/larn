@@ -26,14 +26,14 @@ var college = map[string]course{
 }
 
 func collegePage() string {
-	s := "The College of Larn offers the exciting opportunity of higher education to\n"
-	s += "all inhabitants of the caves.  Here is a list of the class schedule:\n\n\n"
+	s := "\n The College of Larn offers the exciting opportunity of higher education to\n"
+	s += " all inhabitants of the caves.  Here is a list of the class schedule:\n\n\n"
 	buf := bytes.NewBuffer(make([]byte, 100))
 	w := tabwriter.NewWriter(buf, 5, 0, 1, ' ', tabwriter.TabIndent)
-	fmt.Fprintf(w, "Course Name\t\t Time Needed\n\n")
+	fmt.Fprintf(w, "                 Course Name\t\t\t\tTime Needed\n\n")
 	for i, c := range college {
 		if c.available {
-			fmt.Fprintf(w, "%s)  %s\t\t%v mobuls", i, c.name, c.mobuls)
+			fmt.Fprintf(w, "            %s)  %s\t\t%v mobuls", i, c.name, c.mobuls)
 		} else {
 			fmt.Fprintf(w, "\n")
 		}

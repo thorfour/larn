@@ -59,6 +59,26 @@ func (g *Game) collegeHandler() func(termbox.Event) {
 		case termbox.KeyEsc: // Exit
 			g.inputHandler = g.defaultHandler
 			g.render(display(g.currentState))
+		default:
+			switch e.Ch {
+			case 'a':
+				fallthrough
+			case 'b':
+				fallthrough
+			case 'c':
+				fallthrough
+			case 'd':
+				fallthrough
+			case 'e':
+				fallthrough
+			case 'f':
+				fallthrough
+			case 'g':
+				fallthrough
+			case 'h':
+				// Attempt to take a course
+
+			}
 		}
 	}
 }

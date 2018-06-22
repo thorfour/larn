@@ -28,7 +28,7 @@ var college = map[string]course{
 	"h": {"History of Larn", true, 5},
 }
 
-func collegePage() string {
+func collegePage(gold int) string {
 	s := "\n The College of Larn offers the exciting opportunity of higher education to\n"
 	s += " all inhabitants of the caves.  Here is a list of the class schedule:\n\n\n"
 	buf := bytes.NewBuffer(make([]byte, 100))
@@ -45,13 +45,15 @@ func collegePage() string {
 	}
 
 	w.Flush()
-	// TODO add gold lines
-	return s + string(buf.Bytes())
+	costLine := "\n            All courses cost 250 gold pieces"
+	goldLine := fmt.Sprintf("\n\n                       You are presently carrying %v gold pieces", gold)
+	choiceLine := "\n\n What is your choice? [Press escape to leave]"
+	return s + string(buf.Bytes()) + costLine + goldLine + choiceLine
 }
 
 // collegeHandler displays the college of larn
 func (g *Game) collegeHandler() func(termbox.Event) {
-	g.renderSplash(collegePage())
+	g.renderSplash(collegePage(int(g.currentState.C.Stats.Gold)))
 	return func(e termbox.Event) {
 		switch e.Key {
 		case termbox.KeyEsc: // Exit

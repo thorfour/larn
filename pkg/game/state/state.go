@@ -164,6 +164,11 @@ func (s *State) TimeStr() string {
 	return fmt.Sprintf("Elapsed time is %v. You have %v mobuls left", (s.timeUsed+99)/100+1, s.TimeLeft())
 }
 
+// UseTime increment the amount of time used by t
+func (s *State) UseTime(t uint) {
+	s.timeUsed += t
+}
+
 // TimeLeft returns the amount of time a user has left in mobuls
 func (s *State) TimeLeft() int {
 	return int((timeLimit - s.timeUsed) / 100)

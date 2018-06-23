@@ -15,7 +15,7 @@ const courseCost = 250
 type course struct {
 	name      string
 	available bool
-	mobuls    int
+	mobuls    uint
 }
 
 // used to order the map
@@ -33,8 +33,8 @@ var college = map[string]*course{
 }
 
 // takeCourse allows a user to take a course. Handles payment, mobuls, and college updates
-func takeCourse(c string, gold *uint) error {
-	if *gold <= courseCost {
+func (g *Game) takeCourse(c string) error {
+	if g.currentState.C.Stats.Gold <= courseCost {
 		return fmt.Errorf(" You don't have enough gold to pay for that!")
 	}
 
@@ -44,16 +44,71 @@ func takeCourse(c string, gold *uint) error {
 	}
 
 	// Check for prerequisites
+	switch {
+	case c == "b" && college["a"].available:
+		return fmt.Errorf(" Sorry, but this class has a prerequisite of Fighters Training I")
+	case c == "d" && college["c"].available:
+		return fmt.Errorf(" Sorry, but this class has a prerequisite of Introduction to Wizardry")
+	}
 
 	// Take the couse
-	*gold -= courseCost
+	g.currentState.C.Stats.Gold -= courseCost
 	college[c].available = false
+
+	switch c {
+	case "a":
+		g.currentState.C.Stats.Str += 2
+		g.currentState.C.Stats.Con++
+	case "b":
+		g.currentState.C.Stats.Str += 2
+		g.currentState.C.Stats.Con += 2
+	case "c":
+		g.currentState.C.Stats.Intelligence += 2
+	case "d":
+		g.currentState.C.Stats.Intelligence += 2
+	case "e":
+		g.currentState.C.Stats.Cha += 3
+	case "f":
+		g.currentState.C.Stats.Wisdom += 2
+	case "g":
+		g.currentState.C.Stats.Dex += 3
+	case "h":
+		g.currentState.C.Stats.Intelligence++
+	}
+
+	// Use time for course
+	g.currentState.UseTime(college[c].mobuls * 100)
+
+	// Regen for the time used
+	g.currentState.C.Stats.Hp = g.currentState.C.Stats.MaxHP
+	g.currentState.C.Stats.Spells = g.currentState.C.Stats.MaxSpells
+	g.currentState.Active["blind"] = nil
+	g.currentState.Active["confuse"] = nil
 	return nil
 }
 
 // diploma returns the message of what the characrter learned from taking a given course
 func diploma(c string) string {
-	return "" // TODO
+	switch c {
+	case "a":
+		return "You feel stronger!"
+	case "b":
+		return "You feel much stronger!"
+	case "c":
+		return "The task before you now seems more attainable!"
+	case "d":
+		return "The task before you now seems very attainable!"
+	case "e":
+		return "You now feel like a born leader!"
+	case "f":
+		return "You now feel more confident that you can find the potion in time!"
+	case "g":
+		return "You feel like dancing!"
+	case "h":
+		return "Your instructor told you that the Eye of Larn is rumored to be guarded\nby a platinum dragon who possesses psionic abilities."
+	default:
+		return ""
+	}
 }
 
 func collegePage(gold int) string {
@@ -103,13 +158,13 @@ func (g *Game) collegeHandler() func(termbox.Event) {
 				fallthrough
 			case 'h':
 				// Attempt to take a course
-				err := takeCourse(string(e.Ch), &g.currentState.C.Stats.Gold) // TODO consider mobuls?
+				err := g.takeCourse(string(e.Ch))
 				if err != nil {
 					g.renderSplash(collegePage(int(g.currentState.C.Stats.Gold)) + "\n\n" + err.Error())
-					time.Sleep(700 * time.Millisecond) // Blink the message
+					time.Sleep(time.Second) // Blink the message
 				} else {
-					g.renderSplash(collegePage(int(g.currentState.C.Stats.Gold)) + diploma(string(e.Ch)))
-					time.Sleep(700 * time.Millisecond) // Blink the message
+					g.renderSplash(collegePage(int(g.currentState.C.Stats.Gold)) + "\n\n" + diploma(string(e.Ch)))
+					time.Sleep(time.Second) // Blink the message
 				}
 				g.renderSplash(collegePage(int(g.currentState.C.Stats.Gold)))
 			}

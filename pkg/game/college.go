@@ -21,7 +21,7 @@ type course struct {
 // used to order the map
 var order = []string{"a", "b", "c", "d", "e", "f", "g", "h"}
 
-var college = map[string]course{
+var college = map[string]*course{
 	"a": {"Fighters Training I", true, 10},
 	"b": {"Fighters Training II", true, 15},
 	"c": {"Introduction to Wizardry", true, 10},
@@ -38,7 +38,16 @@ func takeCourse(c string, gold *uint) error {
 		return fmt.Errorf(" You don't have enough gold to pay for that!")
 	}
 
-	// TODO
+	crs := college[c]
+	if !crs.available {
+		return fmt.Errorf(" Sorry, but that class is filled.")
+	}
+
+	// Check for prerequisites
+
+	// Take the couse
+	*gold -= courseCost
+	college[c].available = false
 	return nil
 }
 
@@ -57,8 +66,6 @@ func collegePage(gold int) string {
 		c := college[i]
 		if c.available {
 			fmt.Fprintf(w, "            %s)  %s\t\t%v mobuls", i, c.name, c.mobuls)
-		} else {
-			fmt.Fprintf(w, "\n")
 		}
 		fmt.Fprintf(w, "\n")
 	}

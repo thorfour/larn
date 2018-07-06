@@ -435,6 +435,8 @@ func (g *Game) enterAction() func(termbox.Event) {
 		return g.homeHandler()
 	case maps.CollegeLvl:
 		return g.collegeHandler()
+	case maps.TradeLvl:
+		return g.tradingPostHandler()
 	default:
 		g.render(display(g.currentState))
 		return g.defaultHandler

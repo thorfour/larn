@@ -126,9 +126,9 @@ func (c *Character) AddItem(i items.Item) rune {
 	return c.inv.AddItem(i, c.Stats)
 }
 
-// HasItem returns if the character has an item at the given rune (used for selling items)
-func (c *Character) HasItem(e rune) bool {
-	return c.inv.Item(e) != nil
+// Item returns the item at the inventory slot
+func (c *Character) Item(e rune) items.Item {
+	return c.inv.Item(e)
 }
 
 // DropItem removes an item from a characters inventory. Returns the item if there was no error

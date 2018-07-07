@@ -7,6 +7,7 @@ import (
 	"time"
 
 	termbox "github.com/nsf/termbox-go"
+	"github.com/thorfour/larn/pkg/game/state/items"
 )
 
 // MaxDisplay the max number of inventory items to display at once
@@ -32,6 +33,7 @@ func tradingPost(inv []string) string {
 		if i >= MaxDisplay { // only display up to max
 			break
 		}
+		// TODO don't display items that aren't identified
 		if i%2 == 0 {
 			fmt.Fprintf(w, "  %s\t\t\t\t", t)
 		} else {
@@ -117,16 +119,37 @@ func (g *Game) tradingPostHandler() func(termbox.Event) {
 	}
 }
 
-func (g *Game) handleSellingInv(r rune) {
+func (g *Game) validateItemSale(r rune) error {
+
 	//  Check if they have the item
-	if !g.currentState.C.HasItem(r) {
-		g.renderSplash(tradingPost(g.currentState.C.Inventory()) + fmt.Sprintf("\n\n  You don't have item %s!", string(r)))
+	i := g.currentState.C.Item(r)
+	if i == nil {
+		return fmt.Errorf("\n\n  You don't have item %s!", string(r))
+	}
+
+	//  check if the item is identified
+	known := true
+	switch t := i.(type) {
+	case *items.Potion:
+		known = items.KnownPotion(t.ID)
+	case *items.Scroll:
+		known = items.KnownScroll(t.ID)
+	}
+
+	if !known {
+		return fmt.Errorf("\n\n  Sorry, we can't accept unidentified objects")
+	}
+
+	return nil
+}
+
+func (g *Game) handleSellingInv(r rune) {
+	if err := g.validateItemSale(r); err != nil {
+		g.renderSplash(tradingPost(g.currentState.C.Inventory()) + err.Error())
 		time.Sleep(time.Millisecond * 700)
 		g.renderSplash(tradingPost(g.currentState.C.Inventory()))
 		return
 	}
-	//  check if the item is identified
-	// TODO
 
 	//  offer to buy the item
 }

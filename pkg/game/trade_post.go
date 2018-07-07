@@ -151,5 +151,32 @@ func (g *Game) handleSellingInv(r rune) {
 		return
 	}
 
-	//  offer to buy the item
+	// value the item
+	val := 0
+	i := g.currentState.C.Item(r)
+	dndPrice := g.DNDStoreLookup(i)
+	switch t := i.(type) {
+	// TODO handle eye of larn case
+	case *items.Gem:
+		val = 2000 // TODO fix this price
+	case *items.Scroll:
+		val = 2 * dndPrice // TODO don't think this is right...
+	case *items.Potion:
+		val = 2 * dndPrice // TODO don't think this is right...
+	default:
+		// TODO
+	}
+}
+
+// DNDStoreLookup reutns the price of an item in the DND store
+func (g *Game) DNDStoreLookup(t items.Item) int {
+
+	for i := range store {
+		for _, sale := range store[i] {
+			// TODO do a item comparison
+			return sale.price
+		}
+	}
+
+	return 0
 }

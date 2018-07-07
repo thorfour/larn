@@ -8,6 +8,9 @@ import (
 	termbox "github.com/nsf/termbox-go"
 )
 
+// MaxDisplay the max number of inventory items to display at once
+const MaxDisplay = 26
+
 func tradingPostWelcome() string {
 	return `
   Welcome to the Larn Trading Post.  We buy items that explorers no longer find
@@ -25,6 +28,9 @@ func tradingPost(inv []string) string {
 	buf := bytes.NewBuffer(make([]byte, 100))
 	w := tabwriter.NewWriter(buf, 5, 0, 1, ' ', tabwriter.TabIndent)
 	for i, t := range inv {
+		if i >= MaxDisplay { // only display up to max
+			break
+		}
 		if i%2 == 0 {
 			fmt.Fprintf(w, "  %s\t\t\t\t", t)
 		} else {
@@ -33,7 +39,14 @@ func tradingPost(inv []string) string {
 	}
 	w.Flush()
 
-	return s + string(buf.Bytes())
+	s = s + string(buf.Bytes())
+
+	// Pad out with empty lines
+	for i := len(inv); i < MaxDisplay/2; i++ {
+		s = s + "\n"
+	}
+
+	return s + "  What item do you want to sell us? [Press escape to leave]"
 }
 
 // tradingPostHandler input handler for the trading post

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"text/tabwriter"
+	"time"
 
 	termbox "github.com/nsf/termbox-go"
 )
@@ -57,6 +58,75 @@ func (g *Game) tradingPostHandler() func(termbox.Event) {
 		case termbox.KeyEsc: // Exit
 			g.inputHandler = g.defaultHandler
 			g.render(display(g.currentState))
+		default:
+			switch e.Ch {
+			case 'a':
+				fallthrough
+			case 'b':
+				fallthrough
+			case 'c':
+				fallthrough
+			case 'd':
+				fallthrough
+			case 'e':
+				fallthrough
+			case 'f':
+				fallthrough
+			case 'g':
+				fallthrough
+			case 'h':
+				fallthrough
+			case 'i':
+				fallthrough
+			case 'j':
+				fallthrough
+			case 'k':
+				fallthrough
+			case 'l':
+				fallthrough
+			case 'm':
+				fallthrough
+			case 'n':
+				fallthrough
+			case 'o':
+				fallthrough
+			case 'p':
+				fallthrough
+			case 'q':
+				fallthrough
+			case 'r':
+				fallthrough
+			case 's':
+				fallthrough
+			case 't':
+				fallthrough
+			case 'u':
+				fallthrough
+			case 'v':
+				fallthrough
+			case 'w':
+				fallthrough
+			case 'x':
+				fallthrough
+			case 'y':
+				fallthrough
+			case 'z':
+				g.handleSellingInv(e.Ch)
+			}
 		}
 	}
+}
+
+func (g *Game) handleSellingInv(r rune) {
+	//  Check if they have the item
+	if !g.currentState.C.HasItem(r) {
+		g.renderSplash(tradingPost(g.currentState.C.Inventory()) + fmt.Sprintf("\n\n  You don't have item %s!", string(r)))
+		time.Sleep(time.Millisecond * 700)
+		g.renderSplash(tradingPost(g.currentState.C.Inventory()))
+		return
+	}
+	//  check if the item is identified
+	// TODO
+
+	//  offer to buy the item
 }

@@ -142,6 +142,11 @@ func (p *Potion) String() string {
 	return "a potion"
 }
 
+// KnownPotion returns true if the player knows the potion (used for tradig post)
+func KnownPotion(p PotionID) bool {
+	return knownPotions[p]
+}
+
 // LearnPotion adds a potion to the list of known potions
 func LearnPotion(p PotionID) {
 	knownPotions[p] = true

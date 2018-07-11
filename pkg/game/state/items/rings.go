@@ -6,18 +6,27 @@ import (
 	"github.com/thorfour/larn/pkg/game/state/stats"
 )
 
+// RingType is the type of ring
 type RingType int
 
 const ringRune = '|'
 
 const (
+	// Regen ring of regeneration
 	Regen RingType = iota
+	// ExtraRegen ring of extra regeneration
 	ExtraRegen
+	// Protection ring of protection
 	Protection
+	// Strength ring of strength
 	Strength
+	// Clever ring of cleverness
 	Clever
+	// Damage ring of extra damage
 	Damage
+	// Dexterity ring of dexterity
 	Dexterity
+	// Energy ring
 	Energy
 )
 
@@ -32,9 +41,10 @@ var ringName = map[RingType]string{
 	Energy:     "energy ring",
 }
 
+// Ring is a wearable ring item
 type Ring struct {
-	Type      RingType // the type of ring
-	Attribute int      // the ring modifier
+	Type RingType // the type of ring
+	DefaultAttribute
 	DefaultItem
 }
 
@@ -42,9 +52,8 @@ type Ring struct {
 func (r *Ring) Rune() rune {
 	if r.Visibility {
 		return ringRune
-	} else {
-		return invisibleRune
 	}
+	return invisibleRune
 }
 
 // Log implements the Loggable interface
@@ -54,10 +63,10 @@ func (r *Ring) Log() string {
 
 // String implements the Item interface
 func (r *Ring) String() string {
-	if r.Attribute < 0 {
-		return ringName[r.Type] + " " + strconv.Itoa(r.Attribute)
-	} else if r.Attribute > 0 {
-		return ringName[r.Type] + " +" + strconv.Itoa(r.Attribute)
+	if r.Attr() < 0 {
+		return ringName[r.Type] + " " + strconv.Itoa(r.Attr())
+	} else if r.Attr() > 0 {
+		return ringName[r.Type] + " +" + strconv.Itoa(r.Attr())
 	}
 	return ringName[r.Type]
 }
@@ -68,11 +77,11 @@ func (r *Ring) String() string {
 func (r *Ring) PickUp(s *stats.Stats) {
 	switch r.Type {
 	case Strength:
-		s.Str += uint(1 + r.Attribute)
+		s.Str += uint(1 + r.Attr())
 	case Clever:
-		s.Intelligence += uint(1 + r.Attribute)
+		s.Intelligence += uint(1 + r.Attr())
 	case Dexterity:
-		s.Dex += uint(1 + r.Attribute)
+		s.Dex += uint(1 + r.Attr())
 	}
 }
 
@@ -80,10 +89,10 @@ func (r *Ring) PickUp(s *stats.Stats) {
 func (r *Ring) Drop(s *stats.Stats) {
 	switch r.Type {
 	case Strength:
-		s.Str -= uint(1 + r.Attribute)
+		s.Str -= uint(1 + r.Attr())
 	case Clever:
-		s.Intelligence -= uint(1 + r.Attribute)
+		s.Intelligence -= uint(1 + r.Attr())
 	case Dexterity:
-		s.Dex -= uint(1 + r.Attribute)
+		s.Dex -= uint(1 + r.Attr())
 	}
 }

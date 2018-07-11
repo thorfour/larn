@@ -357,13 +357,23 @@ func placeMapObjects(lvl uint, m [][]io.Runeable) {
 		placeRareObject(2, &items.ArmorClass{Type: items.RingMail}, m)
 		placeRareObject(1, &items.ArmorClass{Type: items.StuddedLeather}, m)
 		placeRareObject(3, &items.ArmorClass{Type: items.SplintMail}, m)
-		placeRareObject(5, &items.Shield{Attribute: rand.Intn(3)}, m)
+		s := &items.Shield{}
+		s.ResetAttr(rand.Intn(3))
+		placeRareObject(5, s, m)
 
 		// Add weaspons to level
-		placeRareObject(2, &items.WeaponClass{Type: items.BattleAxe, Attribute: rand.Intn(3)}, m)
-		placeRareObject(5, &items.WeaponClass{Type: items.LongSword, Attribute: rand.Intn(3)}, m)
-		placeRareObject(5, &items.WeaponClass{Type: items.Flail, Attribute: rand.Intn(3)}, m)
-		placeRareObject(7, &items.WeaponClass{Type: items.Spear, Attribute: rand.Intn(5)}, m)
+		ba := &items.WeaponClass{Type: items.BattleAxe}
+		ba.ResetAttr(rand.Intn(3))
+		placeRareObject(2, ba, m)
+		ls := &items.WeaponClass{Type: items.LongSword}
+		ls.ResetAttr(rand.Intn(3))
+		placeRareObject(5, ls, m)
+		fl := &items.WeaponClass{Type: items.Flail}
+		fl.ResetAttr(rand.Intn(3))
+		placeRareObject(5, fl, m)
+		sp := &items.WeaponClass{Type: items.Spear}
+		sp.ResetAttr(rand.Intn(5))
+		placeRareObject(7, sp, m)
 		placeRareObject(2, &items.WeaponClass{Type: items.SwordOfSlashing}, m)
 		if lvl == 1 { // Bessman's hammer can only be created on level 1
 			placeRareObject(4, &items.WeaponClass{Type: items.BessmansHammer}, m)
@@ -371,17 +381,33 @@ func placeMapObjects(lvl uint, m [][]io.Runeable) {
 
 		// TODO don't add these weapons is difficulty >= 3
 		if rand.Intn(4) == 3 && lvl > 3 {
-			placeRareObject(3, &items.WeaponClass{Type: items.SunSword, Attribute: 3}, m)
-			placeRareObject(5, &items.WeaponClass{Type: items.TwoHandedSword, Attribute: rand.Intn(3) + 1}, m)
-			placeRareObject(3, &items.Belt{Attribute: 4}, m)
-			placeRareObject(3, &items.Ring{Type: items.Energy, Attribute: 3}, m)
-			placeRareObject(4, &items.ArmorClass{Type: items.PlateMail, Attribute: 5}, m)
+			ss := &items.WeaponClass{Type: items.SunSword}
+			ss.ResetAttr(3)
+			placeRareObject(3, ss, m)
+			tws := &items.WeaponClass{Type: items.TwoHandedSword}
+			tws.ResetAttr(rand.Intn(3) + 1)
+			placeRareObject(5, tws, m)
+			b := &items.Belt{}
+			b.ResetAttr(4)
+			placeRareObject(3, b, m)
+			er := &items.Ring{Type: items.Energy}
+			er.ResetAttr(3)
+			placeRareObject(3, er, m)
+			pm := &items.ArmorClass{Type: items.PlateMail}
+			pm.ResetAttr(5)
+			placeRareObject(4, pm, m)
 		}
 
 		// Add rings to level
-		placeRareObject(4, &items.Ring{Type: items.Regen, Attribute: rand.Intn(3)}, m)
-		placeRareObject(1, &items.Ring{Type: items.Protection, Attribute: rand.Intn(3)}, m)
-		placeRareObject(2, &items.Ring{Type: items.Strength, Attribute: 4}, m)
+		rr := &items.Ring{Type: items.Regen}
+		rr.ResetAttr(rand.Intn(3))
+		placeRareObject(4, rr, m)
+		rp := &items.Ring{Type: items.Protection}
+		rp.ResetAttr(rand.Intn(3))
+		placeRareObject(1, rp, m)
+		rs := &items.Ring{Type: items.Strength}
+		rs.ResetAttr(4)
+		placeRareObject(2, rs, m)
 
 		// place special objects
 		placeRareObject(3, &items.Special{Type: items.Orb}, m)

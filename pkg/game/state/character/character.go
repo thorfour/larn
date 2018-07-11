@@ -126,6 +126,11 @@ func (c *Character) AddItem(i items.Item) rune {
 	return c.inv.AddItem(i, c.Stats)
 }
 
+// Item returns the item at the inventory slot
+func (c *Character) Item(e rune) items.Item {
+	return c.inv.Item(e)
+}
+
 // DropItem removes an item from a characters inventory. Returns the item if there was no error
 func (c *Character) DropItem(e rune) (items.Item, error) {
 	return c.item(e, DropAction)

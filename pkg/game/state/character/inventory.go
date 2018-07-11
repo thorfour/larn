@@ -190,3 +190,8 @@ func (i *Inventory) Disarm(_ rune, s *stats.Stats) (items.Weapon, error) {
 
 	return w, nil
 }
+
+// Item returns the item at the given inventory slot
+func (i *Inventory) Item(e rune) items.Item {
+	return i.inv[e]
+}

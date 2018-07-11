@@ -120,6 +120,11 @@ type Scroll struct {
 	NoStats
 }
 
+// KnownScroll returns true if the scroll is known
+func KnownScroll(id ScrollID) bool {
+	return knownScrolls[id]
+}
+
 // LearnScroll marks a scroll has having been learned (via reading or identify)
 func LearnScroll(id ScrollID) {
 	knownScrolls[id] = true

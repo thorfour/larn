@@ -188,7 +188,8 @@ func (g *Game) sellConfirmationHandler(r rune, val int) func(termbox.Event) {
 			fallthrough
 		case 'Y': // Sale
 			g.renderSplash(tradingPost(g.currentState.C.Inventory()) + fmt.Sprintf("\n\n  Item (%s) is worth %d gold pieces to us. Do you want to sell it?", string(r), val) + "\n\n  yes")
-			// TODO handle the sale
+			g.currentState.C.DropItem(r)             // Remove the item from players inventory
+			g.currentState.C.Stats.Gold += uint(val) // Add the value of the sale to the users gold
 			time.Sleep(time.Millisecond * 700)
 			g.renderSplash(tradingPost(g.currentState.C.Inventory()))
 			g.inputHandler = g.tradingPostHandler()

@@ -209,7 +209,7 @@ func (g *Game) DNDStoreLookup(t items.Item) int {
 	for i := range store {
 		for _, sale := range store[i] {
 			if sale.String() == t.String() { // Compare the items based on their display name TODO this is kinda gross and would be nice to be replaced by an actual type comparison
-				return sale.price
+				return sale.price / 10 // (reduce all sales by a factor of 10)
 			}
 		}
 	}

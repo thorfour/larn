@@ -65,8 +65,8 @@ var weaponName = map[WeaponType]string{
 
 // WeaponClass satisfies the item interface as well as the Weapon Interface
 type WeaponClass struct {
-	Type      WeaponType // the type of weapon
-	Attribute int        // the attributes of the weapon that add/subtract from the class
+	Type WeaponType // the type of weapon
+	DefaultAttribute
 	DefaultItem
 	NoStats
 }
@@ -86,10 +86,10 @@ func (a *WeaponClass) Log() string {
 
 // String implements the Item interface
 func (a *WeaponClass) String() string {
-	if a.Attribute < 0 {
-		return weaponName[a.Type] + " " + strconv.Itoa(a.Attribute)
-	} else if a.Attribute > 0 {
-		return weaponName[a.Type] + " +" + strconv.Itoa(a.Attribute)
+	if a.Attr() < 0 {
+		return weaponName[a.Type] + " " + strconv.Itoa(a.Attr())
+	} else if a.Attr() > 0 {
+		return weaponName[a.Type] + " +" + strconv.Itoa(a.Attr())
 	}
 	return weaponName[a.Type]
 }
@@ -104,7 +104,7 @@ func (a *WeaponClass) Wield(c *stats.Stats) {
 		c.Str += 10
 		c.Intelligence -= 10 // hammers make you stupid
 	}
-	c.Wc += (weaponBase[a.Type] + a.Attribute)
+	c.Wc += (weaponBase[a.Type] + a.Attr())
 }
 
 // Disarm implements the Weapon interface
@@ -117,7 +117,7 @@ func (a *WeaponClass) Disarm(c *stats.Stats) {
 		c.Str -= 10
 		c.Intelligence += 10 // hammers make you stupid
 	}
-	c.Wc -= (weaponBase[a.Type] + a.Attribute)
+	c.Wc -= (weaponBase[a.Type] + a.Attr())
 }
 
 // GetNewWeapon returns a new default weapon of the given type
@@ -159,8 +159,10 @@ func GetNewWeapon(id WeaponType, l int) *WeaponClass {
 			attr = 3
 		}
 	}
-	return &WeaponClass{
-		Type:      id,
-		Attribute: attr,
+	ac := &WeaponClass{
+		Type: id,
 	}
+	ac.ResetAttr(attr)
+
+	return ac
 }

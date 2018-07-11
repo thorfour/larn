@@ -57,8 +57,8 @@ var armorName = map[ArmorType]string{
 
 // ArmorClass satisfies the item interface as well as the Armor Interface
 type ArmorClass struct {
-	Type      ArmorType // the type of armor
-	Attribute int       // the attributes of the armor that add/subtract from the class
+	Type ArmorType // the type of armor
+	DefaultAttribute
 	DefaultItem
 	NoStats
 }
@@ -78,23 +78,23 @@ func (a *ArmorClass) Log() string {
 
 // String implements the Item interface
 func (a *ArmorClass) String() string {
-	if a.Attribute < 0 {
-		return armorName[a.Type] + " " + strconv.Itoa(a.Attribute)
-	} else if a.Attribute > 0 {
-		return armorName[a.Type] + " +" + strconv.Itoa(a.Attribute)
+	if a.Attr() < 0 {
+		return armorName[a.Type] + " " + strconv.Itoa(a.Attr())
+	} else if a.Attr() > 0 {
+		return armorName[a.Type] + " +" + strconv.Itoa(a.Attr())
 	}
 	return armorName[a.Type]
 }
 
 // Wear implements the Armor interface
 func (a *ArmorClass) Wear(c *stats.Stats) {
-	c.Ac += (armorBase[a.Type] + a.Attribute)
+	c.Ac += (armorBase[a.Type] + a.Attr())
 
 }
 
 // TakeOff implements the Armor interface
 func (a *ArmorClass) TakeOff(c *stats.Stats) {
-	c.Ac -= (armorBase[a.Type] + a.Attribute)
+	c.Ac -= (armorBase[a.Type] + a.Attr())
 }
 
 // NewArmor returns a new defauly armor of type id
@@ -153,8 +153,10 @@ func NewArmor(id ArmorType, l int) *ArmorClass {
 			attr = 4
 		}
 	}
-	return &ArmorClass{
-		Type:      id,
-		Attribute: attr,
+	ac := &ArmorClass{
+		Type: id,
 	}
+	ac.ResetAttr(attr)
+
+	return ac
 }

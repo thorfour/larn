@@ -51,6 +51,39 @@ type Readable interface {
 	Read(s *stats.Stats) []string
 }
 
+// Attributable means an item may carry +/- attributes
+type Attributable interface {
+	ResetAttr(i int)
+	Attr() int
+	IncrAttr(int)
+	DecrAttr(int)
+}
+
+// DefaultAttribute implementes the Attributable interface
+type DefaultAttribute struct {
+	Attribute int
+}
+
+// Attr implements the Attributable interface
+func (d *DefaultAttribute) Attr() int {
+	return d.Attribute
+}
+
+// IncrAttr implements the Attributable interface
+func (d *DefaultAttribute) IncrAttr(i int) {
+	d.Attribute += i
+}
+
+// DecrAttr implements the Attributable interface
+func (d *DefaultAttribute) DecrAttr(i int) {
+	d.Attribute -= i
+}
+
+// ResetAttr implements the Attributable interface
+func (d *DefaultAttribute) ResetAttr(i int) {
+	d.Attribute = i
+}
+
 // DefaultItem provide default Fg and Bg functions
 type DefaultItem struct {
 	Visibility bool
@@ -107,21 +140,34 @@ func CreateItems(l int) []Item {
 		case tmp < 22: // leather armor
 			created = append(created, NewArmor(Leather, l))
 		case tmp < 23: // regen ring
-			created = append(created, &Ring{Type: Regen, Attribute: rand.Intn(l/3 + 1)})
+			r := &Ring{Type: Regen}
+			r.ResetAttr(rand.Intn(l/3 + 1))
+			created = append(created, r)
 		case tmp < 24: // shield
-			created = append(created, &Shield{Attribute: rand.Intn(l/3 + 1)})
+			s := &Shield{}
+			s.ResetAttr(rand.Intn(l/3 + 1))
+			created = append(created, s)
 		case tmp < 25: // 2 hand sword
 			created = append(created, GetNewWeapon(TwoHandedSword, l))
 		case tmp < 26: // prot ring
-			created = append(created, &Ring{Type: Protection, Attribute: rand.Intn(l/4 + 1)})
+			r := &Ring{Type: Protection}
+			created = append(created, r)
 		case tmp < 27: // dex ring
-			created = append(created, &Ring{Type: Dexterity, Attribute: rand.Intn(l/4 + 1)})
+			r := &Ring{Type: Dexterity}
+			r.ResetAttr(rand.Intn(l/4 + 1))
+			created = append(created, r)
 		case tmp < 28: // energy ring
-			created = append(created, &Ring{Type: Energy, Attribute: rand.Intn(l/4 + 1)})
+			r := &Ring{Type: Energy}
+			r.ResetAttr(rand.Intn(l/4 + 1))
+			created = append(created, r)
 		case tmp < 29: // str ring
-			created = append(created, &Ring{Type: Strength, Attribute: rand.Intn(l/2 + 1)})
+			r := &Ring{Type: Strength}
+			r.ResetAttr(rand.Intn(l/2 + 1))
+			created = append(created, r)
 		case tmp < 30: // cleverness ring
-			created = append(created, &Ring{Type: Clever, Attribute: rand.Intn(l/2 + 1)})
+			r := &Ring{Type: Clever}
+			r.ResetAttr(rand.Intn(l/2 + 1))
+			created = append(created, r)
 		case tmp < 31: // ring mail
 			created = append(created, NewArmor(RingMail, l))
 		case tmp < 32: // flail
@@ -131,7 +177,9 @@ func CreateItems(l int) []Item {
 		case tmp < 34: // battleaxe
 			created = append(created, GetNewWeapon(BattleAxe, l))
 		case tmp < 35: // belt
-			created = append(created, &Belt{Attribute: rand.Intn(l/2 + 1)})
+			b := &Belt{}
+			b.ResetAttr(rand.Intn(l/2 + 1))
+			created = append(created, b)
 		case tmp < 36: // studded leather
 			created = append(created, NewArmor(StuddedLeather, l))
 		case tmp < 37: // splint

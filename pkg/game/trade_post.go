@@ -158,23 +158,27 @@ func (g *Game) handleSellingInv(r rune) {
 	switch t := i.(type) {
 	// TODO handle eye of larn case
 	case *items.Gem:
-		val = 2000 // TODO fix this price
+		val = 20 * t.Value
 	case *items.Scroll:
-		val = 2 * dndPrice // TODO don't think this is right...
+		val = 2 * dndPrice
 	case *items.Potion:
-		val = 2 * dndPrice // TODO don't think this is right...
+		val = 2 * dndPrice
 	default:
-		// TODO
+		val = dndPrice
+		// Add value if item has positive modifiers
+		// TODO how to get modifier
 	}
+
+	fmt.Println(val) // TODO placeholder delete me
 }
 
 // DNDStoreLookup reutns the price of an item in the DND store
 func (g *Game) DNDStoreLookup(t items.Item) int {
-
 	for i := range store {
 		for _, sale := range store[i] {
-			// TODO do a item comparison
-			return sale.price
+			if sale.String() == t.String() { // Compare the items based on their display name TODO this is kinda gross and would be nice to be replaced by an actual type comparison
+				return sale.price
+			}
 		}
 	}
 

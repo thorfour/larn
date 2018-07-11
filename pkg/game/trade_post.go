@@ -163,13 +163,44 @@ func (g *Game) handleSellingInv(r rune) {
 		val = 2 * dndPrice
 	case *items.Potion:
 		val = 2 * dndPrice
-	default:
+	case items.Attributable:
 		val = dndPrice
 		// Add value if item has positive modifiers
-		// TODO how to get modifier
+		if a := t.Attr(); a >= 0 {
+			val *= 2
+			for ; a > 0 && val < 500000; a-- { // NOTE: This is the goofiest modifier
+				val = (14 * (67 + val) / 10)
+			}
+		}
+	default:
+		val = dndPrice
 	}
 
-	fmt.Println(val) // TODO placeholder delete me
+	g.renderSplash(tradingPost(g.currentState.C.Inventory()) + fmt.Sprintf("\n\n  Item (%s) is worth %d gold pieces to us. Do you want to sell it?", string(r), val))
+	g.inputHandler = g.sellConfirmationHandler(r, val)
+}
+
+// sellConfirmationHandler waits for confirmation to sell an item
+func (g *Game) sellConfirmationHandler(r rune, val int) func(termbox.Event) {
+	return func(e termbox.Event) {
+		switch e.Ch {
+		case 'y':
+			fallthrough
+		case 'Y': // Sale
+			g.renderSplash(tradingPost(g.currentState.C.Inventory()) + fmt.Sprintf("\n\n  Item (%s) is worth %d gold pieces to us. Do you want to sell it?", string(r), val) + "\n\n  yes")
+			// TODO handle the sale
+			time.Sleep(time.Millisecond * 700)
+			g.renderSplash(tradingPost(g.currentState.C.Inventory()))
+			g.inputHandler = g.tradingPostHandler()
+			return
+		default: // No sale
+			g.renderSplash(tradingPost(g.currentState.C.Inventory()) + fmt.Sprintf("\n\n  Item (%s) is worth %d gold pieces to us. Do you want to sell it?", string(r), val) + "\n\n  no thanks.")
+			time.Sleep(time.Millisecond * 700)
+			g.renderSplash(tradingPost(g.currentState.C.Inventory()))
+			g.inputHandler = g.tradingPostHandler()
+			return
+		}
+	}
 }
 
 // DNDStoreLookup reutns the price of an item in the DND store

@@ -29,16 +29,16 @@ var help = []string{`
 
 	h  move to the left    H  run left          .  stay here
 	j  move down           J  run down          Z  teleport yourself
-	k  move up         K  run up            c  cast a spell
-	l  move to the right       L  run right         r  read a scroll
+	k  move up             K  run up            c  cast a spell
+	l  move to the right   L  run right         r  read a scroll
 	y  move northwest      Y  run northwest     q  quaff a potion
 	u  move northeast      U  run northeast     W  wear armor
 	b  move southwest      B  run southwest     T  take off armor
 	n  move southeast      N  run southeast     w  wield a weapon
 	^  identify a trap     g  give present pack weight  P  give tax status
-	d  drop an item            i  inventory your pockets    Q  quit the game
-	v  print program version   S  save the game     D  list all items found
-	?  this help screen    A  create diagnostic file    e  eat something
+	d  drop an item        i  inventory your pockets    Q  quit the game
+	v  print program version   S  save the game         D  list all items found
+	?  this help screen        A  create diagnostic file    e  eat something
 					(wizards only)
 	larn ++   restore checkpointed game
 	larn -s   list the scoreboard

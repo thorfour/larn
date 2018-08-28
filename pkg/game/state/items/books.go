@@ -11,6 +11,7 @@ const (
 	bookRune = 'B'
 )
 
+// Book represents the book item, that a character can read to learn new spells
 type Book struct {
 	Level uint // the level the book was placed in
 	DefaultItem
@@ -21,9 +22,8 @@ type Book struct {
 func (b *Book) Rune() rune {
 	if b.Visibility {
 		return bookRune
-	} else {
-		return invisibleRune
 	}
+	return invisibleRune
 }
 
 // Log implements the Loggable interface

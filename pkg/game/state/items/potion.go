@@ -3,6 +3,8 @@ package items
 import (
 	"fmt"
 	"math/rand"
+
+	"github.com/thorfour/larn/pkg/game/state/stats"
 )
 
 const (
@@ -161,5 +163,71 @@ func ForgetPotion(p PotionID) {
 func NewPotion() *Potion {
 	return &Potion{
 		ID: potprob[rand.Intn(len(potprob))],
+	}
+}
+
+// Quaff implemtents the Quaffable interface. Applies a potions effects to the given stats. Returns a log of events
+func (p *Potion) Quaff(s *stats.Stats) []string {
+	LearnPotion(p.ID)
+	switch p.ID {
+	case Sleep:
+		// TODO
+		return nil
+	case Healing:
+		if s.Hp == s.MaxHP { // if at max HP, raise max HP by 1
+			s.RaiseMaxHP(1)
+		} else { // heal the player
+			s.GainHP(uint(rand.Intn(20)+1) + 20 + s.Level)
+		}
+		return []string{"You feel better"}
+	case RaiseLevel:
+		s.Level++
+		s.RaiseMaxHP(1)
+		return []string{"Suddenly, you feel much more skillful!"}
+	case IncreaseAbility:
+		// add 1 to random attribute
+		switch rand.Intn(6) {
+		case 0:
+			s.Cha++
+		case 1:
+			s.Wisdom++
+		case 2:
+			s.Con++
+		case 3:
+			s.Dex++
+		case 4:
+			s.Str++
+		case 5:
+			s.Intelligence++
+		}
+		return []string{"You feel strange for a moment"}
+	case GainWisdom:
+		s.Wisdom += uint(rand.Intn(2)) + 1
+		return []string{"You feel more self confident!"}
+	case GainStrength:
+		if s.Str < 12 {
+			s.Str = 12
+		} else {
+			s.Str++
+		}
+		return []string{"Wow! You feel great!"}
+	case IncreaseCharisma:
+		s.Cha++
+		return []string{"Your charm went up by one!"}
+	case Dizziness:
+		s.Str--
+		if s.Str < 3 {
+			s.Str = 3
+		}
+		return []string{"You become dizzy!"}
+	case Learning:
+		s.Intelligence++
+		return []string{"Your intelligence went up by one!"}
+	case ObjectDetection:
+		// TODO don't reveal anything if player is blind
+		// TODO reveal all items on a level
+		return []string{"You sense the presence of objects!"}
+	default:
+		return nil
 	}
 }

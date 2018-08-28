@@ -195,3 +195,19 @@ func (i *Inventory) Disarm(_ rune, s *stats.Stats) (items.Weapon, error) {
 func (i *Inventory) Item(e rune) items.Item {
 	return i.inv[e]
 }
+
+// Quaff ensures the item is Quaffable. Removes item from inventory, Quaff should be called on item
+func (i *Inventory) Quaff(r rune, s *stats.Stats) (items.Quaffable, error) {
+	item, ok := i.inv[r]
+	if !ok {
+		return nil, fmt.Errorf("You don't have item %s", string(r))
+	}
+
+	p, ok := item.(items.Quaffable)
+	if !ok {
+		return nil, fmt.Errorf("You can't quaff that!")
+	}
+
+	delete(i.inv, r)
+	return p, nil
+}

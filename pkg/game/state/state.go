@@ -657,3 +657,21 @@ func (s *State) drop(c types.Coordinate, drop io.Runeable) {
 
 	// NOTE: If we couldn't find a place to drop then nothing gets dropped
 }
+
+// Quaff performs a drink potion action
+func (s *State) Quaff(e rune) error {
+	defer s.update()
+	glog.V(2).Info("Quaff requested")
+
+	l, err := s.C.Quaff(e)
+	if err != nil {
+		return err
+	}
+
+	// Log all the information that read returned
+	for _, r := range l {
+		s.Log(r)
+	}
+
+	return nil
+}

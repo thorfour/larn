@@ -32,6 +32,7 @@ const (
 	WearAction
 	ReadAction
 	TakeOffAction
+	QuaffAction
 )
 
 const (
@@ -153,6 +154,7 @@ func (c *Character) Wear(e rune) error {
 	return err
 }
 
+// Read a scroll or book
 func (c *Character) Read(e rune) ([]string, error) {
 	i, err := c.item(e, ReadAction)
 	if err != nil {
@@ -174,6 +176,8 @@ func (c *Character) item(e rune, a action) (items.Item, error) {
 		return c.inv.Wield(e, c.Stats)
 	case TakeOffAction:
 		return c.inv.TakeOff(e, c.Stats)
+	case QuaffAction:
+		return c.inv.Quaff(e, c.Stats)
 	default:
 		return nil, fmt.Errorf("Invalid action %v", a)
 	}
@@ -261,4 +265,13 @@ func (c *Character) Gems() map[rune]*items.Gem {
 	}
 
 	return gems
+}
+
+// Quaff a potion
+func (c *Character) Quaff(e rune) ([]string, error) {
+	i, err := c.item(e, QuaffAction)
+	if err != nil {
+		return nil, err
+	}
+	return i.(items.Quaffable).Quaff(c.Stats), nil
 }

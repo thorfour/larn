@@ -29,7 +29,7 @@ type Food interface {
 // Quaffable for anything that s *an be quaffed
 type Quaffable interface {
 	Item
-	Quaff(s *stats.Stats)
+	Quaff(s *stats.Stats) []string
 }
 
 // Weapon for anything that s *an be wielded

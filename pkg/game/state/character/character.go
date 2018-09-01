@@ -6,6 +6,7 @@ import (
 
 	"github.com/golang/glog"
 	termbox "github.com/nsf/termbox-go"
+	"github.com/thorfour/larn/pkg/game/state/conditions"
 	"github.com/thorfour/larn/pkg/game/state/items"
 	"github.com/thorfour/larn/pkg/game/state/stats"
 	"github.com/thorfour/larn/pkg/game/state/types"
@@ -41,10 +42,12 @@ const (
 	characterRune = '&'
 )
 
+// Character represents the player in the game
 type Character struct {
 	loc       types.Coordinate
 	Stats     *stats.Stats
 	inv       *Inventory
+	Cond      *conditions.ActiveConditions
 	Displaced io.Runeable // object character is currently on top of
 }
 
@@ -67,6 +70,7 @@ func (c *Character) Init(d int) {
 	c.Stats.Dex = 12
 	c.Stats.Cha = 12
 	c.inv = NewInventory()
+	c.Cond = conditions.New()
 
 	if DEBUG { // Start with all the gold in a debug build
 		c.Stats.Gold = 10000000

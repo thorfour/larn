@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"math/rand"
 
+	"github.com/golang/glog"
 	"github.com/thorfour/larn/pkg/game/state/stats"
-	"github.com/upspin/upspin/log"
 )
 
 const (
@@ -279,7 +279,7 @@ func (p *Potion) Quaff(s *stats.Stats) []string {
 		return []string{"You feel your vision sharpen"}
 	default:
 		// TODO log an error
-		log.Error("unknown potion consumed: %v", p.ID)
+		glog.Error("unknown potion consumed: %v", p.ID)
 		return nil
 	}
 }

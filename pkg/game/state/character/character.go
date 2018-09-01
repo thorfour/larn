@@ -277,5 +277,5 @@ func (c *Character) Quaff(e rune) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	return i.(items.Quaffable).Quaff(c.Stats), nil
+	return i.(items.Quaffable).Quaff(c.Stats, c.Cond), nil
 }

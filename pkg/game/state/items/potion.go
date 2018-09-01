@@ -5,6 +5,7 @@ import (
 	"math/rand"
 
 	"github.com/golang/glog"
+	"github.com/thorfour/larn/pkg/game/state/conditions"
 	"github.com/thorfour/larn/pkg/game/state/stats"
 )
 
@@ -113,6 +114,10 @@ var potionname = []string{
 // knownPotions map of all potions the player has learned
 var knownPotions map[PotionID]bool
 
+func init() {
+	knownPotions = make(map[PotionID]bool)
+}
+
 // Potion that a player may drink for an effect
 type Potion struct {
 	ID    PotionID
@@ -168,7 +173,7 @@ func NewPotion() *Potion {
 }
 
 // Quaff implemtents the Quaffable interface. Applies a potions effects to the given stats. Returns a log of events
-func (p *Potion) Quaff(s *stats.Stats) []string {
+func (p *Potion) Quaff(s *stats.Stats, a *conditions.ActiveConditions) []string {
 	LearnPotion(p.ID)
 	switch p.ID {
 	case Sleep:
@@ -237,31 +242,42 @@ func (p *Potion) Quaff(s *stats.Stats) []string {
 	case Water:
 		return []string{"This potion has no taste to it"}
 	case Blindness:
-		// TODO add active blind
+		a.Refresh(conditions.Blindness, 500, nil)
 		return []string{"You can't see anything!"}
 	case Confusion:
-		// TODO add active confusion
+		a.Refresh(conditions.Confusion, 21+rand.Intn(9), nil)
 		return []string{"You feel confused"}
 	case Heroism:
-		// TODO check if already heroic
-		// TODO add to heroism decay func +250
-		s.Cha += 11
-		s.Wisdom += 11
-		s.Con += 11
-		s.Dex += 11
-		s.Str += 11
-		s.Intelligence++
+		if !a.EffectActive(conditions.Heroic) {
+			s.Cha += 11
+			s.Wisdom += 11
+			s.Con += 11
+			s.Dex += 11
+			s.Str += 11
+			s.Intelligence += 11
+		}
+		a.Refresh(conditions.Heroic, 250, func() {
+			s.Cha -= 11
+			s.Wisdom -= 11
+			s.Con -= 11
+			s.Dex -= 11
+			s.Str -= 11
+			s.Intelligence -= 11
+		})
 		return []string{"WOW!! You feel Super-fantastic!!!"}
 	case Sturdiness:
 		s.Con++
 		return []string{"You have a greater intestinal constitude!"}
 	case GiantStrength:
-		/// TODO if gianstr active +21 strextra
-		// TODO add giantstr decay func
-		s.Str += 700
+		if !a.EffectActive(conditions.GiantStrength) {
+			s.StrExtra += 21
+		}
+		a.Refresh(conditions.GiantStrength, 700, func() {
+			s.Str -= 20
+		})
 		return []string{"You now have incredibly bulgin muscles!!!"}
 	case FireResistance:
-		// TODO add fire resist active +1000
+		a.Refresh(conditions.FireResistance, 1000, nil)
 		return []string{"You feel a chill run up your spine!"}
 	case TreasureFinding:
 		// TODO reveal all diamonds and piles of gold
@@ -272,13 +288,12 @@ func (p *Potion) Quaff(s *stats.Stats) []string {
 	case CureDianthroritis:
 		return []string{"You don't seem to be affected"}
 	case Poison:
-		// TODO add half damage active += 200 + rand.Intn(200)
+		a.Refresh(conditions.HalfDamage, 201+rand.Intn(200), nil)
 		return []string{"You feel a sickness engulf you"}
 	case SeeInvisible:
-		// TODO add see invisible active
+		a.Refresh(conditions.SeeInvisible, rand.Intn(1000)+401, nil)
 		return []string{"You feel your vision sharpen"}
 	default:
-		// TODO log an error
 		glog.Error("unknown potion consumed: %v", p.ID)
 		return nil
 	}

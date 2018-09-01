@@ -4,6 +4,7 @@ import (
 	"math/rand"
 
 	termbox "github.com/nsf/termbox-go"
+	"github.com/thorfour/larn/pkg/game/state/conditions"
 	"github.com/thorfour/larn/pkg/game/state/stats"
 	"github.com/thorfour/larn/pkg/io"
 )
@@ -29,7 +30,7 @@ type Food interface {
 // Quaffable for anything that s *an be quaffed
 type Quaffable interface {
 	Item
-	Quaff(s *stats.Stats) []string
+	Quaff(*stats.Stats, *conditions.ActiveConditions) []string
 }
 
 // Weapon for anything that s *an be wielded

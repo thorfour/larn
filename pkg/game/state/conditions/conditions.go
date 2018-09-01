@@ -7,6 +7,18 @@ type condition int
 const (
 	// Blindness means the player no longer reveals objects when encountering them
 	Blindness condition = iota
+	// Confusion character is confuesd
+	Confusion
+	// Heroic status
+	Heroic
+	// GiantStrength spell
+	GiantStrength
+	// FireResistance resistance to hell hounds and other fire sources
+	FireResistance
+	// HalfDamage player only deals half damange
+	HalfDamage
+	// SeeInvisible allows player to see invisible stalkers
+	SeeInvisible
 	// HoldMonsters keeps all monsters from moving unless provoked
 	HoldMonsters
 	// TimeStop means no time passes
@@ -55,9 +67,15 @@ func (a *ActiveConditions) Decay(c condition) {
 	a.active[c](0)
 }
 
-// Refresh adds time onto a given condition
-func (a *ActiveConditions) Refresh(c condition, n int) {
-	a.active[c](n)
+// Refresh adds time onto a given condition, adds a new condition if the condition doesn't exist
+func (a *ActiveConditions) Refresh(c condition, n int, decay func()) {
+	if _, ok := a.active[c]; ok {
+		a.active[c](n)
+		return
+	}
+
+	// Add condition
+	a.Add(c, n, decay)
 }
 
 // Remove an active condition

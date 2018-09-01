@@ -216,7 +216,7 @@ func (s *State) Cast(spell string) error {
 	case "vpr": // vaporize rock
 		s.maps.VaporizeAdjacent(s.C)
 	case "cbl": // cure blindness
-		s.Active[sp.Code] = nil
+		s.Active[blindness] = nil
 	case "hel": // healing
 		s.C.Heal(20 + int(s.C.Stats.Level<<1))
 	case "hld": // hold monsters

@@ -5,6 +5,7 @@ import (
 	"math/rand"
 
 	"github.com/thorfour/larn/pkg/game/state/stats"
+	"github.com/upspin/upspin/log"
 )
 
 const (
@@ -227,7 +228,58 @@ func (p *Potion) Quaff(s *stats.Stats) []string {
 		// TODO don't reveal anything if player is blind
 		// TODO reveal all items on a level
 		return []string{"You sense the presence of objects!"}
+	case MonsterDetection:
+		// TODO reveal all monster unless blind
+		return []string{"You sense the presence of monsters!"}
+	case Forgetfulness:
+		// TODO hide all objects on map
+		return []string{"You stagger for a moment . ."}
+	case Water:
+		return []string{"This potion has no taste to it"}
+	case Blindness:
+		// TODO add active blind
+		return []string{"You can't see anything!"}
+	case Confusion:
+		// TODO add active confusion
+		return []string{"You feel confused"}
+	case Heroism:
+		// TODO check if already heroic
+		// TODO add to heroism decay func +250
+		s.Cha += 11
+		s.Wisdom += 11
+		s.Con += 11
+		s.Dex += 11
+		s.Str += 11
+		s.Intelligence++
+		return []string{"WOW!! You feel Super-fantastic!!!"}
+	case Sturdiness:
+		s.Con++
+		return []string{"You have a greater intestinal constitude!"}
+	case GiantStrength:
+		/// TODO if gianstr active +21 strextra
+		// TODO add giantstr decay func
+		s.Str += 700
+		return []string{"You now have incredibly bulgin muscles!!!"}
+	case FireResistance:
+		// TODO add fire resist active +1000
+		return []string{"You feel a chill run up your spine!"}
+	case TreasureFinding:
+		// TODO reveal all diamonds and piles of gold
+		return []string{"You feel greedy . . ."}
+	case InstantHealing:
+		s.Hp = s.MaxHP
+		return nil
+	case CureDianthroritis:
+		return []string{"You don't seem to be affected"}
+	case Poison:
+		// TODO add half damage active += 200 + rand.Intn(200)
+		return []string{"You feel a sickness engulf you"}
+	case SeeInvisible:
+		// TODO add see invisible active
+		return []string{"You feel your vision sharpen"}
 	default:
+		// TODO log an error
+		log.Error("unknown potion consumed: %v", p.ID)
 		return nil
 	}
 }

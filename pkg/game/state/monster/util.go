@@ -3,7 +3,8 @@ package monster
 import "math/rand"
 
 const (
-	Bat = iota
+	_ = iota
+	Bat
 	Gnome
 	Hobgoblin
 	Jackal
@@ -72,8 +73,8 @@ const (
 // slice to generate monsters at a given level
 var monstLevel = []int{5, 11, 17, 22, 27, 33, 39, 42, 46, 50, 53, 56, 59}
 
-// MonsterFromLevel generates a monster for a dungeon level
-func MonsterFromLevel(lev int) int {
+// FromLevel generates a monster for a dungeon level
+func FromLevel(lev int) int {
 	if lev < 1 {
 		lev = 1
 	}

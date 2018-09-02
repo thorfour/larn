@@ -638,13 +638,13 @@ func (s *State) drop(c types.Coordinate, drop io.Runeable) {
 }
 
 // Quaff performs a drink potion action
-func (s *State) Quaff(e rune) error {
+func (s *State) Quaff(e rune) (func() bool, error) {
 	defer s.update()
 	glog.V(2).Info("Quaff requested")
 
 	l, id, err := s.C.Quaff(e)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// Log all the information that read returned
@@ -657,7 +657,7 @@ func (s *State) Quaff(e rune) error {
 	case items.TreasureFinding:
 		// Don't if blind
 		if s.C.Cond.EffectActive(conditions.Blindness) {
-			return nil
+			return nil, nil
 		}
 		s.maps.TouchAllInteriorCoordinates(func(obj io.Runeable) {
 			switch obj.(type) {
@@ -674,7 +674,7 @@ func (s *State) Quaff(e rune) error {
 	case items.MonsterDetection:
 		// Don't if blind
 		if s.C.Cond.EffectActive(conditions.Blindness) {
-			return nil
+			return nil, nil
 		}
 		s.maps.TouchAllInteriorCoordinates(func(obj io.Runeable) {
 			if _, ok := obj.(monster.Interface); ok {
@@ -686,7 +686,7 @@ func (s *State) Quaff(e rune) error {
 	case items.ObjectDetection:
 		// Don't if blind
 		if s.C.Cond.EffectActive(conditions.Blindness) {
-			return nil
+			return nil, nil
 		}
 		s.maps.TouchAllInteriorCoordinates(func(obj io.Runeable) {
 			switch obj.(type) {
@@ -706,8 +706,21 @@ func (s *State) Quaff(e rune) error {
 			}
 		})
 	case items.Sleep:
-		// TODO sleep for N units of time
+		// Return a callback function
+		i := rand.Intn(11) + 1 - (int(s.C.Stats.Con) >> 2) + 2
+		return func() bool {
+			if i > 0 {
+				i--
+				s.update()
+				s.maps.SetVisible(s.C)
+				glog.V(2).Infof("sleeping again %v", i)
+				time.Sleep(time.Second)
+				return true
+			}
+			s.Log("You woke up!")
+			return false
+		}, nil
 	}
 
-	return nil
+	return nil, nil
 }

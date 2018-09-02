@@ -178,6 +178,7 @@ func (p *Potion) Quaff(s *stats.Stats, a *conditions.ActiveConditions) ([]string
 	var l []string
 	switch p.ID {
 	case Sleep:
+		l = append(l, "You fall asleep. . .")
 	case Healing:
 		if s.Hp == s.MaxHP { // if at max HP, raise max HP by 1
 			s.RaiseMaxHP(1)

@@ -78,6 +78,7 @@ func (c *Character) Init(d int) {
 		c.inv.AddItem(&items.Potion{ID: items.Forgetfulness}, c.Stats)        // add potion of forgetfulness for debugging
 		c.inv.AddItem(&items.Potion{ID: items.TreasureFinding}, c.Stats)      // add potion of treasurefinding for debugging
 		c.inv.AddItem(&items.Potion{ID: items.MonsterDetection}, c.Stats)     // add potion of MonsterDetection for debugging
+		c.inv.AddItem(&items.Potion{ID: items.Sleep}, c.Stats)                // add potion of Sleep for debugging
 	}
 
 	if d <= 0 { // 0 difficulty games the plaer starts with leather armor and dagger

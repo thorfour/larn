@@ -347,7 +347,14 @@ func (g *Game) itemAction(a action) func(termbox.Event) {
 				case readAction:
 					err = g.currentState.Read(e.Ch)
 				case quaffAction:
-					err = g.currentState.Quaff(e.Ch)
+					var callback func() bool
+					callback, err = g.currentState.Quaff(e.Ch)
+					g.render(display(g.currentState))
+					if callback != nil {
+						for callback() { // render until callback returns false
+							g.render(display(g.currentState))
+						}
+					}
 				}
 				if err != nil {
 					g.currentState.Log(err.Error())

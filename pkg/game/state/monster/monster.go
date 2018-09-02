@@ -12,6 +12,12 @@ const (
 	InvisibleRune = ' '
 )
 
+// Interface is the monster interface
+type Interface interface {
+	ID() int
+	Damage(int) bool
+}
+
 // Monster is a in-game monster
 type Monster struct {
 	id         int         // the lookup id for the monster

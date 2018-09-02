@@ -313,10 +313,10 @@ func placeMapObjects(lvl uint, m [][]io.Runeable) {
 	} else {
 		// Place the stairs
 		if lvl != 1 { // Dungeon level 1 has an entrance/exit doesn't need stairs up
-			placeObject(randMapCoord(), Stairs{Up, int(lvl - 1), DEBUG}, m)
+			placeObject(randMapCoord(), &Stairs{Up, int(lvl - 1), DEBUG}, m)
 		}
 		if lvl != maxDungeon && lvl != maxVolcano { // Last dungeon/volcano no stairs down
-			placeObject(randMapCoord(), Stairs{Down, int(lvl + 1), DEBUG}, m)
+			placeObject(randMapCoord(), &Stairs{Down, int(lvl + 1), DEBUG}, m)
 		}
 
 		// Place random maze objects

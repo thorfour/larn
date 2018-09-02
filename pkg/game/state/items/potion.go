@@ -3,6 +3,10 @@ package items
 import (
 	"fmt"
 	"math/rand"
+
+	"github.com/golang/glog"
+	"github.com/thorfour/larn/pkg/game/state/conditions"
+	"github.com/thorfour/larn/pkg/game/state/stats"
 )
 
 const (
@@ -110,6 +114,10 @@ var potionname = []string{
 // knownPotions map of all potions the player has learned
 var knownPotions map[PotionID]bool
 
+func init() {
+	knownPotions = make(map[PotionID]bool)
+}
+
 // Potion that a player may drink for an effect
 type Potion struct {
 	ID    PotionID
@@ -162,4 +170,126 @@ func NewPotion() *Potion {
 	return &Potion{
 		ID: potprob[rand.Intn(len(potprob))],
 	}
+}
+
+// Quaff implemtents the Quaffable interface. Applies a potions effects to the given stats. Returns a log of events
+func (p *Potion) Quaff(s *stats.Stats, a *conditions.ActiveConditions) ([]string, PotionID) {
+	LearnPotion(p.ID)
+	var l []string
+	switch p.ID {
+	case Sleep:
+		l = append(l, "You fall asleep. . .")
+	case Healing:
+		if s.Hp == s.MaxHP { // if at max HP, raise max HP by 1
+			s.RaiseMaxHP(1)
+		} else { // heal the player
+			s.GainHP(uint(rand.Intn(20)+1) + 20 + s.Level)
+		}
+		l = append(l, "You feel better")
+	case RaiseLevel:
+		s.Level++
+		s.RaiseMaxHP(1)
+		l = append(l, "Suddenly, you feel much more skillful!")
+	case IncreaseAbility:
+		// add 1 to random attribute
+		switch rand.Intn(6) {
+		case 0:
+			s.Cha++
+		case 1:
+			s.Wisdom++
+		case 2:
+			s.Con++
+		case 3:
+			s.Dex++
+		case 4:
+			s.Str++
+		case 5:
+			s.Intelligence++
+		}
+		l = append(l, "You feel strange for a moment")
+	case GainWisdom:
+		s.Wisdom += uint(rand.Intn(2)) + 1
+		l = append(l, "You feel more self confident!")
+	case GainStrength:
+		if s.Str < 12 {
+			s.Str = 12
+		} else {
+			s.Str++
+		}
+		l = append(l, "Wow! You feel great!")
+	case IncreaseCharisma:
+		s.Cha++
+		l = append(l, "Your charm went up by one!")
+	case Dizziness:
+		s.Str--
+		if s.Str < 3 {
+			s.Str = 3
+		}
+		l = append(l, "You become dizzy!")
+	case Learning:
+		s.Intelligence++
+		l = append(l, "Your intelligence went up by one!")
+	case ObjectDetection:
+		l = append(l, "You sense the presence of objects!")
+	case MonsterDetection:
+		l = append(l, "You sense the presence of monsters!")
+	case Forgetfulness:
+		l = append(l, "You stagger for a moment . .")
+	case Water:
+		l = append(l, "This potion has no taste to it")
+	case Blindness:
+		a.Refresh(conditions.Blindness, 500, nil)
+		l = append(l, "You can't see anything!")
+	case Confusion:
+		a.Refresh(conditions.Confusion, 21+rand.Intn(9), nil)
+		l = append(l, "You feel confused")
+	case Heroism:
+		if !a.EffectActive(conditions.Heroic) {
+			s.Cha += 11
+			s.Wisdom += 11
+			s.Con += 11
+			s.Dex += 11
+			s.Str += 11
+			s.Intelligence += 11
+		}
+		a.Refresh(conditions.Heroic, 250, func() {
+			s.Cha -= 11
+			s.Wisdom -= 11
+			s.Con -= 11
+			s.Dex -= 11
+			s.Str -= 11
+			s.Intelligence -= 11
+		})
+		l = append(l, "WOW!! You feel Super-fantastic!!!")
+	case Sturdiness:
+		s.Con++
+		l = append(l, "You have a greater intestinal constitude!")
+	case GiantStrength:
+		if !a.EffectActive(conditions.GiantStrength) {
+			s.StrExtra += 21
+		}
+		a.Refresh(conditions.GiantStrength, 700, func() {
+			s.Str -= 20
+		})
+		l = append(l, "You now have incredibly bulgin muscles!!!")
+	case FireResistance:
+		a.Refresh(conditions.FireResistance, 1000, nil)
+		l = append(l, "You feel a chill run up your spine!")
+	case TreasureFinding:
+		l = append(l, "You feel greedy . . .")
+	case InstantHealing:
+		s.Hp = s.MaxHP
+	case CureDianthroritis:
+		l = append(l, "You don't seem to be affected")
+	case Poison:
+		a.Refresh(conditions.HalfDamage, 201+rand.Intn(200), nil)
+		l = append(l, "You feel a sickness engulf you")
+	case SeeInvisible:
+		a.Refresh(conditions.SeeInvisible, rand.Intn(1000)+401, nil)
+		l = append(l, "You feel your vision sharpen")
+	default:
+		glog.Error("unknown potion consumed: %v", p.ID)
+	}
+
+	return l, p.ID
 }

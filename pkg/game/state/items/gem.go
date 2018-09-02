@@ -17,12 +17,22 @@ const (
 	Sapphire
 )
 
+// Gemstone is the interface for a gem
+type Gemstone interface {
+	Gem() int
+}
+
 // Gem represents a gemstone
 type Gem struct {
 	Stone int // indicates the type of gemstone
 	Value int // the value of the gemstone
 	DefaultItem
 	NoStats
+}
+
+// Gem implements the gemstone interface
+func (g *Gem) Gem() int {
+	return g.Stone
 }
 
 // Rune implements the io.Runeable interface

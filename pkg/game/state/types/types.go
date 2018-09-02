@@ -63,3 +63,8 @@ func Move(c Coordinate, d Direction) Coordinate {
 
 	return c
 }
+
+// Visibility set
+type Visibility interface {
+	Visible(bool)
+}

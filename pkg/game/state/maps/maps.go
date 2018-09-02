@@ -48,7 +48,7 @@ func New(c *character.Character) *Maps {
 			m.entrance = append(m.entrance, walkToEmpty(randMapCoord(), nm)) // TODO change this to be next to the dungeon entrance
 		case 1: // dungeon 0 has an entrance
 			nm[height-1][width/2] = (Empty{})
-			m.entrance = append(m.entrance, types.Coordinate{width / 2, height - 2})
+			m.entrance = append(m.entrance, types.Coordinate{X: width / 2, Y: height - 2})
 			m.monsters[i] = spawnMonsters(nm, i, true) // spawn monsters onto the map
 		default:
 			// Set the entrace for the maze to a random location
@@ -255,4 +255,13 @@ func (m *Maps) At(c types.Coordinate) io.Runeable {
 // NewEmptyTile returns a new Empty map tile
 func (m *Maps) NewEmptyTile() Empty {
 	return Empty{m.current == homeLevel}
+}
+
+// TouchAllInteriorCoordinates walks the maps internal coordinats, and executes the given function on them
+func (m *Maps) TouchAllInteriorCoordinates(f func(io.Runeable)) {
+	for x := 1; x < width-1; x++ {
+		for y := 1; y < height-1; y++ {
+			f(m.CurrentMap()[y][x])
+		}
+	}
 }

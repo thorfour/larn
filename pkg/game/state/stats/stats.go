@@ -23,3 +23,18 @@ type Stats struct {
 	Special      map[int]bool    // Special stats for if the character is holding special items
 	KnownSpells  map[string]bool // Known spells
 }
+
+// RaiseMaxHP raises the max HP and the HP by n
+func (s *Stats) RaiseMaxHP(n uint) {
+	s.MaxHP += n
+	s.Hp += n
+}
+
+// GainHP adds HP, handles not exceeding max HP
+func (s *Stats) GainHP(n uint) {
+	if s.Hp+n < s.MaxHP {
+		s.Hp += n
+	} else {
+		s.Hp = s.MaxHP
+	}
+}

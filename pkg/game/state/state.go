@@ -7,6 +7,7 @@ import (
 
 	"github.com/golang/glog"
 	"github.com/thorfour/larn/pkg/game/state/character"
+	"github.com/thorfour/larn/pkg/game/state/conditions"
 	"github.com/thorfour/larn/pkg/game/state/items"
 	"github.com/thorfour/larn/pkg/game/state/maps"
 	"github.com/thorfour/larn/pkg/game/state/monster"
@@ -58,7 +59,6 @@ func New(diff int) *State {
 	s.difficulty = diff
 	s.C = new(character.Character)
 	s.C.Init(s.difficulty)
-	s.Active = make(map[string]func())
 	s.rng = rand.New(rand.NewSource(time.Now().UnixNano()))
 	s.maps = maps.New(s.C)
 
@@ -203,7 +203,7 @@ func (s *State) Cast(spell string) error {
 			return err
 		}
 
-		if s.EffectActive("stp") {
+		if s.C.Cond.EffectActive(conditions.TimeStop) {
 			return ErrDidntWork
 		}
 	}
@@ -216,36 +216,36 @@ func (s *State) Cast(spell string) error {
 	case "vpr": // vaporize rock
 		s.maps.VaporizeAdjacent(s.C)
 	case "cbl": // cure blindness
-		s.Active[sp.Code] = nil
+		s.C.Cond.Remove(conditions.Blindness)
 	case "hel": // healing
 		s.C.Heal(20 + int(s.C.Stats.Level<<1))
 	case "hld": // hold monsters
-		s.decay(sp.Code, rand.Intn(10)+int(s.C.Stats.Level), func() {})
+		s.C.Cond.Add(conditions.HoldMonsters, rand.Intn(10)+int(s.C.Stats.Level), nil)
 	case "stp": // time stop
-		s.decay(sp.Code, rand.Intn(20)+(int(s.C.Stats.Level)<<1), func() {})
+		s.C.Cond.Add(conditions.TimeStop, rand.Intn(20)+(int(s.C.Stats.Level)<<1), nil)
 	case "glo":
-		if s.Active[sp.Code] == nil {
+		if !s.C.Cond.EffectActive(conditions.GlobeOfInvul) {
 			s.C.Stats.Ac += 10
 		}
 		if s.C.Stats.Intelligence > 3 { // globe decreases intelligence to minimum of 3
 			s.C.Stats.Intelligence--
 		}
-		s.decay(sp.Code, 200, func() { s.C.Stats.Ac -= 10 })
+		s.C.Cond.Add(conditions.GlobeOfInvul, 200, func() { s.C.Stats.Ac -= 10 })
 	case "str":
-		if s.Active[sp.Code] == nil {
+		if !s.C.Cond.EffectActive(conditions.SpellOfStrength) {
 			s.C.Stats.Str += 3
 		}
-		s.decay(sp.Code, 150+rand.Intn(100), func() { s.C.Stats.Str -= 3 })
+		s.C.Cond.Add(conditions.SpellOfStrength, 150+rand.Intn(100), func() { s.C.Stats.Str -= 3 })
 	case "dex":
-		if s.Active[sp.Code] == nil {
+		if !s.C.Cond.EffectActive(conditions.SpellOfDexterity) {
 			s.C.Stats.Dex += 3
 		}
-		s.decay(sp.Code, 400, func() { s.C.Stats.Dex -= 3 })
+		s.C.Cond.Add(conditions.SpellOfDexterity, 400, func() { s.C.Stats.Dex -= 3 })
 	case "pro":
-		if s.Active[sp.Code] == nil {
+		if !s.C.Cond.EffectActive(conditions.SpellOfProtection) {
 			s.C.Stats.Ac += 2 // protection field +2
 		}
-		s.decay(sp.Code, 250, func() { s.C.Stats.Ac -= 2 })
+		s.C.Cond.Add(conditions.SpellOfProtection, 250, func() { s.C.Stats.Ac -= 2 })
 	case "sca": // scare monsters
 		fallthrough
 	case "cld":
@@ -261,19 +261,6 @@ func (s *State) Cast(spell string) error {
 	}
 
 	return nil
-}
-
-// decay adds a decay function to the Active functions map
-func (s *State) decay(code string, dur int, f func()) {
-	s.Active[code] = func() {
-		glog.V(6).Infof("Decay %s: %v", code, dur)
-		dur--
-		if dur == 0 {
-			f() // execute the func
-			// remove it from the list of actives
-			delete(s.Active, code)
-		}
-	}
 }
 
 // IdentTrap notifies the player if there are traps adjacent
@@ -309,9 +296,9 @@ func (s *State) IdentTrap() {
 // update function to handle time passage, spell decay and monster movement
 func (s *State) update() {
 	glog.V(3).Infof("Updating game state")
-	if f, ok := s.Active["stp"]; ok {
-		f()
-		return // time stop only thing to do is decay that spell
+	if s.C.Cond.EffectActive(conditions.TimeStop) {
+		s.C.Cond.Decay(conditions.TimeStop) // time stop, only thing to do is decay that spell
+		return
 	}
 
 	// Move monsters
@@ -321,16 +308,14 @@ func (s *State) update() {
 	s.timeUsed++
 
 	// Decay all active functions
-	for k := range s.Active {
-		s.Active[k]()
-	}
+	s.C.Cond.DecayAll()
 }
 
 func (s *State) moveMonsters() {
 	glog.V(4).Infof("Move monsters")
 
 	// Hold monsters, monsters don't move
-	if s.EffectActive("hld") {
+	if s.C.Cond.EffectActive(conditions.HoldMonsters) {
 		return
 	}
 
@@ -462,19 +447,19 @@ func (s *State) attackPlayer(mon *monster.Monster) {
 
 	// if blind don't print monster name
 	mName := mon.Name()
-	if s.EffectActive("blind") {
+	if s.C.Cond.EffectActive(conditions.Blindness) {
 		mName = "monster"
 	}
 
 	// If character is invisble chance to miss
-	if s.EffectActive("invsibility") {
+	if s.C.Cond.EffectActive(conditions.Invisiblity) {
 		if rand.Intn(33) < 20 {
 			s.Log(fmt.Sprintf("The %s misses wildly", mName))
 			return
 		}
 	}
 
-	if s.EffectActive("charm") {
+	if s.C.Cond.EffectActive(conditions.CharmMonsters) {
 		if rand.Intn(30)+5*mon.Info.Lvl-int(s.C.Stats.Cha) < 30 {
 			s.Log(fmt.Sprintf("The %s is awestruct at your magnificence!", mName))
 			return
@@ -543,7 +528,7 @@ func (s *State) playerAttack(d types.Direction) {
 // hitMonster handles a charachter attempting to hit a monster
 func (s *State) hitMonster(m *monster.Monster) bool {
 	dead := false
-	if s.EffectActive("stp") { // time is stopped
+	if s.C.Cond.EffectActive(conditions.TimeStop) {
 		return dead
 	}
 
@@ -563,12 +548,6 @@ func (s *State) hitMonster(m *monster.Monster) bool {
 	// TODO handle dulled weapons
 	// TODO handle turning vampires back into bats
 	return dead
-}
-
-// EffectActive returns a bool indicating if the effect is currently active
-func (s *State) EffectActive(e string) bool {
-	_, ok := s.Active[e]
-	return ok
 }
 
 // hits returns the damage dealt for the given number of hits
@@ -656,4 +635,92 @@ func (s *State) drop(c types.Coordinate, drop io.Runeable) {
 	}
 
 	// NOTE: If we couldn't find a place to drop then nothing gets dropped
+}
+
+// Quaff performs a drink potion action
+func (s *State) Quaff(e rune) (func() bool, error) {
+	defer s.update()
+	glog.V(2).Info("Quaff requested")
+
+	l, id, err := s.C.Quaff(e)
+	if err != nil {
+		return nil, err
+	}
+
+	// Log all the information that read returned
+	for _, r := range l {
+		s.Log(r)
+	}
+
+	// Special potion cases
+	switch id {
+	case items.TreasureFinding:
+		// Don't if blind
+		if s.C.Cond.EffectActive(conditions.Blindness) {
+			return nil, nil
+		}
+		s.maps.TouchAllInteriorCoordinates(func(obj io.Runeable) {
+			switch obj.(type) {
+			case items.Gemstone:
+				if _, ok := obj.(types.Visibility); ok {
+					obj.(types.Visibility).Visible(true)
+				}
+			case items.Gold:
+				if _, ok := obj.(types.Visibility); ok {
+					obj.(types.Visibility).Visible(true)
+				}
+			}
+		})
+	case items.MonsterDetection:
+		// Don't if blind
+		if s.C.Cond.EffectActive(conditions.Blindness) {
+			return nil, nil
+		}
+		s.maps.TouchAllInteriorCoordinates(func(obj io.Runeable) {
+			if _, ok := obj.(monster.Interface); ok {
+				if _, ok := obj.(types.Visibility); ok {
+					obj.(types.Visibility).Visible(true)
+				}
+			}
+		})
+	case items.ObjectDetection:
+		// Don't if blind
+		if s.C.Cond.EffectActive(conditions.Blindness) {
+			return nil, nil
+		}
+		s.maps.TouchAllInteriorCoordinates(func(obj io.Runeable) {
+			switch obj.(type) {
+			case items.Gemstone:
+			case items.Gold:
+				// no gems or gold piles
+			case items.Item:
+				if _, ok := obj.(types.Visibility); ok {
+					obj.(types.Visibility).Visible(true)
+				}
+			}
+		})
+	case items.Forgetfulness:
+		s.maps.TouchAllInteriorCoordinates(func(obj io.Runeable) {
+			if _, ok := obj.(types.Visibility); ok {
+				obj.(types.Visibility).Visible(false)
+			}
+		})
+	case items.Sleep:
+		// Return a callback function
+		i := rand.Intn(11) + 1 - (int(s.C.Stats.Con) >> 2) + 2
+		return func() bool {
+			if i > 0 {
+				i--
+				s.update()
+				s.maps.SetVisible(s.C)
+				glog.V(2).Infof("sleeping again %v", i)
+				time.Sleep(time.Second)
+				return true
+			}
+			s.Log("You woke up!")
+			return false
+		}, nil
+	}
+
+	return nil, nil
 }

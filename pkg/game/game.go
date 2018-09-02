@@ -16,11 +16,12 @@ import (
 type action int
 
 const (
-	DropAction action = iota
-	WieldAction
-	WearAction
-	TakeOffAction
-	ReadAction
+	dropAction action = iota
+	wieldAction
+	wearAction
+	takeOffAction
+	readAction
+	quaffAction
 )
 
 var (
@@ -180,7 +181,7 @@ func (g *Game) defaultHandler(e termbox.Event) {
 		g.currentState.IdentTrap()
 		g.render(display(g.currentState))
 	case 'd': // drop an item
-		g.inputHandler = g.itemAction(DropAction)
+		g.inputHandler = g.itemAction(dropAction)
 	case 'v': // print program version
 	case '?': // help screen
 		g.inputHandler = g.help()
@@ -193,14 +194,15 @@ func (g *Game) defaultHandler(e termbox.Event) {
 	case 'c': // cast a spell
 		g.inputHandler = g.cast()
 	case 'r': // read a scroll/book
-		g.inputHandler = g.itemAction(ReadAction)
+		g.inputHandler = g.itemAction(readAction)
 	case 'q': // quaff a potion
+		g.inputHandler = g.itemAction(quaffAction)
 	case 'W': // wear armor
-		g.inputHandler = g.itemAction(WearAction)
+		g.inputHandler = g.itemAction(wearAction)
 	case 'T': // take off armor
-		g.inputHandler = g.itemAction(TakeOffAction)
+		g.inputHandler = g.itemAction(takeOffAction)
 	case 'w': // wield a weapon
-		g.inputHandler = g.itemAction(WieldAction)
+		g.inputHandler = g.itemAction(wieldAction)
 	case 'P': // give tax status
 	case 'D': // list all items found
 	case 'e': // eat something
@@ -290,13 +292,13 @@ func (g *Game) itemAction(a action) func(termbox.Event) {
 	glog.V(2).Infof("item action requested")
 
 	switch a {
-	case WieldAction:
+	case wieldAction:
 		g.currentState.Log("What do you want to wield (- for nothing) [* for all] ?")
-	case DropAction:
+	case dropAction:
 		g.currentState.Log("What do you want to drop [* for all] ?")
-	case WearAction:
+	case wearAction:
 		g.currentState.Log("What do you want to wear [* for all] ?")
-	case TakeOffAction:
+	case takeOffAction:
 		if err := g.currentState.C.TakeOff(); err != nil {
 			g.currentState.Log("You aren't wearing anything")
 		} else {
@@ -304,8 +306,12 @@ func (g *Game) itemAction(a action) func(termbox.Event) {
 		}
 		g.render(display(g.currentState))
 		return g.defaultHandler
-	case ReadAction:
+	case readAction:
 		g.currentState.Log("What do you want to read [* for all] ?")
+	case quaffAction:
+		g.currentState.Log("What do you want to quaff [space to view] ?")
+	default:
+		glog.Fatal("unknown item action %v", a)
 	}
 
 	g.render(display(g.currentState))
@@ -327,19 +333,28 @@ func (g *Game) itemAction(a action) func(termbox.Event) {
 			default: // try and act on something
 				var err error
 				switch a {
-				case WieldAction:
+				case wieldAction:
 					err = g.currentState.C.Wield(e.Ch)
-				case WearAction:
+				case wearAction:
 					err = g.currentState.C.Wear(e.Ch)
-				case DropAction:
+				case dropAction:
 					var item items.Item
 					item, err = g.currentState.Drop(e.Ch)
 					if err == nil {
 						g.currentState.Log("You drop:")
 						g.currentState.Log(fmt.Sprintf("%s) %s", string(e.Ch), item.String()))
 					}
-				case ReadAction:
+				case readAction:
 					err = g.currentState.Read(e.Ch)
+				case quaffAction:
+					var callback func() bool
+					callback, err = g.currentState.Quaff(e.Ch)
+					g.render(display(g.currentState))
+					if callback != nil {
+						for callback() { // render until callback returns false
+							g.render(display(g.currentState))
+						}
+					}
 				}
 				if err != nil {
 					g.currentState.Log(err.Error())

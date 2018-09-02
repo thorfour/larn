@@ -123,16 +123,16 @@ type Stairs struct {
 }
 
 // Visible implements the visibility interface
-func (s Stairs) Visible(v bool) { s.visible = v }
+func (s *Stairs) Visible(v bool) { s.visible = v }
 
 // Displace implementes the Displaceable interface
-func (s Stairs) Displace() bool { return true }
+func (s *Stairs) Displace() bool { return true }
 
 // Enter implements the Enterable interface
-func (s Stairs) Enter() int { return s.level }
+func (s *Stairs) Enter() int { return s.level }
 
 // Rune implements the io.Runeable interface
-func (s Stairs) Rune() rune {
+func (s *Stairs) Rune() rune {
 	if s.visible {
 		if s.up {
 			return stairUpRune
@@ -143,10 +143,10 @@ func (s Stairs) Rune() rune {
 }
 
 // Fg implements the io.Runeable interface
-func (s Stairs) Fg() termbox.Attribute { return termbox.ColorDefault }
+func (s *Stairs) Fg() termbox.Attribute { return termbox.ColorDefault }
 
 // Bg implements the io.Runeable interface
-func (s Stairs) Bg() termbox.Attribute { return termbox.ColorDefault }
+func (s *Stairs) Bg() termbox.Attribute { return termbox.ColorDefault }
 
 // Entrance type are the entrances that are on the home level
 type Entrance struct {

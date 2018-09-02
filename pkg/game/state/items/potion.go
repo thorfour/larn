@@ -173,23 +173,22 @@ func NewPotion() *Potion {
 }
 
 // Quaff implemtents the Quaffable interface. Applies a potions effects to the given stats. Returns a log of events
-func (p *Potion) Quaff(s *stats.Stats, a *conditions.ActiveConditions) []string {
+func (p *Potion) Quaff(s *stats.Stats, a *conditions.ActiveConditions) ([]string, PotionID) {
 	LearnPotion(p.ID)
+	var l []string
 	switch p.ID {
 	case Sleep:
-		// TODO
-		return nil
 	case Healing:
 		if s.Hp == s.MaxHP { // if at max HP, raise max HP by 1
 			s.RaiseMaxHP(1)
 		} else { // heal the player
 			s.GainHP(uint(rand.Intn(20)+1) + 20 + s.Level)
 		}
-		return []string{"You feel better"}
+		l = append(l, "You feel better")
 	case RaiseLevel:
 		s.Level++
 		s.RaiseMaxHP(1)
-		return []string{"Suddenly, you feel much more skillful!"}
+		l = append(l, "Suddenly, you feel much more skillful!")
 	case IncreaseAbility:
 		// add 1 to random attribute
 		switch rand.Intn(6) {
@@ -206,47 +205,43 @@ func (p *Potion) Quaff(s *stats.Stats, a *conditions.ActiveConditions) []string 
 		case 5:
 			s.Intelligence++
 		}
-		return []string{"You feel strange for a moment"}
+		l = append(l, "You feel strange for a moment")
 	case GainWisdom:
 		s.Wisdom += uint(rand.Intn(2)) + 1
-		return []string{"You feel more self confident!"}
+		l = append(l, "You feel more self confident!")
 	case GainStrength:
 		if s.Str < 12 {
 			s.Str = 12
 		} else {
 			s.Str++
 		}
-		return []string{"Wow! You feel great!"}
+		l = append(l, "Wow! You feel great!")
 	case IncreaseCharisma:
 		s.Cha++
-		return []string{"Your charm went up by one!"}
+		l = append(l, "Your charm went up by one!")
 	case Dizziness:
 		s.Str--
 		if s.Str < 3 {
 			s.Str = 3
 		}
-		return []string{"You become dizzy!"}
+		l = append(l, "You become dizzy!")
 	case Learning:
 		s.Intelligence++
-		return []string{"Your intelligence went up by one!"}
+		l = append(l, "Your intelligence went up by one!")
 	case ObjectDetection:
-		// TODO don't reveal anything if player is blind
-		// TODO reveal all items on a level
-		return []string{"You sense the presence of objects!"}
+		l = append(l, "You sense the presence of objects!")
 	case MonsterDetection:
-		// TODO reveal all monster unless blind
-		return []string{"You sense the presence of monsters!"}
+		l = append(l, "You sense the presence of monsters!")
 	case Forgetfulness:
-		// TODO hide all objects on map
-		return []string{"You stagger for a moment . ."}
+		l = append(l, "You stagger for a moment . .")
 	case Water:
-		return []string{"This potion has no taste to it"}
+		l = append(l, "This potion has no taste to it")
 	case Blindness:
 		a.Refresh(conditions.Blindness, 500, nil)
-		return []string{"You can't see anything!"}
+		l = append(l, "You can't see anything!")
 	case Confusion:
 		a.Refresh(conditions.Confusion, 21+rand.Intn(9), nil)
-		return []string{"You feel confused"}
+		l = append(l, "You feel confused")
 	case Heroism:
 		if !a.EffectActive(conditions.Heroic) {
 			s.Cha += 11
@@ -264,10 +259,10 @@ func (p *Potion) Quaff(s *stats.Stats, a *conditions.ActiveConditions) []string 
 			s.Str -= 11
 			s.Intelligence -= 11
 		})
-		return []string{"WOW!! You feel Super-fantastic!!!"}
+		l = append(l, "WOW!! You feel Super-fantastic!!!")
 	case Sturdiness:
 		s.Con++
-		return []string{"You have a greater intestinal constitude!"}
+		l = append(l, "You have a greater intestinal constitude!")
 	case GiantStrength:
 		if !a.EffectActive(conditions.GiantStrength) {
 			s.StrExtra += 21
@@ -275,26 +270,25 @@ func (p *Potion) Quaff(s *stats.Stats, a *conditions.ActiveConditions) []string 
 		a.Refresh(conditions.GiantStrength, 700, func() {
 			s.Str -= 20
 		})
-		return []string{"You now have incredibly bulgin muscles!!!"}
+		l = append(l, "You now have incredibly bulgin muscles!!!")
 	case FireResistance:
 		a.Refresh(conditions.FireResistance, 1000, nil)
-		return []string{"You feel a chill run up your spine!"}
+		l = append(l, "You feel a chill run up your spine!")
 	case TreasureFinding:
-		// TODO reveal all diamonds and piles of gold
-		return []string{"You feel greedy . . ."}
+		l = append(l, "You feel greedy . . .")
 	case InstantHealing:
 		s.Hp = s.MaxHP
-		return nil
 	case CureDianthroritis:
-		return []string{"You don't seem to be affected"}
+		l = append(l, "You don't seem to be affected")
 	case Poison:
 		a.Refresh(conditions.HalfDamage, 201+rand.Intn(200), nil)
-		return []string{"You feel a sickness engulf you"}
+		l = append(l, "You feel a sickness engulf you")
 	case SeeInvisible:
 		a.Refresh(conditions.SeeInvisible, rand.Intn(1000)+401, nil)
-		return []string{"You feel your vision sharpen"}
+		l = append(l, "You feel your vision sharpen")
 	default:
 		glog.Error("unknown potion consumed: %v", p.ID)
-		return nil
 	}
+
+	return l, p.ID
 }

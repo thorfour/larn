@@ -256,3 +256,12 @@ func (m *Maps) At(c types.Coordinate) io.Runeable {
 func (m *Maps) NewEmptyTile() Empty {
 	return Empty{m.current == homeLevel}
 }
+
+// TouchAllInteriorCoordinates walks the maps internal coordinats, and executes the given function on them
+func (m *Maps) TouchAllInteriorCoordinates(f func(io.Runeable)) {
+	for x := 1; x < width-1; x++ {
+		for y := 1; y < height-1; y++ {
+			f(m.CurrentMap()[y][x])
+		}
+	}
+}

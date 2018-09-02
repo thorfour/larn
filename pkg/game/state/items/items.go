@@ -30,7 +30,7 @@ type Food interface {
 // Quaffable for anything that s *an be quaffed
 type Quaffable interface {
 	Item
-	Quaff(*stats.Stats, *conditions.ActiveConditions) []string
+	Quaff(*stats.Stats, *conditions.ActiveConditions) ([]string, PotionID)
 }
 
 // Weapon for anything that s *an be wielded

@@ -642,7 +642,7 @@ func (s *State) Quaff(e rune) error {
 	defer s.update()
 	glog.V(2).Info("Quaff requested")
 
-	l, err := s.C.Quaff(e)
+	l, id, err := s.C.Quaff(e)
 	if err != nil {
 		return err
 	}
@@ -650,6 +650,63 @@ func (s *State) Quaff(e rune) error {
 	// Log all the information that read returned
 	for _, r := range l {
 		s.Log(r)
+	}
+
+	// Special potion cases
+	switch id {
+	case items.TreasureFinding:
+		// Don't if blind
+		if s.C.Cond.EffectActive(conditions.Blindness) {
+			return nil
+		}
+		s.maps.TouchAllInteriorCoordinates(func(obj io.Runeable) {
+			switch obj.(type) {
+			case items.Gemstone:
+				if _, ok := obj.(types.Visibility); ok {
+					obj.(types.Visibility).Visible(true)
+				}
+			case items.Gold:
+				if _, ok := obj.(types.Visibility); ok {
+					obj.(types.Visibility).Visible(true)
+				}
+			}
+		})
+	case items.MonsterDetection:
+		// Don't if blind
+		if s.C.Cond.EffectActive(conditions.Blindness) {
+			return nil
+		}
+		s.maps.TouchAllInteriorCoordinates(func(obj io.Runeable) {
+			if _, ok := obj.(monster.Interface); ok {
+				if _, ok := obj.(types.Visibility); ok {
+					obj.(types.Visibility).Visible(true)
+				}
+			}
+		})
+	case items.ObjectDetection:
+		// Don't if blind
+		if s.C.Cond.EffectActive(conditions.Blindness) {
+			return nil
+		}
+		s.maps.TouchAllInteriorCoordinates(func(obj io.Runeable) {
+			switch obj.(type) {
+			case items.Gemstone:
+			case items.Gold:
+				// no gems or gold piles
+			case items.Item:
+				if _, ok := obj.(types.Visibility); ok {
+					obj.(types.Visibility).Visible(true)
+				}
+			}
+		})
+	case items.Forgetfulness:
+		s.maps.TouchAllInteriorCoordinates(func(obj io.Runeable) {
+			if _, ok := obj.(types.Visibility); ok {
+				obj.(types.Visibility).Visible(false)
+			}
+		})
+	case items.Sleep:
+		// TODO sleep for N units of time
 	}
 
 	return nil

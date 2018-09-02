@@ -42,7 +42,9 @@ const (
 )
 
 const (
-	Up   = true
+	// Up is stairs going up
+	Up = true
+	// Down is stairs goind down
 	Down = false
 )
 
@@ -71,6 +73,7 @@ type Empty struct {
 	visible bool
 }
 
+// Visible implements the visibility interface
 func (e Empty) Visible(v bool) { e.visible = v }
 
 // Displace implementes the Displaceable interface
@@ -80,9 +83,8 @@ func (e Empty) Displace() bool { return true }
 func (e Empty) Rune() rune {
 	if e.visible {
 		return emptyRune
-	} else {
-		return invisbleRune
 	}
+	return invisbleRune
 }
 
 // Fg implements the io.Runeable interface
@@ -96,15 +98,15 @@ type Wall struct {
 	visible bool
 }
 
+// Visible implements the visibility interface
 func (w *Wall) Visible(v bool) { w.visible = v }
 
 // Rune implements the io.Runeable interface
 func (w *Wall) Rune() rune {
 	if w.visible {
 		return wallRune
-	} else {
-		return invisbleRune
 	}
+	return invisbleRune
 }
 
 // Fg implements the io.Runeable interface
@@ -120,6 +122,7 @@ type Stairs struct {
 	visible bool
 }
 
+// Visible implements the visibility interface
 func (s Stairs) Visible(v bool) { s.visible = v }
 
 // Displace implementes the Displaceable interface
@@ -135,9 +138,8 @@ func (s Stairs) Rune() rune {
 			return stairUpRune
 		}
 		return stairDownRune
-	} else {
-		return invisbleRune
 	}
+	return invisbleRune
 }
 
 // Fg implements the io.Runeable interface
@@ -146,7 +148,7 @@ func (s Stairs) Fg() termbox.Attribute { return termbox.ColorDefault }
 // Bg implements the io.Runeable interface
 func (s Stairs) Bg() termbox.Attribute { return termbox.ColorDefault }
 
-// HomeEntrance type are the entrances that are on the home level
+// Entrance type are the entrances that are on the home level
 type Entrance struct {
 	r         rune // entrnace rune to displace
 	enterCode int  // code that is returned upon entering

@@ -10,11 +10,19 @@ const (
 	goldPileRune = '*'
 )
 
+// Gold interface is an interface provided for type casting a gold pile
+type Gold interface {
+	GoldPile()
+}
+
 // GoldPile represents a pile of gold
 type GoldPile struct {
 	Amount int
 	DefaultItem
 }
+
+// GoldPile implements the Gold interface
+func (g *GoldPile) GoldPile() {}
 
 // Rune implements the io.Runeable interface
 func (g *GoldPile) Rune() rune {

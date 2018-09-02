@@ -75,6 +75,9 @@ func (c *Character) Init(d int) {
 	if DEBUG { // Start with all the gold in a debug build
 		c.Stats.Gold = 10000000
 		c.inv.AddItem(&items.Gem{Stone: items.Diamond, Value: 1000}, c.Stats) // add a diamond for debugging
+		c.inv.AddItem(&items.Potion{ID: items.Forgetfulness}, c.Stats)        // add potion of forgetfulness for debugging
+		c.inv.AddItem(&items.Potion{ID: items.TreasureFinding}, c.Stats)      // add potion of treasurefinding for debugging
+		c.inv.AddItem(&items.Potion{ID: items.MonsterDetection}, c.Stats)     // add potion of MonsterDetection for debugging
 	}
 
 	if d <= 0 { // 0 difficulty games the plaer starts with leather armor and dagger
@@ -272,10 +275,11 @@ func (c *Character) Gems() map[rune]*items.Gem {
 }
 
 // Quaff a potion
-func (c *Character) Quaff(e rune) ([]string, error) {
+func (c *Character) Quaff(e rune) ([]string, items.PotionID, error) {
 	i, err := c.item(e, QuaffAction)
 	if err != nil {
-		return nil, err
+		return nil, -1, err
 	}
-	return i.(items.Quaffable).Quaff(c.Stats, c.Cond), nil
+	s, pid := i.(items.Quaffable).Quaff(c.Stats, c.Cond)
+	return s, pid, nil
 }

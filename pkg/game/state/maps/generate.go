@@ -492,14 +492,14 @@ func makeRoom(w, h, x, y, glyph int, m [][]io.Runeable) {
 func spawnMonsters(m [][]io.Runeable, lvl uint, fresh bool) []*monster.Monster {
 	num := (int(lvl) >> 1) + 1
 	if fresh {
-		num += rand.Intn(12) + 1
+		num += rand.Intn(12) + 2
 	}
 
 	var monsterList []*monster.Monster
 
 	// spawn num monsters
 	for i := 0; i < num; i++ {
-		mon := monster.New(monster.MonsterFromLevel(int(lvl)))
+		mon := monster.New(monster.FromLevel(int(lvl)))
 		monsterList = append(monsterList, mon)
 		placeObject(randMapCoord(), mon, m)
 	}

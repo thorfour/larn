@@ -213,20 +213,27 @@ func (s *State) Cast(spell string) (func() bool, error) {
 	}
 
 	switch sp.Code {
+	//----------------------------------------------------------------------------
+	//                            LEVEL 1 SPELLS
+	//----------------------------------------------------------------------------
 	case "pro": // protection
 		if !s.C.Cond.EffectActive(conditions.SpellOfProtection) {
 			s.C.Stats.Ac += 2 // protection field +2
 		}
-		s.C.Cond.Add(conditions.SpellOfProtection, 250, func() { s.C.Stats.Ac -= 2 })
+		s.C.Cond.Refresh(conditions.SpellOfProtection, 250, func() { s.C.Stats.Ac -= 2 })
 	case "mle":
 	case "dex": // dexterity
 		if !s.C.Cond.EffectActive(conditions.SpellOfDexterity) {
 			s.C.Stats.Dex += 3
 		}
-		s.C.Cond.Add(conditions.SpellOfDexterity, 400, func() { s.C.Stats.Dex -= 3 })
+		s.C.Cond.Refresh(conditions.SpellOfDexterity, 400, func() { s.C.Stats.Dex -= 3 })
 	case "sle":
 	case "chm":
+		s.C.Cond.Refresh(conditions.CharmMonsters, int(s.C.Stats.Cha)<<1, nil)
 	case "ssp":
+		//----------------------------------------------------------------------------
+		//                            LEVEL 2 SPELLS
+		//----------------------------------------------------------------------------
 	case "web":
 	case "str": // strength
 		if !s.C.Cond.EffectActive(conditions.SpellOfStrength) {
@@ -241,6 +248,9 @@ func (s *State) Cast(spell string) (func() bool, error) {
 	case "cre":
 	case "pha":
 	case "inv":
+		//----------------------------------------------------------------------------
+		//                            LEVEL 3 SPELLS
+		//----------------------------------------------------------------------------
 	case "bal":
 	case "cld":
 	case "ply":
@@ -249,6 +259,9 @@ func (s *State) Cast(spell string) (func() bool, error) {
 	case "ckl":
 	case "vpr": // vaporize rock
 		s.maps.VaporizeAdjacent(s.C)
+		//----------------------------------------------------------------------------
+		//                            LEVEL 4 SPELLS
+		//----------------------------------------------------------------------------
 	case "dry":
 	case "lit":
 	case "drl":
@@ -262,6 +275,9 @@ func (s *State) Cast(spell string) (func() bool, error) {
 		s.C.Cond.Add(conditions.GlobeOfInvul, 200, func() { s.C.Stats.Ac -= 10 })
 	case "flo":
 	case "fgr":
+		//----------------------------------------------------------------------------
+		//                            LEVEL 5 SPELLS
+		//----------------------------------------------------------------------------
 	case "sca":
 	case "hld": // hold monsters
 		s.C.Cond.Add(conditions.HoldMonsters, rand.Intn(10)+int(s.C.Stats.Level), nil)
@@ -269,6 +285,9 @@ func (s *State) Cast(spell string) (func() bool, error) {
 		s.C.Cond.Add(conditions.TimeStop, rand.Intn(20)+(int(s.C.Stats.Level)<<1), nil)
 	case "tel":
 	case "mfi":
+		//----------------------------------------------------------------------------
+		//                            LEVEL 6 SPELLS
+		//----------------------------------------------------------------------------
 	case "sph":
 	case "gen":
 	case "sum":

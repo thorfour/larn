@@ -192,19 +192,19 @@ func (s *State) Read(e rune) error {
 	return nil
 }
 
-// Cast casts the requested spell
-func (s *State) Cast(spell string) error {
+// Cast casts the requested spell. May return a callback function
+func (s *State) Cast(spell string) (func() bool, error) {
 	defer s.update()
 	var sp *items.Spell
 	if !DEBUG {
 		var err error
 		sp, err = s.C.Cast(spell)
 		if err != nil {
-			return err
+			return nil, err
 		}
 
 		if s.C.Cond.EffectActive(conditions.TimeStop) {
-			return ErrDidntWork
+			return nil, ErrDidntWork
 		}
 	}
 
@@ -213,17 +213,46 @@ func (s *State) Cast(spell string) error {
 	}
 
 	switch sp.Code {
-	case "vpr": // vaporize rock
-		s.maps.VaporizeAdjacent(s.C)
-	case "cbl": // cure blindness
-		s.C.Cond.Remove(conditions.Blindness)
+	case "pro": // protection
+		if !s.C.Cond.EffectActive(conditions.SpellOfProtection) {
+			s.C.Stats.Ac += 2 // protection field +2
+		}
+		s.C.Cond.Add(conditions.SpellOfProtection, 250, func() { s.C.Stats.Ac -= 2 })
+	case "mle":
+	case "dex": // dexterity
+		if !s.C.Cond.EffectActive(conditions.SpellOfDexterity) {
+			s.C.Stats.Dex += 3
+		}
+		s.C.Cond.Add(conditions.SpellOfDexterity, 400, func() { s.C.Stats.Dex -= 3 })
+	case "sle":
+	case "chm":
+	case "ssp":
+	case "web":
+	case "str": // strength
+		if !s.C.Cond.EffectActive(conditions.SpellOfStrength) {
+			s.C.Stats.Str += 3
+		}
+		s.C.Cond.Add(conditions.SpellOfStrength, 150+rand.Intn(100), func() { s.C.Stats.Str -= 3 })
+	case "enl":
 	case "hel": // healing
 		s.C.Heal(20 + int(s.C.Stats.Level<<1))
-	case "hld": // hold monsters
-		s.C.Cond.Add(conditions.HoldMonsters, rand.Intn(10)+int(s.C.Stats.Level), nil)
-	case "stp": // time stop
-		s.C.Cond.Add(conditions.TimeStop, rand.Intn(20)+(int(s.C.Stats.Level)<<1), nil)
-	case "glo":
+	case "cbl": // cure blindness
+		s.C.Cond.Remove(conditions.Blindness)
+	case "cre":
+	case "pha":
+	case "inv":
+	case "bal":
+	case "cld":
+	case "ply":
+	case "can":
+	case "has":
+	case "ckl":
+	case "vpr": // vaporize rock
+		s.maps.VaporizeAdjacent(s.C)
+	case "dry":
+	case "lit":
+	case "drl":
+	case "glo": // globe of invulnerability
 		if !s.C.Cond.EffectActive(conditions.GlobeOfInvul) {
 			s.C.Stats.Ac += 10
 		}
@@ -231,36 +260,26 @@ func (s *State) Cast(spell string) error {
 			s.C.Stats.Intelligence--
 		}
 		s.C.Cond.Add(conditions.GlobeOfInvul, 200, func() { s.C.Stats.Ac -= 10 })
-	case "str":
-		if !s.C.Cond.EffectActive(conditions.SpellOfStrength) {
-			s.C.Stats.Str += 3
-		}
-		s.C.Cond.Add(conditions.SpellOfStrength, 150+rand.Intn(100), func() { s.C.Stats.Str -= 3 })
-	case "dex":
-		if !s.C.Cond.EffectActive(conditions.SpellOfDexterity) {
-			s.C.Stats.Dex += 3
-		}
-		s.C.Cond.Add(conditions.SpellOfDexterity, 400, func() { s.C.Stats.Dex -= 3 })
-	case "pro":
-		if !s.C.Cond.EffectActive(conditions.SpellOfProtection) {
-			s.C.Stats.Ac += 2 // protection field +2
-		}
-		s.C.Cond.Add(conditions.SpellOfProtection, 250, func() { s.C.Stats.Ac -= 2 })
-	case "sca": // scare monsters
-		fallthrough
-	case "cld":
-		fallthrough
-	case "ssp":
-		fallthrough
-	case "bal":
-		fallthrough
-	case "lit":
-		fallthrough
-	case "mle":
-		panic("TODO")
+	case "flo":
+	case "fgr":
+	case "sca":
+	case "hld": // hold monsters
+		s.C.Cond.Add(conditions.HoldMonsters, rand.Intn(10)+int(s.C.Stats.Level), nil)
+	case "stp": // time stop
+		s.C.Cond.Add(conditions.TimeStop, rand.Intn(20)+(int(s.C.Stats.Level)<<1), nil)
+	case "tel":
+	case "mfi":
+	case "sph":
+	case "gen":
+	case "sum":
+	case "wtw":
+	case "alt":
+	case "per":
+	default:
+		return nil, ErrDidntWork
 	}
 
-	return nil
+	return nil, nil
 }
 
 // IdentTrap notifies the player if there are traps adjacent

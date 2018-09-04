@@ -193,7 +193,7 @@ func (s *State) Read(e rune) error {
 }
 
 // Cast casts the requested spell. May return a callback function
-func (s *State) Cast(spell string) (func() bool, error) {
+func (s *State) Cast(spell string) (func(types.Direction) bool, error) {
 	defer s.update()
 	var sp *items.Spell
 	if !DEBUG {
@@ -222,6 +222,12 @@ func (s *State) Cast(spell string) (func() bool, error) {
 		}
 		s.C.Cond.Refresh(conditions.SpellOfProtection, 250, func() { s.C.Stats.Ac -= 2 })
 	case "mle":
+		msg := "Your missile hit the %s"
+		if s.C.Stats.Level >= 2 {
+			msg = "Your missiles hit the %s"
+		}
+		dmg := rand.Intn((int(s.C.Stats.Level)+1)<<1) + int(s.C.Stats.Level) + 3
+		return s.projectile(sp, dmg, msg, 100, '+'), nil
 	case "dex": // dexterity
 		if !s.C.Cond.EffectActive(conditions.SpellOfDexterity) {
 			s.C.Stats.Dex += 3
@@ -761,4 +767,12 @@ func (s *State) Quaff(e rune) (func() bool, error) {
 	}
 
 	return nil, nil
+}
+
+// projectile returns a callback function that will handle the animation of a projectile
+func (s *State) projectile(spell *items.Spell, dmg int, msg string, i int, c rune) func(types.Direction) bool {
+	return func(d types.Direction) bool {
+		// TODO THOR perform the animation
+		return false
+	}
 }

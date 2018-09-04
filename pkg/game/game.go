@@ -394,8 +394,19 @@ func (g *Game) cast() func(termbox.Event) {
 			spell = append(spell, byte(e.Ch))
 			if len(spell) == 3 { // Spell complete
 				glog.V(2).Infof("Spell: %s", string(spell))
-				g.currentState.Cast(string(spell))
-				g.inputHandler = g.defaultHandler
+				callback, err := g.currentState.Cast(string(spell))
+				if err != nil {
+					g.currentState.Log(err.Error())
+					g.inputHandler = g.defaultHandler
+					break
+				}
+
+				// If there was a callback func passed, that means the player is casting a projectile.
+				// Obtian the direction the player would like to cast it, before using the callback to render
+				// the animation
+				if callback != nil {
+					g.inputHandler = g.directionalSpellHandler(callback)
+				}
 			}
 		}
 		g.render(display(g.currentState))
@@ -455,5 +466,41 @@ func (g *Game) enterAction() func(termbox.Event) {
 	default:
 		g.render(display(g.currentState))
 		return g.defaultHandler
+	}
+}
+
+func (g *Game) directionalSpellHandler(cb func(types.Direction) bool) func(termbox.Event) {
+
+	g.currentState.Log("What Direction? ")
+	g.render(display(g.currentState))
+
+	return func(e termbox.Event) {
+		var d types.Direction
+		switch e.Ch {
+		case 'b':
+			d = types.DownLeft
+		case 'n':
+			d = types.DownRight
+		case 'y':
+			d = types.UpLeft
+		case 'u':
+			d = types.UpRight
+		case 'h':
+			d = types.Left
+		case 'k':
+			d = types.Up
+		case 'l':
+			d = types.Right
+		case 'j':
+			d = types.Down
+		default: // keep waiting for a valid direction to be entered
+			return
+		}
+
+		// Continue to call the callback function until animation complete
+		for cb(d) {
+			g.render(display(g.currentState))
+		}
+		g.inputHandler = g.defaultHandler
 	}
 }

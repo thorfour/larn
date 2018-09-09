@@ -775,6 +775,7 @@ func (s *State) projectile(spell *items.Spell, dmg int, msg string, i int, c run
 	var obj io.Runeable
 	return func(d types.Direction) bool {
 		if dmg <= 0 { // projectile ran out of power
+			s.maps.Swap(current, obj)
 			return false
 		}
 

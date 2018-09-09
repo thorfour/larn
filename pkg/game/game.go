@@ -504,6 +504,7 @@ func (g *Game) directionalSpellHandler(cb func(types.Direction) bool) func(termb
 			g.render(display(g.currentState))
 			time.Sleep(30 * time.Millisecond) // small sleep so user can see the spell animation
 		}
+		g.render(display(g.currentState))
 		g.inputHandler = g.defaultHandler
 	}
 }

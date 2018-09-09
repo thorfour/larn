@@ -775,16 +775,20 @@ func (s *State) projectile(spell *items.Spell, dmg int, msg string, i int, c run
 	var obj io.Runeable
 	return func(d types.Direction) bool {
 		if dmg <= 0 { // projectile ran out of power
-			s.maps.Swap(current, obj)
+			if obj != nil {
+				s.maps.Swap(current, obj)
+			}
 			return false
 		}
 
-		// TODO handle off the map
 		// Update state with location of projectile
 		if obj != nil { // replace the object that was displaced
 			s.maps.Swap(current, obj)
 		}
 		current = types.Move(current, d)
+		if s.maps.OutOfBounds(current) { // If the projectile would go off the map, or into a dungeon wall
+			return false
+		}
 		obj = s.maps.Swap(current, &items.ProjectileSpell{R: c})
 
 		switch obj.(type) {

@@ -273,3 +273,8 @@ func (m *Maps) Swap(c types.Coordinate, o io.Runeable) io.Runeable {
 
 	return displaced
 }
+
+// OutOfBounds returns true of the given coordinate c is out of map boundaries
+func (m *Maps) OutOfBounds(c types.Coordinate) bool {
+	return c.X < 0 || c.X > width-1 || c.Y < 0 || c.Y > height-1
+}

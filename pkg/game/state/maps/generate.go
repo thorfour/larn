@@ -14,7 +14,7 @@ import (
 const (
 	homeLevel  = 0
 	maxDungeon = 10
-	maxVolcano = 13 // 3 volcanos. 10 dungeons
+	MaxVolcano = 13 // 3 volcanos. 10 dungeons
 )
 
 // newMap is a wrapper of newLevel, it creates the level and places objects in the level.
@@ -315,7 +315,7 @@ func placeMapObjects(lvl uint, m [][]io.Runeable) {
 		if lvl != 1 { // Dungeon level 1 has an entrance/exit doesn't need stairs up
 			placeObject(randMapCoord(), &Stairs{Up, int(lvl - 1), DEBUG}, m)
 		}
-		if lvl != maxDungeon && lvl != maxVolcano { // Last dungeon/volcano no stairs down
+		if lvl != maxDungeon && lvl != MaxVolcano { // Last dungeon/volcano no stairs down
 			placeObject(randMapCoord(), &Stairs{Down, int(lvl + 1), DEBUG}, m)
 		}
 
@@ -335,7 +335,7 @@ func placeMapObjects(lvl uint, m [][]io.Runeable) {
 			placeMultipleObjects(rand.Intn(2), func() io.Runeable { return &items.Chest{Level: lvl} }, m)
 		}
 
-		if lvl != maxDungeon && lvl != maxVolcano {
+		if lvl != maxDungeon && lvl != MaxVolcano {
 			placeMultipleObjects(rand.Intn(2), func() io.Runeable { return &items.Trap{TrapType: items.DoorTrap} }, m)
 		}
 

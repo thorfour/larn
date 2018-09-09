@@ -38,8 +38,8 @@ func New(c *character.Character) *Maps {
 	glog.V(2).Infof("Generating new maps")
 
 	m := new(Maps)
-	m.monsters = make([][]*monster.Monster, maxVolcano)
-	for i := uint(0); i < maxVolcano; i++ {
+	m.monsters = make([][]*monster.Monster, MaxVolcano)
+	for i := uint(0); i < MaxVolcano; i++ {
 
 		nm := newMap(i) // create the new map with items
 
@@ -277,4 +277,13 @@ func (m *Maps) Swap(c types.Coordinate, o io.Runeable) io.Runeable {
 // OutOfBounds returns true of the given coordinate c is out of map boundaries
 func (m *Maps) OutOfBounds(c types.Coordinate) bool {
 	return c.X < 0 || c.X > width-1 || c.Y < 0 || c.Y > height-1
+}
+
+// OuterWall returns true if the corrdinate c locates an outer dungeon/volcano wall
+func (m *Maps) OuterWall(c types.Coordinate) bool {
+	if m.CurrentLevel() == homeLevel {
+		return false
+	}
+
+	return c.X == 0 || c.X == width-1 || c.Y == 0 || c.Y == height-1
 }

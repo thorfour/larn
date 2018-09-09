@@ -774,16 +774,19 @@ func (s *State) projectile(spell *items.Spell, dmg int, msg string, i int, c run
 	current := s.C.Location()
 	var obj io.Runeable
 	return func(d types.Direction) bool {
-		if dmg <= 0 { // projectile ran out of power
+		cleanup := func() {
 			if obj != nil {
 				s.maps.Swap(current, obj)
 			}
+		}
+		if dmg <= 0 { // projectile ran out of power
+			cleanup()
 			return false
 		}
 
 		// Update state with location of projectile
 		if obj != nil { // replace the object that was displaced
-			s.maps.Swap(current, obj)
+			s.maps.Swap(current, obj) // TODO replaced objects should probably be visible?
 		}
 		current = types.Move(current, d)
 		if s.maps.OutOfBounds(current) { // If the projectile would go off the map, or into a dungeon wall
@@ -796,7 +799,20 @@ func (s *State) projectile(spell *items.Spell, dmg int, msg string, i int, c run
 		case *maps.Empty:
 			dmg -= (3 + (s.difficulty >> 1)) // reduce power for each space traveled
 		case *maps.Wall:
-			s.Log(fmt.Sprintf(msg, "wall"))
+			msg = fmt.Sprintf(msg, "wall")
+			bonusDmg := 0
+			if DEBUG {
+				bonusDmg = 100000
+			}
+			// Enough damage to destroy the wall?
+			if (dmg+bonusDmg >= 50+s.difficulty) && s.maps.CurrentLevel() < maps.MaxVolcano && !s.maps.OuterWall(current) {
+				msg = fmt.Sprintf(msg + "  The wall crumbles")
+				s.maps.Swap(current, &maps.Empty{})
+			} else {
+				cleanup()
+			}
+			s.Log(msg)
+			return false
 		default:
 			// TODO probably panic here
 			dmg -= (3 + (s.difficulty >> 1)) // reduce power for each space traveled

@@ -791,6 +791,7 @@ func (s *State) projectile(spell *items.Spell, dmg int, msg string, i int, c run
 		}
 		obj = s.maps.Swap(current, &items.ProjectileSpell{R: c})
 
+		// Object collision handling
 		switch obj.(type) {
 		case *maps.Empty:
 			dmg -= (3 + (s.difficulty >> 1)) // reduce power for each space traveled
@@ -801,7 +802,6 @@ func (s *State) projectile(spell *items.Spell, dmg int, msg string, i int, c run
 			dmg -= (3 + (s.difficulty >> 1)) // reduce power for each space traveled
 		}
 
-		s.Log(fmt.Sprintf("Loc: %v Dmg: %v", current, dmg))
 		return true
 	}
 }

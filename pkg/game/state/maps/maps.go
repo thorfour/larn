@@ -265,3 +265,11 @@ func (m *Maps) TouchAllInteriorCoordinates(f func(io.Runeable)) {
 		}
 	}
 }
+
+// Swap places the object at the given coordinate and returns the item that was previously there
+func (m *Maps) Swap(c types.Coordinate, o io.Runeable) io.Runeable {
+	displaced := m.CurrentMap()[c.Y][c.X]
+	m.CurrentMap()[c.Y][c.X] = o
+
+	return displaced
+}

@@ -771,8 +771,32 @@ func (s *State) Quaff(e rune) (func() bool, error) {
 
 // projectile returns a callback function that will handle the animation of a projectile
 func (s *State) projectile(spell *items.Spell, dmg int, msg string, i int, c rune) func(types.Direction) bool {
+	current := s.C.Location()
+	var obj io.Runeable
 	return func(d types.Direction) bool {
-		// TODO THOR perform the animation
-		return false
+		if dmg <= 0 { // projectile ran out of power
+			return false
+		}
+
+		// TODO handle off the map
+		// Update state with location of projectile
+		if obj != nil { // replace the object that was displaced
+			s.maps.Swap(current, obj)
+		}
+		current = types.Move(current, d)
+		obj = s.maps.Swap(current, &items.ProjectileSpell{R: c})
+
+		switch obj.(type) {
+		case *maps.Empty:
+			dmg -= (3 + (s.difficulty >> 1)) // reduce power for each space traveled
+		case *maps.Wall:
+			s.Log(fmt.Sprintf(msg, "wall"))
+		default:
+			// TODO probably panic here
+			dmg -= (3 + (s.difficulty >> 1)) // reduce power for each space traveled
+		}
+
+		s.Log(fmt.Sprintf("Loc: %v Dmg: %v", current, dmg))
+		return true
 	}
 }

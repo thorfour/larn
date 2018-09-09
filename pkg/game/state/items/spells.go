@@ -1,5 +1,9 @@
 package items
 
+import (
+	termbox "github.com/nsf/termbox-go"
+)
+
 const (
 	Pro = iota
 	Mle
@@ -42,10 +46,10 @@ const (
 )
 
 type Spell struct {
-	Level int
-	Code  string
-	Name  string
-	Desc  string
+	Id   int
+	Code string
+	Name string
+	Desc string
 }
 
 var spellLevel = []int{1, 4, 9, 14, 18, 22, 26, 29, 32, 35, 37, 37, 37, 37, 37}
@@ -132,8 +136,24 @@ var spellLUT = map[string]Spell{
 	"per": spellIndex[Per],
 }
 
-// LearnSpell returns the spell that corresponds to the index i
+// SpellFromIndex returns the spell that corresponds to the index i
 func SpellFromIndex(i int) Spell { return spellIndex[i] }
 
 // SpellFromCode returns a spell from the 3 letter code
 func SpellFromCode(c string) Spell { return spellLUT[c] }
+
+// ProjectileSpell is a type of spell that cast a projectile
+type ProjectileSpell struct {
+	R rune
+}
+
+// Rune implements the io.Runeable interface
+func (p *ProjectileSpell) Rune() rune {
+	return p.R
+}
+
+// Fg implements the io.Runeable interface
+func (p *ProjectileSpell) Fg() termbox.Attribute { return termbox.ColorDefault }
+
+// Bg implements the io.Runeable interface
+func (p *ProjectileSpell) Bg() termbox.Attribute { return termbox.ColorDefault }

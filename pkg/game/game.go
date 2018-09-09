@@ -2,6 +2,7 @@ package game
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/golang/glog"
 	termbox "github.com/nsf/termbox-go"
@@ -398,7 +399,8 @@ func (g *Game) cast() func(termbox.Event) {
 				if err != nil {
 					g.currentState.Log(err.Error())
 					g.inputHandler = g.defaultHandler
-					break
+					g.render(display(g.currentState))
+					return
 				}
 
 				// If there was a callback func passed, that means the player is casting a projectile.
@@ -500,6 +502,7 @@ func (g *Game) directionalSpellHandler(cb func(types.Direction) bool) func(termb
 		// Continue to call the callback function until animation complete
 		for cb(d) {
 			g.render(display(g.currentState))
+			time.Sleep(30 * time.Millisecond) // small sleep so user can see the spell animation
 		}
 		g.inputHandler = g.defaultHandler
 	}

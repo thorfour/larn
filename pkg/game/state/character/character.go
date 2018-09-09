@@ -213,7 +213,7 @@ func (c *Character) Cast(s string) (*items.Spell, error) {
 	}
 
 	// check if caster is high level enough to cast spell
-	if int(c.Stats.Level)*3+2 < spell.Level {
+	if int(c.Stats.Level)*3+2 < spell.Id {
 		return nil, Inexperienced
 	}
 

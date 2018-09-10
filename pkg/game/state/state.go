@@ -584,7 +584,7 @@ func (s *State) hitMonster(m *monster.Monster) bool {
 			dmg = rand.Intn(dmg) + 1
 		}
 		glog.V(4).Infof("Monster %v took %v damage", m.Rune(), dmg)
-		dead = m.Damage(dmg)
+		_, dead = m.Damage(dmg)
 	} else {
 		s.Log(fmt.Sprintf("You missed the %s", m.Name()))
 	}
@@ -795,7 +795,7 @@ func (s *State) projectile(spell *items.Spell, dmg int, msg string, i int, c run
 		obj = s.maps.Swap(current, &items.ProjectileSpell{R: c})
 
 		// Object collision handling
-		switch obj.(type) {
+		switch o := obj.(type) {
 		case *maps.Empty:
 			dmg -= (3 + (s.difficulty >> 1)) // reduce power for each space traveled
 		case *maps.Wall:
@@ -813,6 +813,17 @@ func (s *State) projectile(spell *items.Spell, dmg int, msg string, i int, c run
 			}
 			s.Log(msg)
 			return false
+		case *monster.Monster:
+			s.Log(fmt.Sprintf(msg, o.Name()))
+			dealt, dead := o.Damage(dmg)
+			if dead {
+				// TODO handle gaining exp for killing a monster
+				s.maps.Swap(current, o.Displaced)
+				obj = nil
+				s.Log(fmt.Sprintf("The %s died!", o.Name()))
+			}
+
+			dmg -= dealt
 		default:
 			// TODO probably panic here
 			dmg -= (3 + (s.difficulty >> 1)) // reduce power for each space traveled

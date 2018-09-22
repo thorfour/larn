@@ -227,7 +227,7 @@ func (s *State) Cast(spell string) (func(types.Direction) bool, error) {
 			msg = "Your missiles hit the %s"
 		}
 		dmg := rand.Intn((int(s.C.Stats.Level)+1)<<1) + int(s.C.Stats.Level) + 3
-		return s.projectile(sp, dmg, msg, 100, '+'), nil
+		return s.projectile(sp, dmg, msg, '+'), nil
 	case "dex": // dexterity
 		if !s.C.Cond.EffectActive(conditions.SpellOfDexterity) {
 			s.C.Stats.Dex += 3
@@ -270,6 +270,9 @@ func (s *State) Cast(spell string) (func(types.Direction) bool, error) {
 		//----------------------------------------------------------------------------
 	case "dry":
 	case "lit":
+		msg := "A lightning bolt hits the  %s"
+		dmg := (rand.Intn(25) + 1) + 20 + (int(s.C.Stats.Level) << 1)
+		return s.projectile(sp, dmg, msg, '~'), nil
 	case "drl":
 	case "glo": // globe of invulnerability
 		if !s.C.Cond.EffectActive(conditions.GlobeOfInvul) {
@@ -770,7 +773,7 @@ func (s *State) Quaff(e rune) (func() bool, error) {
 }
 
 // projectile returns a callback function that will handle the animation of a projectile
-func (s *State) projectile(spell *items.Spell, dmg int, msg string, i int, c rune) func(types.Direction) bool {
+func (s *State) projectile(spell *items.Spell, dmg int, msg string, c rune) func(types.Direction) bool {
 	current := s.C.Location()
 	var obj io.Runeable
 	return func(d types.Direction) bool {

@@ -237,6 +237,8 @@ func (s *State) Cast(spell string) (func(types.Direction) bool, error) {
 	case "chm":
 		s.C.Cond.Refresh(conditions.CharmMonsters, int(s.C.Stats.Cha)<<1, nil)
 	case "ssp":
+		dmg := rand.Intn(10) + 16 + int(s.C.Stats.Level)
+		return s.projectile(sp, dmg, "The sound damages the %s", '@'), nil
 		//----------------------------------------------------------------------------
 		//                            LEVEL 2 SPELLS
 		//----------------------------------------------------------------------------

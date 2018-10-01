@@ -252,7 +252,7 @@ func (s *State) Cast(spell string) (func(types.Direction) bool, error) {
 			s.C.Stats.Str += 3
 		}
 		s.C.Cond.Add(conditions.SpellOfStrength, 150+rand.Intn(100), func() { s.C.Stats.Str -= 3 })
-	case "enl":
+	case "enl": // enlightenment
 		s.maps.TouchAllInteriorCoordinates(func(obj io.Runeable) {
 			if _, ok := obj.(types.Visibility); ok {
 				obj.(types.Visibility).Visible(true)

@@ -408,6 +408,9 @@ func (g *Game) cast() func(termbox.Event) {
 				// the animation
 				if callback != nil {
 					g.inputHandler = g.directionalSpellHandler(callback)
+				} else {
+					g.inputHandler = g.defaultHandler
+					g.render(display(g.currentState))
 				}
 			}
 		}

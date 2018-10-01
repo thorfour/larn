@@ -245,6 +245,8 @@ func (s *State) Cast(spell string) (func(types.Direction) bool, error) {
 		//                            LEVEL 2 SPELLS
 		//----------------------------------------------------------------------------
 	case "web":
+		hits := rand.Intn(3) + 3
+		return s.directedHit(sp, hits, "While the %s is entangled, you hit %d times"), nil
 	case "str": // strength
 		if !s.C.Cond.EffectActive(conditions.SpellOfStrength) {
 			s.C.Stats.Str += 3

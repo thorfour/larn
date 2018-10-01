@@ -414,6 +414,7 @@ func placeMapObjects(lvl uint, m [][]io.Runeable) {
 		placeRareObject(4, &items.Special{Type: items.Scarab}, m)
 		placeRareObject(4, &items.Special{Type: items.Cube}, m)
 		placeRareObject(3, &items.Special{Type: items.Device}, m)
+		placeRareObject(3, &items.Special{Type: items.Amulet}, m)
 	}
 }
 

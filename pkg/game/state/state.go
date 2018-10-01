@@ -265,6 +265,11 @@ func (s *State) Cast(spell string) (func(types.Direction) bool, error) {
 	case "cre":
 	case "pha":
 	case "inv":
+		n := 0
+		if am := s.C.CarryingSpecial(items.Amulet); am != nil { // Time added for amulet of invisibility
+			n += 1 + am.Attr()
+		}
+		s.C.Cond.Refresh(conditions.Invisiblity, (n<<7)+12, nil)
 		//----------------------------------------------------------------------------
 		//                            LEVEL 3 SPELLS
 		//----------------------------------------------------------------------------

@@ -289,3 +289,15 @@ func (c *Character) Quaff(e rune) ([]string, items.PotionID, error) {
 func (c *Character) Wielding() items.Item {
 	return c.inv.Item(c.inv.weapon)
 }
+
+// CarryingSpecial returns the special item if found in chars inventory
+func (c *Character) CarryingSpecial(t items.SpecialType) *items.Special {
+	for _, item := range c.inv.inv {
+		if i, ok := item.(*items.Special); ok {
+			if i.Type == t {
+				return i
+			}
+		}
+	}
+	return nil
+}

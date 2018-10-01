@@ -221,7 +221,7 @@ func (s *State) Cast(spell string) (func(types.Direction) bool, error) {
 			s.C.Stats.Ac += 2 // protection field +2
 		}
 		s.C.Cond.Refresh(conditions.SpellOfProtection, 250, func() { s.C.Stats.Ac -= 2 })
-	case "mle":
+	case "mle": // magic missile
 		msg := "Your missile hit the %s"
 		if s.C.Stats.Level >= 2 {
 			msg = "Your missiles hit the %s"
@@ -233,18 +233,18 @@ func (s *State) Cast(spell string) (func(types.Direction) bool, error) {
 			s.C.Stats.Dex += 3
 		}
 		s.C.Cond.Refresh(conditions.SpellOfDexterity, 400, func() { s.C.Stats.Dex -= 3 })
-	case "sle":
+	case "sle": // sleep
 		hits := rand.Intn(3) + 2
 		return s.directedHit(sp, hits, "While the %s slept, you smashed it %d times"), nil
-	case "chm":
+	case "chm": // charm monsters
 		s.C.Cond.Refresh(conditions.CharmMonsters, int(s.C.Stats.Cha)<<1, nil)
-	case "ssp":
+	case "ssp": // sonic spear
 		dmg := rand.Intn(10) + 16 + int(s.C.Stats.Level)
 		return s.projectile(sp, dmg, "The sound damages the %s", '@'), nil
 		//----------------------------------------------------------------------------
 		//                            LEVEL 2 SPELLS
 		//----------------------------------------------------------------------------
-	case "web":
+	case "web": // webs
 		hits := rand.Intn(3) + 3
 		return s.directedHit(sp, hits, "While the %s is entangled, you hit %d times"), nil
 	case "str": // strength

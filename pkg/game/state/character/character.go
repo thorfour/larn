@@ -284,3 +284,8 @@ func (c *Character) Quaff(e rune) ([]string, items.PotionID, error) {
 	s, pid := i.(items.Quaffable).Quaff(c.Stats, c.Cond)
 	return s, pid, nil
 }
+
+// Wielding returns the weapon the character is currently wielding
+func (c *Character) Wielding() items.Item {
+	return c.inv.Item(c.inv.weapon)
+}

@@ -234,6 +234,8 @@ func (s *State) Cast(spell string) (func(types.Direction) bool, error) {
 		}
 		s.C.Cond.Refresh(conditions.SpellOfDexterity, 400, func() { s.C.Stats.Dex -= 3 })
 	case "sle":
+		hits := rand.Intn(3) + 2
+		return s.directedHit(sp, hits, "While the %s slept, you smashed it %d times"), nil
 	case "chm":
 		s.C.Cond.Refresh(conditions.CharmMonsters, int(s.C.Stats.Cha)<<1, nil)
 	case "ssp":
@@ -494,11 +496,7 @@ func (s *State) attackPlayer(mon *monster.Monster) {
 	// TODO check for negatespirit or spirit pro against poltergeis and naga
 	// TODO cubeundead or undeadpro against vampire, wraith, zombie
 
-	// if blind don't print monster name
-	mName := mon.Name()
-	if s.C.Cond.EffectActive(conditions.Blindness) {
-		mName = "monster"
-	}
+	mName := s.monsterName(mon)
 
 	// If character is invisble chance to miss
 	if s.C.Cond.EffectActive(conditions.Invisiblity) {
@@ -537,13 +535,13 @@ func (s *State) hitPlayer(mon *monster.Monster) {
 
 	// No special attack, deal normal damage
 	if (dmg+s.difficulty) > s.C.Stats.Ac || s.C.Stats.Ac <= 0 || rand.Intn(s.C.Stats.Ac) == 0 {
-		s.Log(fmt.Sprintf("The %v hit you", mon.Name()))
+		s.Log(fmt.Sprintf("The %v hit you", s.monsterName(mon)))
 		if s.C.Stats.Ac < dmg {
 			s.C.Damage(dmg - s.C.Stats.Ac)
 		}
 	}
 
-	s.Log(fmt.Sprintf("The %s missed", mon.Name()))
+	s.Log(fmt.Sprintf("The %s missed", s.monsterName(mon)))
 }
 
 // playerAttack deals damage to a monster
@@ -559,7 +557,7 @@ func (s *State) playerAttack(d types.Direction) {
 		// Deal damage to the monster
 		dead := s.hitMonster(mon)
 		if dead {
-			s.Log(fmt.Sprintf("The %s died", mon.Name()))
+			s.Log(fmt.Sprintf("The %s died", s.monsterName(mon)))
 			s.maps.RemoveAt(mLoc)                               // remove the mosnter at the location
 			s.maps.CurrentMap()[mLoc.Y][mLoc.X] = mon.Displaced // replace the any items displaced by the monster
 			s.monsterDrop(mLoc, mon)                            // have the monster drop gold/items
@@ -583,7 +581,7 @@ func (s *State) hitMonster(m *monster.Monster) bool {
 
 	tmp := m.Info.Armor + int(s.C.Stats.Level) + int(s.C.Stats.Dex) + s.C.Stats.Wc/4 - 12
 	if rand.Intn(20) < tmp-s.difficulty || rand.Intn(71) < 5 { // some random chance to hit
-		s.Log(fmt.Sprintf("You hit the %s", m.Name()))
+		s.Log(fmt.Sprintf("You hit the %s", s.monsterName(m)))
 		dmg := s.hits(1)
 		if dmg < 9999 {
 			dmg = rand.Intn(dmg) + 1
@@ -591,7 +589,7 @@ func (s *State) hitMonster(m *monster.Monster) bool {
 		glog.V(4).Infof("Monster %v took %v damage", m.Rune(), dmg)
 		_, dead = m.Damage(dmg)
 	} else {
-		s.Log(fmt.Sprintf("You missed the %s", m.Name()))
+		s.Log(fmt.Sprintf("You missed the %s", s.monsterName(m)))
 	}
 
 	// TODO handle dulled weapons
@@ -605,7 +603,7 @@ func (s *State) hits(n int) int {
 		return 0
 	}
 
-	if lanceofdeath := false; lanceofdeath { // TODO determine if player is wieleding lance of death
+	if s.wieldingLance() {
 		return 10000
 	}
 
@@ -819,13 +817,10 @@ func (s *State) projectile(spell *items.Spell, dmg int, msg string, c rune) func
 			s.Log(msg)
 			return false
 		case *monster.Monster:
-			s.Log(fmt.Sprintf(msg, o.Name()))
-			dealt, dead := o.Damage(dmg)
+			s.Log(fmt.Sprintf(msg, s.monsterName(o)))
+			dealt, dead := s.damageMonster(dmg, o, current)
 			if dead {
-				// TODO handle gaining exp for killing a monster
-				s.maps.Swap(current, o.Displaced)
 				obj = nil
-				s.Log(fmt.Sprintf("The %s died!", o.Name()))
 			}
 
 			dmg -= dealt
@@ -836,4 +831,58 @@ func (s *State) projectile(spell *items.Spell, dmg int, msg string, c rune) func
 
 		return true
 	}
+}
+
+func (s *State) directedHit(spell *items.Spell, cnt int, msg string) func(types.Direction) bool {
+	if s.C.Cond.EffectActive(conditions.Confusion) { // Do nothing if confused
+		return nil
+	}
+
+	// TODO handle if spell affects the monster
+
+	return func(d types.Direction) bool {
+		monLoc := types.Move(s.C.Location(), d)
+		obj := s.maps.At(monLoc)
+		switch o := obj.(type) {
+		case *monster.Monster:
+			s.Log(fmt.Sprintf(msg, s.monsterName(o), cnt))
+			s.damageMonster(s.hits(cnt), o, monLoc)
+		case *items.Mirror:
+			// TODO handle hitting a mirror
+		default:
+			s.Log("There wasn't anything there!")
+		}
+		return false
+	}
+}
+
+// wieldingLance returns true if the character is wielding the lance of death
+func (s *State) wieldingLance() bool {
+	if w, ok := s.C.Wielding().(*items.WeaponClass); ok {
+		if w.Type == items.LanceOfDeath {
+			return true
+		}
+	}
+
+	return false
+}
+
+func (s *State) damageMonster(dmg int, m *monster.Monster, loc types.Coordinate) (int, bool) {
+	dealt, dead := m.Damage(dmg)
+	if dead {
+		// TODO handle gaining exp for killing a monster
+		s.maps.Swap(loc, m.Displaced)
+		s.Log(fmt.Sprintf("The %s died!", s.monsterName(m)))
+	}
+
+	return dealt, dead
+}
+
+// monsterName returns the name of the monster, handles if the character is blind
+func (s *State) monsterName(m *monster.Monster) string {
+	if s.C.Cond.EffectActive(conditions.Blindness) {
+		return "monster"
+	}
+
+	return m.Name()
 }

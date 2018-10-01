@@ -253,6 +253,11 @@ func (s *State) Cast(spell string) (func(types.Direction) bool, error) {
 		}
 		s.C.Cond.Add(conditions.SpellOfStrength, 150+rand.Intn(100), func() { s.C.Stats.Str -= 3 })
 	case "enl":
+		s.maps.TouchAllInteriorCoordinates(func(obj io.Runeable) {
+			if _, ok := obj.(types.Visibility); ok {
+				obj.(types.Visibility).Visible(true)
+			}
+		})
 	case "hel": // healing
 		s.C.Heal(20 + int(s.C.Stats.Level<<1))
 	case "cbl": // cure blindness

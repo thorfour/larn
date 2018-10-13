@@ -263,6 +263,24 @@ func (s *State) Cast(spell string) (func(types.Direction) bool, error) {
 	case "cbl": // cure blindness
 		s.C.Cond.Remove(conditions.Blindness)
 	case "cre":
+		// Select a random empty location next to the player to spawn the monster
+		coords := s.maps.AdjacentCoords(s.C.Location())
+		rand.Shuffle(len(coords), func(i, j int) {
+			tmp := coords[j]
+			coords[j] = coords[i]
+			coords[i] = tmp
+		})
+
+		for _, c := range coords {
+			if _, ok := s.maps.At(c).(maps.Displaceable); ok { // Found a displaceable object to place the monster onto
+				mon := monster.New(monster.FromLevel(s.maps.CurrentLevel() + 1))
+				mon.Visible(true)
+				// TODO in the case of ROTHE, POLTERGEIST OR VAMPIRE stealth needs to be set on the monster
+				// TODO figure out how monster stealth is utilized
+				mon.Displaced = s.maps.Swap(c, mon)
+				return nil, nil
+			}
+		}
 	case "pha":
 	case "inv":
 		n := 0

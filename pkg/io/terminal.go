@@ -1,7 +1,6 @@
 package io
 
 import (
-	"github.com/golang/glog"
 	runewidth "github.com/mattn/go-runewidth"
 	termbox "github.com/nsf/termbox-go"
 )
@@ -91,7 +90,6 @@ func RenderCell(x, y int, c rune, fg, bg termbox.Attribute) error {
 
 func RenderCells(c []Cell) error {
 	for _, ci := range c {
-		glog.V(6).Infof("RenderCells: (%v,%v); Char(%v); %v: %v", ci.X(), ci.Y(), ci.Rune(), ci.Fg(), ci.Bg())
 		termbox.SetCell(ci.X(), ci.Y(), ci.Rune(), ci.Fg(), ci.Bg())
 	}
 	return termbox.Flush()

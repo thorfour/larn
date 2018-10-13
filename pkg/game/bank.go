@@ -7,8 +7,8 @@ import (
 	"text/tabwriter"
 	"time"
 
-	"github.com/golang/glog"
 	termbox "github.com/nsf/termbox-go"
+	log "github.com/sirupsen/logrus"
 	"github.com/thorfour/larn/pkg/game/state/items"
 )
 
@@ -105,7 +105,7 @@ func (g *Game) accountHandler(deposit bool) func(termbox.Event) {
 		case termbox.KeyEnter: // Deposit/Withdraw
 			n, err := strconv.Atoi(amt)
 			if err != nil {
-				glog.Errorf("unable to convert bank input to number: %s", amt)
+				log.WithField("amount", amt).Error("unable to convert bank input to number")
 			}
 			if deposit {
 				if g.currentState.C.Stats.Gold < uint(n) {

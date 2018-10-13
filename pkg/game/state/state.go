@@ -5,7 +5,7 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/golang/glog"
+	log "github.com/sirupsen/logrus"
 	"github.com/thorfour/larn/pkg/game/state/character"
 	"github.com/thorfour/larn/pkg/game/state/conditions"
 	"github.com/thorfour/larn/pkg/game/state/items"
@@ -35,7 +35,6 @@ func (log logring) add(s string) logring {
 	if len(log) > logLength { // remove first element if the log exceeds length
 		log = log[1:]
 	}
-	glog.V(6).Infof("Add: %s", s)
 	return log
 }
 
@@ -54,7 +53,7 @@ type State struct {
 
 // New returns a new state and prints the welcome screen
 func New(diff int) *State {
-	glog.V(1).Info("Creating new state")
+	log.Info("creating new state")
 	s := new(State)
 	s.difficulty = diff
 	s.C = new(character.Character)
@@ -126,7 +125,7 @@ func (s *State) Move(d types.Direction) bool {
 // Enter is used for entering into a building or dungeon/volcano
 func (s *State) Enter() int {
 	defer s.update()
-	glog.V(2).Infof("Enter request")
+	log.Debug("enter request")
 
 	// Check if character is standing on an enterable object
 	if t, ok := s.C.Displaced.(maps.Enterable); ok {
@@ -143,7 +142,7 @@ func (s *State) Enter() int {
 // PickUp will pick up the item the player is standing on
 func (s *State) PickUp() {
 	defer s.update()
-	glog.V(2).Info("PickUp request")
+	log.Debug("pickup request")
 
 	i, ok := s.C.Displaced.(items.Item)
 	if ok {
@@ -155,7 +154,7 @@ func (s *State) PickUp() {
 
 // Inventory request
 func (s *State) Inventory() []string {
-	glog.V(2).Info("Inventory request")
+	log.Debug("inventory request")
 	return s.C.Inventory()
 }
 
@@ -177,7 +176,7 @@ func (s *State) TimeLeft() int {
 // Read is for the player to read a scroll or book
 func (s *State) Read(e rune) error {
 	defer s.update()
-	glog.V(2).Info("Read requested")
+	log.Debug("read request")
 
 	l, err := s.C.Read(e)
 	if err != nil {
@@ -376,7 +375,7 @@ func (s *State) IdentTrap() {
 
 // update function to handle time passage, spell decay and monster movement
 func (s *State) update() {
-	glog.V(3).Infof("Updating game state")
+	log.Debug("updating game state")
 	if s.C.Cond.EffectActive(conditions.TimeStop) {
 		s.C.Cond.Decay(conditions.TimeStop) // time stop, only thing to do is decay that spell
 		return
@@ -393,7 +392,7 @@ func (s *State) update() {
 }
 
 func (s *State) moveMonsters() {
-	glog.V(4).Infof("Move monsters")
+	log.Debug("move monsters")
 
 	// Hold monsters, monsters don't move
 	if s.C.Cond.EffectActive(conditions.HoldMonsters) {
@@ -429,7 +428,10 @@ func (s *State) moveMonsters() {
 */
 // c1 is the lower left corner of a square and c2 is the upper right corner of a square
 func (s *State) monstersInWindow(c1, c2 types.Coordinate) []types.Coordinate {
-	glog.V(5).Infof("monster window: %v, %v", c1, c2)
+	log.WithFields(log.Fields{
+		"c1": c1,
+		"c2": c2,
+	}).Debug("monster window")
 
 	level := s.maps.CurrentMap()
 	var ml []types.Coordinate
@@ -448,7 +450,10 @@ func (s *State) monstersInWindow(c1, c2 types.Coordinate) []types.Coordinate {
 
 			// Check if there is a monster at the coordinate
 			if _, ok := level[c.Y][c.X].(*monster.Monster); ok {
-				glog.V(6).Infof("monster %s found at %v", string(level[c.Y][c.X].Rune()), c)
+				log.WithFields(log.Fields{
+					"monster": string(level[c.Y][c.X].Rune()),
+					"coord":   c,
+				}).Debug("monster found")
 				ml = append(ml, c) // add the monsters coordinate to the list
 			}
 		}
@@ -480,8 +485,6 @@ func (s *State) monsterMove(m types.Coordinate) {
 		}
 	}
 
-	glog.V(5).Infof("moving monster %s", string(level[m.Y][m.X].Rune()))
-
 	// all spaces surrounding monster
 	adj := s.maps.AdjacentCoords(m)
 
@@ -503,7 +506,7 @@ func (s *State) monsterMove(m types.Coordinate) {
 	var minC types.Coordinate
 	for _, c := range adj {
 		if _, ok := level[c.Y][c.X].(maps.Displaceable); !ok { // Invalid movement location
-			glog.Infof("not displaceable %v", c)
+			log.WithField("coord", c).Debug("not displaceable")
 			continue
 		}
 
@@ -513,7 +516,11 @@ func (s *State) monsterMove(m types.Coordinate) {
 		}
 	}
 
-	glog.V(6).Infof("min coordinate %v. %v away from %v", minC, minD, m)
+	log.WithFields(log.Fields{
+		"monster":   string(level[m.Y][m.X].Rune()),
+		"min coord": minC,
+		"distance":  minD,
+	}).Debug("moving monster")
 
 	// Perform the move
 	level[m.Y][m.X] = mon.Displaced
@@ -596,7 +603,7 @@ func (s *State) playerAttack(d types.Direction) {
 			}
 		}
 	default:
-		glog.Errorf("Attacked non attackable object %v", m)
+		log.WithField("object", m).Error("attached non attackable object")
 		return
 	}
 
@@ -616,7 +623,12 @@ func (s *State) hitMonster(m *monster.Monster) bool {
 		if dmg < 9999 {
 			dmg = rand.Intn(dmg) + 1
 		}
-		glog.V(4).Infof("Monster %v took %v damage", m.Rune(), dmg)
+
+		log.WithFields(log.Fields{
+			"monster": string(m.Rune()),
+			"damage":  dmg,
+		}).Debug("damanged monster")
+
 		_, dead = m.Damage(dmg)
 	} else {
 		s.Log(fmt.Sprintf("You missed the %s", s.monsterName(m)))
@@ -717,7 +729,7 @@ func (s *State) drop(c types.Coordinate, drop io.Runeable) {
 // Quaff performs a drink potion action
 func (s *State) Quaff(e rune) (func() bool, error) {
 	defer s.update()
-	glog.V(2).Info("Quaff requested")
+	log.Debug("quaff requested")
 
 	l, id, err := s.C.Quaff(e)
 	if err != nil {
@@ -790,7 +802,7 @@ func (s *State) Quaff(e rune) (func() bool, error) {
 				i--
 				s.update()
 				s.maps.SetVisible(s.C)
-				glog.V(2).Infof("sleeping again %v", i)
+				log.Info("sleeping from potion")
 				time.Sleep(time.Second)
 				return true
 			}

@@ -5,7 +5,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/golang/glog"
+	log "github.com/sirupsen/logrus"
 	"github.com/thorfour/larn/pkg/game/state/items"
 	"github.com/thorfour/larn/pkg/game/state/stats"
 )
@@ -53,7 +53,7 @@ func (i *Inventory) List() []string {
 		return strings.Split(ret[i], " ")[0] < strings.Split(ret[j], " ")[0]
 	})
 
-	glog.V(4).Infof("Inventory: %v", ret)
+	log.WithField("items", ret).Debug("Inventory")
 
 	return ret
 }
@@ -152,7 +152,7 @@ func (i *Inventory) TakeOff(_ rune, s *stats.Stats) (items.Armor, error) {
 
 	a, ok := i.inv[i.armor].(items.Armor)
 	if !ok {
-		glog.Errorf("not wearing armor: %s", a)
+		log.WithField("item", a).Error("not wearing armor")
 	}
 	i.armor = none
 	a.TakeOff(s)
@@ -183,7 +183,7 @@ func (i *Inventory) Disarm(_ rune, s *stats.Stats) (items.Weapon, error) {
 
 	w, ok := i.inv[i.weapon].(items.Weapon)
 	if !ok {
-		glog.Errorf("not wielding weapon: %s", w)
+		log.WithField("item", w).Error("not wielding weapon")
 	}
 	i.weapon = none
 	w.Disarm(s)

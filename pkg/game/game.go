@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/golang/glog"
 	termbox "github.com/nsf/termbox-go"
+	log "github.com/sirupsen/logrus"
 	"github.com/thorfour/larn/pkg/game/data"
 	"github.com/thorfour/larn/pkg/game/state"
 	"github.com/thorfour/larn/pkg/game/state/items"
@@ -61,7 +61,7 @@ func saveFilePresent() (bool, string) {
 
 // New initializes a game state
 func New(s *data.Settings) *Game {
-	glog.V(1).Infof("Creating new game with %v difficulty", s.Difficulty)
+	log.WithField("difficulty", s.Difficulty).Info("creating new game")
 	g := new(Game)
 	g.settings = s
 	g.inputHandler = g.defaultHandler
@@ -282,7 +282,7 @@ func (g *Game) inventoryWrapper(callback func() func(termbox.Event)) func(termbo
 			g.inputHandler = callback()
 			g.render(display(g.currentState))
 		default:
-			glog.V(6).Infof("Receive invalid input: %s", string(e.Ch))
+			log.WithField("input", string(e.Ch)).Debug("recieved invalid input")
 			return
 		}
 	}
@@ -290,7 +290,6 @@ func (g *Game) inventoryWrapper(callback func() func(termbox.Event)) func(termbo
 
 // itemAction is a subroutine for a player to interact with his inventory
 func (g *Game) itemAction(a action) func(termbox.Event) {
-	glog.V(2).Infof("item action requested")
 
 	switch a {
 	case wieldAction:
@@ -312,7 +311,7 @@ func (g *Game) itemAction(a action) func(termbox.Event) {
 	case quaffAction:
 		g.currentState.Log("What do you want to quaff [space to view] ?")
 	default:
-		glog.Fatal("unknown item action %v", a)
+		log.WithField("action", a).Fatal("unknown item action")
 	}
 
 	g.render(display(g.currentState))
@@ -394,7 +393,7 @@ func (g *Game) cast() func(termbox.Event) {
 		default:
 			spell = append(spell, byte(e.Ch))
 			if len(spell) == 3 { // Spell complete
-				glog.V(2).Infof("Spell: %s", string(spell))
+				log.WithField("spell", string(spell)).Info("cast")
 				callback, err := g.currentState.Cast(string(spell))
 				if err != nil {
 					g.currentState.Log(err.Error())

@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"math/rand"
 
-	"github.com/golang/glog"
 	termbox "github.com/nsf/termbox-go"
+	log "github.com/sirupsen/logrus"
 	"github.com/thorfour/larn/pkg/game/state/conditions"
 	"github.com/thorfour/larn/pkg/game/state/items"
 	"github.com/thorfour/larn/pkg/game/state/stats"
@@ -85,12 +85,12 @@ func (c *Character) Init(d int) {
 		w := items.GetNewWeapon(items.Dagger, 0)
 		w.Attribute = 0
 		if err := c.Wield(c.inv.AddItem(w, c.Stats)); err != nil {
-			glog.Fatal("Uanble to wield starting weapon")
+			log.Fatal("unable to wield starting weapon")
 		}
 		a := items.NewArmor(items.Leather, 0)
 		a.Attribute = 0
 		if err := c.Wear(c.inv.AddItem(a, c.Stats)); err != nil {
-			glog.Fatal("Unable to wear starting armor")
+			log.Fatal("unable to wear starting armor")
 		}
 	}
 }
@@ -194,7 +194,7 @@ func (c *Character) item(e rune, a action) (items.Item, error) {
 // Cast handles the bookkeeping for a character casting a spell
 func (c *Character) Cast(s string) (*items.Spell, error) {
 	if c.Stats.Spells == 0 { // this should never happen, there's a guard before calls to this
-		glog.Error("Cast requested with no spells")
+		log.Error("Cast requested with no spells")
 		return nil, NoSpellsErr
 	}
 

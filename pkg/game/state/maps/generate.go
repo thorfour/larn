@@ -4,7 +4,7 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/golang/glog"
+	log "github.com/sirupsen/logrus"
 	"github.com/thorfour/larn/pkg/game/state/items"
 	"github.com/thorfour/larn/pkg/game/state/monster"
 	"github.com/thorfour/larn/pkg/game/state/types"
@@ -25,7 +25,7 @@ func newMap(lvl uint) [][]io.Runeable {
 	}
 
 	seed := time.Now().UnixNano()
-	glog.V(1).Infof("Map Seed: %v", seed)
+	log.WithField("seed", seed).Info("new map")
 
 	// Seed the global rand // FIXME maps shouldn't use global rand
 	rand.Seed(seed)
@@ -123,7 +123,11 @@ func carve(lvl [][]io.Runeable) {
 		i := rand.Intn(len(walls))
 		w := walls[i]
 
-		glog.V(6).Infof("Carve loop. Wall count %v Current Wall %v\n Wall list: %v", len(walls), w, walls)
+		log.WithFields(log.Fields{
+			"count":   len(walls),
+			"current": w,
+			"walls":   walls,
+		}).Debug("carve loop")
 
 		// If that wall is adjacent to one open space (less than for initial case)
 		if emptyAdjacent(w, lvl) <= 1 {
@@ -279,8 +283,7 @@ func placeMultipleObjects(n int, f func() io.Runeable, lvl [][]io.Runeable) {
 
 // placeObject places an object in a maze at arandom open location
 func placeObject(c types.Coordinate, o io.Runeable, lvl [][]io.Runeable) (types.Coordinate, io.Runeable) {
-
-	glog.V(6).Infof("Placing %s", string(o.Rune()))
+	log.WithField("rune", string(o.Rune())).Debug("place object")
 
 	c = walkToEmpty(c, lvl)
 
@@ -449,7 +452,12 @@ func treasureRoom(m [][]io.Runeable) {
 }
 
 func makeRoom(w, h, x, y, glyph int, m [][]io.Runeable) {
-	glog.V(2).Infof("Making room at (%v,%v) width: %v height: %v", x, y, w, h)
+	log.WithFields(log.Fields{
+		"coord":  types.Coordinate{X: x, Y: y},
+		"width":  w,
+		"height": h,
+	}).Debug("make room")
+
 	for i := x; i < x+w; i++ { // Create only walls where the room will be
 		for j := y; j < y+h; j++ {
 			m[j][i] = &Wall{DEBUG}

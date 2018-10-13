@@ -5,8 +5,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/golang/glog"
 	termbox "github.com/nsf/termbox-go"
+	log "github.com/sirupsen/logrus"
 )
 
 func tax(taxes int) string {
@@ -60,7 +60,7 @@ func (g *Game) payTaxesHandler() func(termbox.Event) {
 		case termbox.KeyEnter: // Execute payment
 			amount, err := strconv.Atoi(amt)
 			if err != nil {
-				glog.Errorf("unable to convert tax input to number: %s", amt)
+				log.WithField("amount", amt).Error("unable to convert tax input to number")
 			}
 			if g.currentState.C.Stats.Gold < uint(amount) {
 				g.renderSplash(lrsPage(g.currentState.Taxes, g.currentState.C.Stats.Gold) + "\n  How much? " + amt + "\n  You don't have that much.")

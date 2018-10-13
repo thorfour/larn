@@ -3,7 +3,7 @@ package maps
 import (
 	"math"
 
-	"github.com/golang/glog"
+	log "github.com/sirupsen/logrus"
 	"github.com/thorfour/larn/pkg/game/state/character"
 	"github.com/thorfour/larn/pkg/game/state/monster"
 	"github.com/thorfour/larn/pkg/game/state/types"
@@ -35,7 +35,7 @@ func (m *Maps) EnterLevel(c *character.Character, lvl int) {
 // New returns a set of maps to represent the game
 func New(c *character.Character) *Maps {
 
-	glog.V(2).Infof("Generating new maps")
+	log.Info("Generating new maps")
 
 	m := new(Maps)
 	m.monsters = make([][]*monster.Monster, MaxVolcano)
@@ -77,7 +77,7 @@ func (m *Maps) RemoveCharacter(c *character.Character) {
 
 // SpawnCharacter places the character on the home level
 func (m *Maps) SpawnCharacter(coord types.Coordinate, c *character.Character) {
-	glog.V(2).Infof("Spawning Character: %v", coord)
+	log.WithField("coord", coord).Info("Spawning Character")
 
 	// Place the character on the map
 	l, d := placeObject(coord, c, m.active)
@@ -139,7 +139,7 @@ func (m *Maps) validMove(d types.Direction, c *character.Character) bool {
 	// Make the move and check its validity
 	newLoc := types.Move(c.Location(), d)
 
-	glog.V(6).Infof("ValidMove: (%v,%v)", newLoc.X, newLoc.Y)
+	log.WithField("coord", types.Coordinate{X: newLoc.X, Y: newLoc.Y}).Info("valid move")
 
 	// Ensure the character isn't going off the grid, tron
 	inBounds := m.ValidCoordinate(newLoc)
@@ -174,7 +174,7 @@ func (m *Maps) isAttack(d types.Direction, c *character.Character) bool {
 
 // SetCurrent sets the current map level to display (i.e the character moved between levels)
 func (m *Maps) SetCurrent(lvl int) {
-	glog.V(2).Infof("Setting current level %v", lvl)
+	log.WithField("lvl", lvl).Info("setting current level")
 	m.current = lvl
 	m.active = m.mazes[m.current]
 }

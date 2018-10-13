@@ -1,7 +1,5 @@
 package conditions
 
-import "github.com/golang/glog"
-
 type condition int
 
 const (
@@ -86,7 +84,6 @@ func (a ActiveConditions) Remove(c condition) {
 // Add an active condition with the given decay function
 func (a ActiveConditions) Add(c condition, dur int, decay func()) {
 	a.active[c] = func(refresh int) {
-		glog.V(6).Infof("Decay %s: %v", c, dur)
 		if refresh != 0 { // refresh instead of decay
 			dur += refresh
 			return

@@ -26,7 +26,7 @@ const (
 
 // Attackable indicates something is attackable
 type Attackable interface {
-	Damage(int) bool // take damage and return if dead
+	Damage(int) (int, bool) // take damage and return if dead
 }
 
 // Coordinate represents a cartesian map coordinate

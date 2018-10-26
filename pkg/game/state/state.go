@@ -234,7 +234,7 @@ func (s *State) Cast(spell string) (func(types.Direction) bool, error) {
 		s.C.Cond.Refresh(conditions.SpellOfDexterity, 400, func() { s.C.Stats.Dex -= 3 })
 	case "sle": // sleep
 		hits := rand.Intn(3) + 2
-		return s.directedHit(sp, hits, "While the %s slept, you smashed it %d times"), nil
+		return s.directedHit(sp, s.hits(hits), fmt.Sprintf("While the %s slept, you smashed it %d times", "%s", hits)), nil
 	case "chm": // charm monsters
 		s.C.Cond.Refresh(conditions.CharmMonsters, int(s.C.Stats.Cha)<<1, nil)
 	case "ssp": // sonic spear
@@ -245,7 +245,7 @@ func (s *State) Cast(spell string) (func(types.Direction) bool, error) {
 		//----------------------------------------------------------------------------
 	case "web": // webs
 		hits := rand.Intn(3) + 3
-		return s.directedHit(sp, hits, "While the %s is entangled, you hit %d times"), nil
+		return s.directedHit(sp, s.hits(hits), fmt.Sprintf("While the %s is entangled, you hit %d times", "%s", hits)), nil
 	case "str": // strength
 		if !s.C.Cond.EffectActive(conditions.SpellOfStrength) {
 			s.C.Stats.Str += 3
@@ -261,7 +261,7 @@ func (s *State) Cast(spell string) (func(types.Direction) bool, error) {
 		s.C.Heal(20 + int(s.C.Stats.Level<<1))
 	case "cbl": // cure blindness
 		s.C.Cond.Remove(conditions.Blindness)
-	case "cre":
+	case "cre": // create monster
 		// Select a random empty location next to the player to spawn the monster
 		coords := s.maps.AdjacentCoords(s.C.Location())
 		rand.Shuffle(len(coords), func(i, j int) {
@@ -280,8 +280,12 @@ func (s *State) Cast(spell string) (func(types.Direction) bool, error) {
 				return nil, nil
 			}
 		}
-	case "pha":
-	case "inv":
+	case "pha": // phantasmal forces
+		if rand.Intn(11)+8 <= int(s.C.Stats.Wisdom) {
+			return s.directedHit(sp, rand.Intn(20)+21+int(s.C.Stats.Level), "The %s believed!"), nil
+		}
+		s.Log("It didn't believe the illusions!")
+	case "inv": // invsibility
 		n := 0
 		if am := s.C.CarryingSpecial(items.Amulet); am != nil { // Time added for amulet of invisibility
 			n += 1 + am.Attr()
@@ -875,7 +879,7 @@ func (s *State) projectile(spell *items.Spell, dmg int, msg string, c rune) func
 	}
 }
 
-func (s *State) directedHit(spell *items.Spell, cnt int, msg string) func(types.Direction) bool {
+func (s *State) directedHit(spell *items.Spell, dmg int, msg string) func(types.Direction) bool {
 	if s.C.Cond.EffectActive(conditions.Confusion) { // Do nothing if confused
 		return nil
 	}
@@ -887,8 +891,8 @@ func (s *State) directedHit(spell *items.Spell, cnt int, msg string) func(types.
 		obj := s.maps.At(monLoc)
 		switch o := obj.(type) {
 		case *monster.Monster:
-			s.Log(fmt.Sprintf(msg, s.monsterName(o), cnt))
-			s.damageMonster(s.hits(cnt), o, monLoc)
+			s.Log(fmt.Sprintf(msg, s.monsterName(o)))
+			s.damageMonster(dmg, o, monLoc)
 		case *items.Mirror:
 			// TODO handle hitting a mirror
 		default:

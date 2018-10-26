@@ -2,6 +2,7 @@ package state
 
 import (
 	"fmt"
+	"math"
 	"math/rand"
 	"time"
 
@@ -309,16 +310,25 @@ func (s *State) Cast(spell string) (func(types.Direction) bool, error) {
 	case "ckl": // cloud kill
 		s.omniDirect(sp, 31+rand.Intn(10), "The %s gasps for air")
 	case "vpr": // vaporize rock
+		//TODO may not be high level enough to break walls
+		//TODO statues can drop books
+		//TODO xorns take dmg from vpr
+		//TODO thrones create gnome kings
+		//TODO altars create demon princes
+		//TODO fountains create waterlords
 		s.maps.VaporizeAdjacent(s.C)
 		//----------------------------------------------------------------------------
 		//                            LEVEL 4 SPELLS
 		//----------------------------------------------------------------------------
-	case "dry":
-	case "lit":
-		msg := "A lightning bolt hits the %s"
+	case "dry": // dehydration
+		return s.directedHit(sp, 100+int(s.C.Stats.Level), "The %s shrivels up"), nil
+	case "lit": // lightning bolt
 		dmg := (rand.Intn(25) + 1) + 20 + (int(s.C.Stats.Level) << 1)
-		return s.projectile(sp, dmg, msg, '~'), nil
-	case "drl":
+		return s.projectile(sp, dmg, "A lightning bolt hits the %s", '~'), nil
+	case "drl": // drain life
+		i := int(math.Min(float64(s.C.Stats.Hp-1), float64(s.C.Stats.MaxHP/2)))
+		s.C.Stats.Hp -= uint(i)
+		return s.directedHit(sp, i+i, ""), nil
 	case "glo": // globe of invulnerability
 		if !s.C.Cond.EffectActive(conditions.GlobeOfInvul) {
 			s.C.Stats.Ac += 10
@@ -933,7 +943,9 @@ func (s *State) directedHit(spell *items.Spell, dmg int, msg string) func(types.
 		obj := s.maps.At(monLoc)
 		switch o := obj.(type) {
 		case *monster.Monster:
-			s.Log(fmt.Sprintf(msg, s.monsterName(o)))
+			if msg != "" {
+				s.Log(fmt.Sprintf(msg, s.monsterName(o)))
+			}
 			s.damageMonster(dmg, o, monLoc)
 		case *items.Mirror:
 			// TODO handle hitting a mirror

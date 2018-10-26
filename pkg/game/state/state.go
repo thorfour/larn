@@ -300,7 +300,7 @@ func (s *State) Cast(spell string) (func(types.Direction) bool, error) {
 	case "cld": // cone of cold
 		dmg := rand.Intn(25) + 21 + int(s.C.Stats.Level)
 		return s.projectile(sp, dmg, "Your cone of cold strikes the %s", 'O'), nil
-	case "ply":
+	case "ply": // polymorph
 		return s.directedPolymorph(), nil
 	case "can": // cancellation
 		s.C.Cond.Refresh(conditions.Cancellation, 5+int(s.C.Stats.Level), nil)

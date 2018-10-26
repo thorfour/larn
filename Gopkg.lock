@@ -2,10 +2,10 @@
 
 
 [[projects]]
-  branch = "master"
-  name = "github.com/golang/glog"
+  name = "github.com/konsorten/go-windows-terminal-sequences"
   packages = ["."]
-  revision = "23def4e6c14b4da8ac2ed8007337bc5eb5007998"
+  revision = "5c8c8bd35d3832f5d134ae1e1e375b69a4d25242"
+  version = "v1.0.1"
 
 [[projects]]
   name = "github.com/mattn/go-runewidth"
@@ -19,9 +19,30 @@
   packages = ["."]
   revision = "aa4a75b1c20a2b03751b1a9f7e41d58bd6f71c43"
 
+[[projects]]
+  name = "github.com/sirupsen/logrus"
+  packages = ["."]
+  revision = "ad15b42461921f1fb3529b058c6786c6a45d5162"
+  version = "v1.1.1"
+
+[[projects]]
+  branch = "master"
+  name = "golang.org/x/crypto"
+  packages = ["ssh/terminal"]
+  revision = "e84da0312774c21d64ee2317962ef669b27ffb41"
+
+[[projects]]
+  branch = "master"
+  name = "golang.org/x/sys"
+  packages = [
+    "unix",
+    "windows"
+  ]
+  revision = "2772b66316d2c587efeb188dcd5ebc6987656e84"
+
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "ded237d323de4024a874bf5cff8d83823d5aa26488366b3d8cd2e09c7332b57d"
+  inputs-digest = "7bf770ec0d92e902e68d051e318a028c220aced983f7aed6e7b4e6bad7bcbee0"
   solver-name = "gps-cdcl"
   solver-version = 1

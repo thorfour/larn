@@ -301,6 +301,7 @@ func (s *State) Cast(spell string) (func(types.Direction) bool, error) {
 		dmg := rand.Intn(25) + 21 + int(s.C.Stats.Level)
 		return s.projectile(sp, dmg, "Your cone of cold strikes the %s", 'O'), nil
 	case "ply":
+		return s.directedPolymorph(), nil
 	case "can": // cancellation
 		s.C.Cond.Refresh(conditions.Cancellation, 5+int(s.C.Stats.Level), nil)
 	case "has": // haste self
@@ -886,6 +887,7 @@ func (s *State) projectile(spell *items.Spell, dmg int, msg string, c rune) func
 	}
 }
 
+// omniDirect deals damange to all adjacent coordinates to the character
 func (s *State) omniDirect(spell *items.Spell, dmg int, msg string) {
 	for _, c := range s.maps.AdjacentCoords(s.C.Location()) {
 		obj := s.maps.At(c)
@@ -897,6 +899,28 @@ func (s *State) omniDirect(spell *items.Spell, dmg int, msg string) {
 	}
 }
 
+// directedPolymorph attempts to polymorph a monster in a given direction
+func (s *State) directedPolymorph() func(types.Direction) bool {
+	if s.C.Cond.EffectActive(conditions.Confusion) { // Do nothing if confused
+		return nil
+	}
+
+	return func(d types.Direction) bool {
+		monLoc := types.Move(s.C.Location(), d)
+		obj := s.maps.At(monLoc)
+		switch obj.(type) {
+		case *monster.Monster:
+			mon := monster.New(monster.Random())
+			mon.Visible(true)
+			s.maps.Swap(monLoc, mon)
+		default:
+			s.Log("There wasn't anything there!")
+		}
+		return false
+	}
+}
+
+// directedHit attempts to damange a monster in a given direction
 func (s *State) directedHit(spell *items.Spell, dmg int, msg string) func(types.Direction) bool {
 	if s.C.Cond.EffectActive(conditions.Confusion) { // Do nothing if confused
 		return nil

@@ -37,6 +37,8 @@ const (
 	Cancellation
 	// HasteSelf increases character speed
 	HasteSelf
+	// ScareMonster makes them scared of you
+	ScareMonster
 )
 
 // ActiveConditions represents all active conditions a character might have

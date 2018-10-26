@@ -355,13 +355,15 @@ func (s *State) Cast(spell string) (func(types.Direction) bool, error) {
 		//----------------------------------------------------------------------------
 		//                            LEVEL 5 SPELLS
 		//----------------------------------------------------------------------------
-	case "sca":
+	case "sca": // scare monster
+		s.C.Cond.Refresh(conditions.ScareMonster, rand.Intn(9)+1+int(s.C.Stats.Level), nil)
 	case "hld": // hold monsters
-		s.C.Cond.Add(conditions.HoldMonsters, rand.Intn(10)+int(s.C.Stats.Level), nil)
+		s.C.Cond.Add(conditions.HoldMonsters, rand.Intn(9)+1+int(s.C.Stats.Level), nil)
 	case "stp": // time stop
-		s.C.Cond.Add(conditions.TimeStop, rand.Intn(20)+(int(s.C.Stats.Level)<<1), nil)
+		s.C.Cond.Add(conditions.TimeStop, rand.Intn(19)+1+(int(s.C.Stats.Level)<<1), nil)
 	case "tel":
-	case "mfi":
+	case "mfi": // magic fire
+		s.omniDirect(sp, 35+rand.Intn(9)+1+int(s.C.Stats.Level), "The %s cringes from the flame")
 		//----------------------------------------------------------------------------
 		//                            LEVEL 6 SPELLS
 		//----------------------------------------------------------------------------

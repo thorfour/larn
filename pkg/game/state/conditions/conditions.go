@@ -33,6 +33,10 @@ const (
 	Invisiblity
 	// CharmMonsters monsters are more likely to be charmed
 	CharmMonsters
+	// Cancellation TODO
+	Cancellation
+	// HasteSelf increases character speed
+	HasteSelf
 )
 
 // ActiveConditions represents all active conditions a character might have

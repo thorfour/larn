@@ -294,15 +294,17 @@ func (s *State) Cast(spell string) (func(types.Direction) bool, error) {
 		//----------------------------------------------------------------------------
 		//                            LEVEL 3 SPELLS
 		//----------------------------------------------------------------------------
-	case "bal":
+	case "bal": // fireball
 		dmg := rand.Intn(25+int(s.C.Stats.Level)) + 26 + int(s.C.Stats.Level)
 		return s.projectile(sp, dmg, "A fireball hits the %s", '*'), nil
-	case "cld":
+	case "cld": // cone of cold
 		dmg := rand.Intn(25) + 21 + int(s.C.Stats.Level)
 		return s.projectile(sp, dmg, "Your cone of cold strikes the %s", 'O'), nil
 	case "ply":
-	case "can":
-	case "has":
+	case "can": // cancellation
+		s.C.Cond.Refresh(conditions.Cancellation, 5+int(s.C.Stats.Level), nil)
+	case "has": // haste self
+		s.C.Cond.Refresh(conditions.HasteSelf, 7+int(s.C.Stats.Level), nil)
 	case "ckl":
 	case "vpr": // vaporize rock
 		s.maps.VaporizeAdjacent(s.C)

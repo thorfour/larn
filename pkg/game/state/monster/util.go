@@ -195,3 +195,12 @@ func NameFromID(id int) string { return monsterData[id].Name }
 
 // Genocided returns true if the monster has been genocided
 func Genocided(id int) bool { return monsterData[id].Genocided == 1 }
+
+// Random returns a random non-genocided monster ID
+func Random() int {
+	var id int
+	for id = rand.Intn(Reddragon) + 1; Genocided(id); id = rand.Intn(Reddragon) + 1 {
+	}
+
+	return id
+}

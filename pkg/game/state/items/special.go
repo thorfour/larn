@@ -9,6 +9,7 @@ var specialRunes = map[SpecialType]rune{
 	Scarab: ':',
 	Cube:   '@',
 	Device: '.',
+	Amulet: '&',
 }
 
 var specialString = map[SpecialType]string{
@@ -16,6 +17,7 @@ var specialString = map[SpecialType]string{
 	Scarab: "a scarab of negate spirit",
 	Cube:   "a cube of undead control",
 	Device: "a device of theft prevention",
+	Amulet: "an amulet of invisibility",
 }
 
 const (
@@ -23,12 +25,14 @@ const (
 	Scarab
 	Cube
 	Device
+	Amulet
 )
 
 // Special is a special item that don't offer stats but an in-game effect
 type Special struct {
 	Type SpecialType
 	DefaultItem
+	DefaultAttribute
 }
 
 // Log implements the Loggable interface

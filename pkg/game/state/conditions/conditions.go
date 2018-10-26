@@ -1,7 +1,5 @@
 package conditions
 
-import "github.com/golang/glog"
-
 type condition int
 
 const (
@@ -35,6 +33,12 @@ const (
 	Invisiblity
 	// CharmMonsters monsters are more likely to be charmed
 	CharmMonsters
+	// Cancellation TODO
+	Cancellation
+	// HasteSelf increases character speed
+	HasteSelf
+	// ScareMonster makes them scared of you
+	ScareMonster
 )
 
 // ActiveConditions represents all active conditions a character might have
@@ -86,7 +90,6 @@ func (a ActiveConditions) Remove(c condition) {
 // Add an active condition with the given decay function
 func (a ActiveConditions) Add(c condition, dur int, decay func()) {
 	a.active[c] = func(refresh int) {
-		glog.V(6).Infof("Decay %s: %v", c, dur)
 		if refresh != 0 { // refresh instead of decay
 			dur += refresh
 			return

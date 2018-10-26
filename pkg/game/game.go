@@ -2,9 +2,10 @@ package game
 
 import (
 	"fmt"
+	"time"
 
-	"github.com/golang/glog"
 	termbox "github.com/nsf/termbox-go"
+	log "github.com/sirupsen/logrus"
 	"github.com/thorfour/larn/pkg/game/data"
 	"github.com/thorfour/larn/pkg/game/state"
 	"github.com/thorfour/larn/pkg/game/state/items"
@@ -60,7 +61,7 @@ func saveFilePresent() (bool, string) {
 
 // New initializes a game state
 func New(s *data.Settings) *Game {
-	glog.V(1).Infof("Creating new game with %v difficulty", s.Difficulty)
+	log.WithField("difficulty", s.Difficulty).Info("creating new game")
 	g := new(Game)
 	g.settings = s
 	g.inputHandler = g.defaultHandler
@@ -281,7 +282,7 @@ func (g *Game) inventoryWrapper(callback func() func(termbox.Event)) func(termbo
 			g.inputHandler = callback()
 			g.render(display(g.currentState))
 		default:
-			glog.V(6).Infof("Receive invalid input: %s", string(e.Ch))
+			log.WithField("input", string(e.Ch)).Debug("recieved invalid input")
 			return
 		}
 	}
@@ -289,7 +290,6 @@ func (g *Game) inventoryWrapper(callback func() func(termbox.Event)) func(termbo
 
 // itemAction is a subroutine for a player to interact with his inventory
 func (g *Game) itemAction(a action) func(termbox.Event) {
-	glog.V(2).Infof("item action requested")
 
 	switch a {
 	case wieldAction:
@@ -311,7 +311,7 @@ func (g *Game) itemAction(a action) func(termbox.Event) {
 	case quaffAction:
 		g.currentState.Log("What do you want to quaff [space to view] ?")
 	default:
-		glog.Fatal("unknown item action %v", a)
+		log.WithField("action", a).Fatal("unknown item action")
 	}
 
 	g.render(display(g.currentState))
@@ -393,9 +393,24 @@ func (g *Game) cast() func(termbox.Event) {
 		default:
 			spell = append(spell, byte(e.Ch))
 			if len(spell) == 3 { // Spell complete
-				glog.V(2).Infof("Spell: %s", string(spell))
-				g.currentState.Cast(string(spell))
-				g.inputHandler = g.defaultHandler
+				log.WithField("spell", string(spell)).Info("cast")
+				callback, err := g.currentState.Cast(string(spell))
+				if err != nil {
+					g.currentState.Log(err.Error())
+					g.inputHandler = g.defaultHandler
+					g.render(display(g.currentState))
+					return
+				}
+
+				// If there was a callback func passed, that means the player is casting a projectile.
+				// Obtian the direction the player would like to cast it, before using the callback to render
+				// the animation
+				if callback != nil {
+					g.inputHandler = g.directionalSpellHandler(callback)
+				} else {
+					g.inputHandler = g.defaultHandler
+					g.render(display(g.currentState))
+				}
 			}
 		}
 		g.render(display(g.currentState))
@@ -455,5 +470,43 @@ func (g *Game) enterAction() func(termbox.Event) {
 	default:
 		g.render(display(g.currentState))
 		return g.defaultHandler
+	}
+}
+
+func (g *Game) directionalSpellHandler(cb func(types.Direction) bool) func(termbox.Event) {
+
+	g.currentState.Log("What Direction? ")
+	g.render(display(g.currentState))
+
+	return func(e termbox.Event) {
+		var d types.Direction
+		switch e.Ch {
+		case 'b':
+			d = types.DownLeft
+		case 'n':
+			d = types.DownRight
+		case 'y':
+			d = types.UpLeft
+		case 'u':
+			d = types.UpRight
+		case 'h':
+			d = types.Left
+		case 'k':
+			d = types.Up
+		case 'l':
+			d = types.Right
+		case 'j':
+			d = types.Down
+		default: // keep waiting for a valid direction to be entered
+			return
+		}
+
+		// Continue to call the callback function until animation complete
+		for cb(d) {
+			g.render(display(g.currentState))
+			time.Sleep(30 * time.Millisecond) // small sleep so user can see the spell animation
+		}
+		g.render(display(g.currentState))
+		g.inputHandler = g.defaultHandler
 	}
 }

@@ -2,8 +2,9 @@ package maps
 
 import (
 	"math"
+	"math/rand"
 
-	"github.com/golang/glog"
+	log "github.com/sirupsen/logrus"
 	"github.com/thorfour/larn/pkg/game/state/character"
 	"github.com/thorfour/larn/pkg/game/state/monster"
 	"github.com/thorfour/larn/pkg/game/state/types"
@@ -35,11 +36,11 @@ func (m *Maps) EnterLevel(c *character.Character, lvl int) {
 // New returns a set of maps to represent the game
 func New(c *character.Character) *Maps {
 
-	glog.V(2).Infof("Generating new maps")
+	log.Info("Generating new maps")
 
 	m := new(Maps)
-	m.monsters = make([][]*monster.Monster, maxVolcano)
-	for i := uint(0); i < maxVolcano; i++ {
+	m.monsters = make([][]*monster.Monster, MaxVolcano)
+	for i := uint(0); i < MaxVolcano; i++ {
 
 		nm := newMap(i) // create the new map with items
 
@@ -77,7 +78,7 @@ func (m *Maps) RemoveCharacter(c *character.Character) {
 
 // SpawnCharacter places the character on the home level
 func (m *Maps) SpawnCharacter(coord types.Coordinate, c *character.Character) {
-	glog.V(2).Infof("Spawning Character: %v", coord)
+	log.WithField("coord", coord).Info("Spawning Character")
 
 	// Place the character on the map
 	l, d := placeObject(coord, c, m.active)
@@ -139,7 +140,7 @@ func (m *Maps) validMove(d types.Direction, c *character.Character) bool {
 	// Make the move and check its validity
 	newLoc := types.Move(c.Location(), d)
 
-	glog.V(6).Infof("ValidMove: (%v,%v)", newLoc.X, newLoc.Y)
+	log.WithField("coord", types.Coordinate{X: newLoc.X, Y: newLoc.Y}).Info("valid move")
 
 	// Ensure the character isn't going off the grid, tron
 	inBounds := m.ValidCoordinate(newLoc)
@@ -174,7 +175,7 @@ func (m *Maps) isAttack(d types.Direction, c *character.Character) bool {
 
 // SetCurrent sets the current map level to display (i.e the character moved between levels)
 func (m *Maps) SetCurrent(lvl int) {
-	glog.V(2).Infof("Setting current level %v", lvl)
+	log.WithField("lvl", lvl).Info("setting current level")
 	m.current = lvl
 	m.active = m.mazes[m.current]
 }
@@ -263,5 +264,41 @@ func (m *Maps) TouchAllInteriorCoordinates(f func(io.Runeable)) {
 		for y := 1; y < height-1; y++ {
 			f(m.CurrentMap()[y][x])
 		}
+	}
+}
+
+// Swap places the object at the given coordinate and returns the item that was previously there
+func (m *Maps) Swap(c types.Coordinate, o io.Runeable) io.Runeable {
+	displaced := m.CurrentMap()[c.Y][c.X]
+	m.CurrentMap()[c.Y][c.X] = o
+
+	return displaced
+}
+
+// OutOfBounds returns true of the given coordinate c is out of map boundaries
+func (m *Maps) OutOfBounds(c types.Coordinate) bool {
+	return c.X < 0 || c.X > width-1 || c.Y < 0 || c.Y > height-1
+}
+
+// OuterWall returns true if the corrdinate c locates an outer dungeon/volcano wall
+func (m *Maps) OuterWall(c types.Coordinate) bool {
+	if m.CurrentLevel() == homeLevel {
+		return false
+	}
+
+	return c.X == 0 || c.X == width-1 || c.Y == 0 || c.Y == height-1
+}
+
+// RandomDisplaceableCoordinate returns a coordinate with a displaceable object anywhere in the current maze
+func (m *Maps) RandomDisplaceableCoordinate() types.Coordinate {
+
+	// randomly select a coordinate in the maze
+	c := types.Coordinate{X: rand.Intn(width), Y: rand.Intn(height)}
+	for { // continue selecting new coordinates until a displaceable coordinate is found
+		if _, ok := m.At(c).(Displaceable); ok {
+			return c
+		}
+
+		c = types.Coordinate{X: rand.Intn(width), Y: rand.Intn(height)}
 	}
 }

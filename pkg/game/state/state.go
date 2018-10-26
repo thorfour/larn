@@ -2,10 +2,11 @@ package state
 
 import (
 	"fmt"
+	"math"
 	"math/rand"
 	"time"
 
-	"github.com/golang/glog"
+	log "github.com/sirupsen/logrus"
 	"github.com/thorfour/larn/pkg/game/state/character"
 	"github.com/thorfour/larn/pkg/game/state/conditions"
 	"github.com/thorfour/larn/pkg/game/state/items"
@@ -35,7 +36,6 @@ func (log logring) add(s string) logring {
 	if len(log) > logLength { // remove first element if the log exceeds length
 		log = log[1:]
 	}
-	glog.V(6).Infof("Add: %s", s)
 	return log
 }
 
@@ -54,7 +54,7 @@ type State struct {
 
 // New returns a new state and prints the welcome screen
 func New(diff int) *State {
-	glog.V(1).Info("Creating new state")
+	log.Info("creating new state")
 	s := new(State)
 	s.difficulty = diff
 	s.C = new(character.Character)
@@ -126,7 +126,7 @@ func (s *State) Move(d types.Direction) bool {
 // Enter is used for entering into a building or dungeon/volcano
 func (s *State) Enter() int {
 	defer s.update()
-	glog.V(2).Infof("Enter request")
+	log.Debug("enter request")
 
 	// Check if character is standing on an enterable object
 	if t, ok := s.C.Displaced.(maps.Enterable); ok {
@@ -143,7 +143,7 @@ func (s *State) Enter() int {
 // PickUp will pick up the item the player is standing on
 func (s *State) PickUp() {
 	defer s.update()
-	glog.V(2).Info("PickUp request")
+	log.Debug("pickup request")
 
 	i, ok := s.C.Displaced.(items.Item)
 	if ok {
@@ -155,7 +155,7 @@ func (s *State) PickUp() {
 
 // Inventory request
 func (s *State) Inventory() []string {
-	glog.V(2).Info("Inventory request")
+	log.Debug("inventory request")
 	return s.C.Inventory()
 }
 
@@ -177,7 +177,7 @@ func (s *State) TimeLeft() int {
 // Read is for the player to read a scroll or book
 func (s *State) Read(e rune) error {
 	defer s.update()
-	glog.V(2).Info("Read requested")
+	log.Debug("read request")
 
 	l, err := s.C.Read(e)
 	if err != nil {
@@ -192,19 +192,19 @@ func (s *State) Read(e rune) error {
 	return nil
 }
 
-// Cast casts the requested spell
-func (s *State) Cast(spell string) error {
+// Cast casts the requested spell. May return a callback function
+func (s *State) Cast(spell string) (func(types.Direction) bool, error) {
 	defer s.update()
 	var sp *items.Spell
 	if !DEBUG {
 		var err error
 		sp, err = s.C.Cast(spell)
 		if err != nil {
-			return err
+			return nil, err
 		}
 
 		if s.C.Cond.EffectActive(conditions.TimeStop) {
-			return ErrDidntWork
+			return nil, ErrDidntWork
 		}
 	}
 
@@ -213,17 +213,123 @@ func (s *State) Cast(spell string) error {
 	}
 
 	switch sp.Code {
-	case "vpr": // vaporize rock
-		s.maps.VaporizeAdjacent(s.C)
-	case "cbl": // cure blindness
-		s.C.Cond.Remove(conditions.Blindness)
+	//----------------------------------------------------------------------------
+	//                            LEVEL 1 SPELLS
+	//----------------------------------------------------------------------------
+	case "pro": // protection
+		if !s.C.Cond.EffectActive(conditions.SpellOfProtection) {
+			s.C.Stats.Ac += 2 // protection field +2
+		}
+		s.C.Cond.Refresh(conditions.SpellOfProtection, 250, func() { s.C.Stats.Ac -= 2 })
+	case "mle": // magic missile
+		msg := "Your missile hit the %s"
+		if s.C.Stats.Level >= 2 {
+			msg = "Your missiles hit the %s"
+		}
+		dmg := rand.Intn((int(s.C.Stats.Level)+1)<<1) + int(s.C.Stats.Level) + 3
+		return s.projectile(sp, dmg, msg, '+'), nil
+	case "dex": // dexterity
+		if !s.C.Cond.EffectActive(conditions.SpellOfDexterity) {
+			s.C.Stats.Dex += 3
+		}
+		s.C.Cond.Refresh(conditions.SpellOfDexterity, 400, func() { s.C.Stats.Dex -= 3 })
+	case "sle": // sleep
+		hits := rand.Intn(3) + 2
+		return s.directedHit(sp, s.hits(hits), fmt.Sprintf("While the %s slept, you smashed it %d times", "%s", hits)), nil
+	case "chm": // charm monsters
+		s.C.Cond.Refresh(conditions.CharmMonsters, int(s.C.Stats.Cha)<<1, nil)
+	case "ssp": // sonic spear
+		dmg := rand.Intn(10) + 16 + int(s.C.Stats.Level)
+		return s.projectile(sp, dmg, "The sound damages the %s", '@'), nil
+		//----------------------------------------------------------------------------
+		//                            LEVEL 2 SPELLS
+		//----------------------------------------------------------------------------
+	case "web": // webs
+		hits := rand.Intn(3) + 3
+		return s.directedHit(sp, s.hits(hits), fmt.Sprintf("While the %s is entangled, you hit %d times", "%s", hits)), nil
+	case "str": // strength
+		if !s.C.Cond.EffectActive(conditions.SpellOfStrength) {
+			s.C.Stats.Str += 3
+		}
+		s.C.Cond.Add(conditions.SpellOfStrength, 150+rand.Intn(100), func() { s.C.Stats.Str -= 3 })
+	case "enl": // enlightenment
+		s.maps.TouchAllInteriorCoordinates(func(obj io.Runeable) {
+			if _, ok := obj.(types.Visibility); ok {
+				obj.(types.Visibility).Visible(true)
+			}
+		})
 	case "hel": // healing
 		s.C.Heal(20 + int(s.C.Stats.Level<<1))
-	case "hld": // hold monsters
-		s.C.Cond.Add(conditions.HoldMonsters, rand.Intn(10)+int(s.C.Stats.Level), nil)
-	case "stp": // time stop
-		s.C.Cond.Add(conditions.TimeStop, rand.Intn(20)+(int(s.C.Stats.Level)<<1), nil)
-	case "glo":
+	case "cbl": // cure blindness
+		s.C.Cond.Remove(conditions.Blindness)
+	case "cre": // create monster
+		// Select a random empty location next to the player to spawn the monster
+		coords := s.maps.AdjacentCoords(s.C.Location())
+		rand.Shuffle(len(coords), func(i, j int) {
+			tmp := coords[j]
+			coords[j] = coords[i]
+			coords[i] = tmp
+		})
+
+		for _, c := range coords {
+			if _, ok := s.maps.At(c).(maps.Displaceable); ok { // Found a displaceable object to place the monster onto
+				mon := monster.New(monster.FromLevel(s.maps.CurrentLevel() + 1))
+				mon.Visible(true)
+				// TODO in the case of ROTHE, POLTERGEIST OR VAMPIRE stealth needs to be set on the monster
+				// TODO figure out how monster stealth is utilized
+				mon.Displaced = s.maps.Swap(c, mon)
+				return nil, nil
+			}
+		}
+	case "pha": // phantasmal forces
+		if rand.Intn(11)+8 <= int(s.C.Stats.Wisdom) {
+			return s.directedHit(sp, rand.Intn(20)+21+int(s.C.Stats.Level), "The %s believed!"), nil
+		}
+		s.Log("It didn't believe the illusions!")
+	case "inv": // invsibility
+		n := 0
+		if am := s.C.CarryingSpecial(items.Amulet); am != nil { // Time added for amulet of invisibility
+			n += 1 + am.Attr()
+		}
+		s.C.Cond.Refresh(conditions.Invisiblity, (n<<7)+12, nil)
+		//----------------------------------------------------------------------------
+		//                            LEVEL 3 SPELLS
+		//----------------------------------------------------------------------------
+	case "bal": // fireball
+		dmg := rand.Intn(25+int(s.C.Stats.Level)) + 26 + int(s.C.Stats.Level)
+		return s.projectile(sp, dmg, "A fireball hits the %s", '*'), nil
+	case "cld": // cone of cold
+		dmg := rand.Intn(25) + 21 + int(s.C.Stats.Level)
+		return s.projectile(sp, dmg, "Your cone of cold strikes the %s", 'O'), nil
+	case "ply": // polymorph
+		return s.directedPolymorph(), nil
+	case "can": // cancellation
+		s.C.Cond.Refresh(conditions.Cancellation, 5+int(s.C.Stats.Level), nil)
+	case "has": // haste self
+		s.C.Cond.Refresh(conditions.HasteSelf, 7+int(s.C.Stats.Level), nil)
+	case "ckl": // cloud kill
+		s.omniDirect(sp, 31+rand.Intn(10), "The %s gasps for air")
+	case "vpr": // vaporize rock
+		//TODO may not be high level enough to break walls
+		//TODO statues can drop books
+		//TODO xorns take dmg from vpr
+		//TODO thrones create gnome kings
+		//TODO altars create demon princes
+		//TODO fountains create waterlords
+		s.maps.VaporizeAdjacent(s.C)
+		//----------------------------------------------------------------------------
+		//                            LEVEL 4 SPELLS
+		//----------------------------------------------------------------------------
+	case "dry": // dehydration
+		return s.directedHit(sp, 100+int(s.C.Stats.Level), "The %s shrivels up"), nil
+	case "lit": // lightning bolt
+		dmg := (rand.Intn(25) + 1) + 20 + (int(s.C.Stats.Level) << 1)
+		return s.projectile(sp, dmg, "A lightning bolt hits the %s", '~'), nil
+	case "drl": // drain life
+		i := int(math.Min(float64(s.C.Stats.Hp-1), float64(s.C.Stats.MaxHP/2)))
+		s.C.Stats.Hp -= uint(i)
+		return s.directedHit(sp, i+i, ""), nil
+	case "glo": // globe of invulnerability
 		if !s.C.Cond.EffectActive(conditions.GlobeOfInvul) {
 			s.C.Stats.Ac += 10
 		}
@@ -231,36 +337,48 @@ func (s *State) Cast(spell string) error {
 			s.C.Stats.Intelligence--
 		}
 		s.C.Cond.Add(conditions.GlobeOfInvul, 200, func() { s.C.Stats.Ac -= 10 })
-	case "str":
-		if !s.C.Cond.EffectActive(conditions.SpellOfStrength) {
-			s.C.Stats.Str += 3
+	case "flo": // flood
+		s.omniDirect(sp, 32+int(s.C.Stats.Level), "The %s struggles for air in your flood!")
+	case "fgr": // finger of death
+		if rand.Intn(150) == 63 {
+			s.Log("Your heart stopped!")
+			s.C.Stats.Hp = 0
+			// TODO character died
+			return nil, nil
 		}
-		s.C.Cond.Add(conditions.SpellOfStrength, 150+rand.Intn(100), func() { s.C.Stats.Str -= 3 })
-	case "dex":
-		if !s.C.Cond.EffectActive(conditions.SpellOfDexterity) {
-			s.C.Stats.Dex += 3
+
+		if int(s.C.Stats.Wisdom) > rand.Intn(10)+11 {
+			return s.directedHit(sp, 2000, "The %s's heart stopped"), nil
 		}
-		s.C.Cond.Add(conditions.SpellOfDexterity, 400, func() { s.C.Stats.Dex -= 3 })
-	case "pro":
-		if !s.C.Cond.EffectActive(conditions.SpellOfProtection) {
-			s.C.Stats.Ac += 2 // protection field +2
-		}
-		s.C.Cond.Add(conditions.SpellOfProtection, 250, func() { s.C.Stats.Ac -= 2 })
-	case "sca": // scare monsters
-		fallthrough
-	case "cld":
-		fallthrough
-	case "ssp":
-		fallthrough
-	case "bal":
-		fallthrough
-	case "lit":
-		fallthrough
-	case "mle":
-		panic("TODO")
+
+		s.Log("It didn't work")
+		//----------------------------------------------------------------------------
+		//                            LEVEL 5 SPELLS
+		//----------------------------------------------------------------------------
+	case "sca": // scare monster
+		s.C.Cond.Refresh(conditions.ScareMonster, rand.Intn(9)+1+int(s.C.Stats.Level), nil)
+	case "hld": // hold monsters
+		s.C.Cond.Add(conditions.HoldMonsters, rand.Intn(9)+1+int(s.C.Stats.Level), nil)
+	case "stp": // time stop
+		s.C.Cond.Add(conditions.TimeStop, rand.Intn(19)+1+(int(s.C.Stats.Level)<<1), nil)
+	case "tel": // teleport away
+		return s.directedTeleport(), nil
+	case "mfi": // magic fire
+		s.omniDirect(sp, 35+rand.Intn(9)+1+int(s.C.Stats.Level), "The %s cringes from the flame")
+		//----------------------------------------------------------------------------
+		//                            LEVEL 6 SPELLS
+		//----------------------------------------------------------------------------
+	case "sph":
+	case "gen":
+	case "sum":
+	case "wtw":
+	case "alt":
+	case "per":
+	default:
+		return nil, ErrDidntWork
 	}
 
-	return nil
+	return nil, nil
 }
 
 // IdentTrap notifies the player if there are traps adjacent
@@ -295,7 +413,7 @@ func (s *State) IdentTrap() {
 
 // update function to handle time passage, spell decay and monster movement
 func (s *State) update() {
-	glog.V(3).Infof("Updating game state")
+	log.Debug("updating game state")
 	if s.C.Cond.EffectActive(conditions.TimeStop) {
 		s.C.Cond.Decay(conditions.TimeStop) // time stop, only thing to do is decay that spell
 		return
@@ -312,7 +430,7 @@ func (s *State) update() {
 }
 
 func (s *State) moveMonsters() {
-	glog.V(4).Infof("Move monsters")
+	log.Debug("move monsters")
 
 	// Hold monsters, monsters don't move
 	if s.C.Cond.EffectActive(conditions.HoldMonsters) {
@@ -348,7 +466,10 @@ func (s *State) moveMonsters() {
 */
 // c1 is the lower left corner of a square and c2 is the upper right corner of a square
 func (s *State) monstersInWindow(c1, c2 types.Coordinate) []types.Coordinate {
-	glog.V(5).Infof("monster window: %v, %v", c1, c2)
+	log.WithFields(log.Fields{
+		"c1": c1,
+		"c2": c2,
+	}).Debug("monster window")
 
 	level := s.maps.CurrentMap()
 	var ml []types.Coordinate
@@ -367,7 +488,10 @@ func (s *State) monstersInWindow(c1, c2 types.Coordinate) []types.Coordinate {
 
 			// Check if there is a monster at the coordinate
 			if _, ok := level[c.Y][c.X].(*monster.Monster); ok {
-				glog.V(6).Infof("monster %s found at %v", string(level[c.Y][c.X].Rune()), c)
+				log.WithFields(log.Fields{
+					"monster": string(level[c.Y][c.X].Rune()),
+					"coord":   c,
+				}).Debug("monster found")
 				ml = append(ml, c) // add the monsters coordinate to the list
 			}
 		}
@@ -399,8 +523,6 @@ func (s *State) monsterMove(m types.Coordinate) {
 		}
 	}
 
-	glog.V(5).Infof("moving monster %s", string(level[m.Y][m.X].Rune()))
-
 	// all spaces surrounding monster
 	adj := s.maps.AdjacentCoords(m)
 
@@ -422,7 +544,7 @@ func (s *State) monsterMove(m types.Coordinate) {
 	var minC types.Coordinate
 	for _, c := range adj {
 		if _, ok := level[c.Y][c.X].(maps.Displaceable); !ok { // Invalid movement location
-			glog.Infof("not displaceable %v", c)
+			log.WithField("coord", c).Debug("not displaceable")
 			continue
 		}
 
@@ -432,7 +554,11 @@ func (s *State) monsterMove(m types.Coordinate) {
 		}
 	}
 
-	glog.V(6).Infof("min coordinate %v. %v away from %v", minC, minD, m)
+	log.WithFields(log.Fields{
+		"monster":   string(level[m.Y][m.X].Rune()),
+		"min coord": minC,
+		"distance":  minD,
+	}).Debug("moving monster")
 
 	// Perform the move
 	level[m.Y][m.X] = mon.Displaced
@@ -445,11 +571,7 @@ func (s *State) attackPlayer(mon *monster.Monster) {
 	// TODO check for negatespirit or spirit pro against poltergeis and naga
 	// TODO cubeundead or undeadpro against vampire, wraith, zombie
 
-	// if blind don't print monster name
-	mName := mon.Name()
-	if s.C.Cond.EffectActive(conditions.Blindness) {
-		mName = "monster"
-	}
+	mName := s.monsterName(mon)
 
 	// If character is invisble chance to miss
 	if s.C.Cond.EffectActive(conditions.Invisiblity) {
@@ -488,13 +610,13 @@ func (s *State) hitPlayer(mon *monster.Monster) {
 
 	// No special attack, deal normal damage
 	if (dmg+s.difficulty) > s.C.Stats.Ac || s.C.Stats.Ac <= 0 || rand.Intn(s.C.Stats.Ac) == 0 {
-		s.Log(fmt.Sprintf("The %v hit you", mon.Name()))
+		s.Log(fmt.Sprintf("The %v hit you", s.monsterName(mon)))
 		if s.C.Stats.Ac < dmg {
 			s.C.Damage(dmg - s.C.Stats.Ac)
 		}
 	}
 
-	s.Log(fmt.Sprintf("The %s missed", mon.Name()))
+	s.Log(fmt.Sprintf("The %s missed", s.monsterName(mon)))
 }
 
 // playerAttack deals damage to a monster
@@ -510,7 +632,7 @@ func (s *State) playerAttack(d types.Direction) {
 		// Deal damage to the monster
 		dead := s.hitMonster(mon)
 		if dead {
-			s.Log(fmt.Sprintf("The %s died", mon.Name()))
+			s.Log(fmt.Sprintf("The %s died", s.monsterName(mon)))
 			s.maps.RemoveAt(mLoc)                               // remove the mosnter at the location
 			s.maps.CurrentMap()[mLoc.Y][mLoc.X] = mon.Displaced // replace the any items displaced by the monster
 			s.monsterDrop(mLoc, mon)                            // have the monster drop gold/items
@@ -519,7 +641,7 @@ func (s *State) playerAttack(d types.Direction) {
 			}
 		}
 	default:
-		glog.Errorf("Attacked non attackable object %v", m)
+		log.WithField("object", m).Error("attached non attackable object")
 		return
 	}
 
@@ -534,15 +656,20 @@ func (s *State) hitMonster(m *monster.Monster) bool {
 
 	tmp := m.Info.Armor + int(s.C.Stats.Level) + int(s.C.Stats.Dex) + s.C.Stats.Wc/4 - 12
 	if rand.Intn(20) < tmp-s.difficulty || rand.Intn(71) < 5 { // some random chance to hit
-		s.Log(fmt.Sprintf("You hit the %s", m.Name()))
+		s.Log(fmt.Sprintf("You hit the %s", s.monsterName(m)))
 		dmg := s.hits(1)
 		if dmg < 9999 {
 			dmg = rand.Intn(dmg) + 1
 		}
-		glog.V(4).Infof("Monster %v took %v damage", m.Rune(), dmg)
-		dead = m.Damage(dmg)
+
+		log.WithFields(log.Fields{
+			"monster": string(m.Rune()),
+			"damage":  dmg,
+		}).Debug("damanged monster")
+
+		_, dead = m.Damage(dmg)
 	} else {
-		s.Log(fmt.Sprintf("You missed the %s", m.Name()))
+		s.Log(fmt.Sprintf("You missed the %s", s.monsterName(m)))
 	}
 
 	// TODO handle dulled weapons
@@ -556,7 +683,7 @@ func (s *State) hits(n int) int {
 		return 0
 	}
 
-	if lanceofdeath := false; lanceofdeath { // TODO determine if player is wieleding lance of death
+	if s.wieldingLance() {
 		return 10000
 	}
 
@@ -640,7 +767,7 @@ func (s *State) drop(c types.Coordinate, drop io.Runeable) {
 // Quaff performs a drink potion action
 func (s *State) Quaff(e rune) (func() bool, error) {
 	defer s.update()
-	glog.V(2).Info("Quaff requested")
+	log.Debug("quaff requested")
 
 	l, id, err := s.C.Quaff(e)
 	if err != nil {
@@ -713,7 +840,7 @@ func (s *State) Quaff(e rune) (func() bool, error) {
 				i--
 				s.update()
 				s.maps.SetVisible(s.C)
-				glog.V(2).Infof("sleeping again %v", i)
+				log.Info("sleeping from potion")
 				time.Sleep(time.Second)
 				return true
 			}
@@ -723,4 +850,176 @@ func (s *State) Quaff(e rune) (func() bool, error) {
 	}
 
 	return nil, nil
+}
+
+// projectile returns a callback function that will handle the animation of a projectile
+func (s *State) projectile(spell *items.Spell, dmg int, msg string, c rune) func(types.Direction) bool {
+	current := s.C.Location()
+	var obj io.Runeable
+	return func(d types.Direction) bool {
+		cleanup := func() {
+			if obj != nil {
+				s.maps.Swap(current, obj)
+			}
+		}
+		if dmg <= 0 { // projectile ran out of power
+			cleanup()
+			return false
+		}
+
+		// Update state with location of projectile
+		if obj != nil { // replace the object that was displaced
+			s.maps.Swap(current, obj) // TODO replaced objects should probably be visible?
+		}
+		current = types.Move(current, d)
+		if s.maps.OutOfBounds(current) { // If the projectile would go off the map, or into a dungeon wall
+			return false
+		}
+		obj = s.maps.Swap(current, &items.ProjectileSpell{R: c})
+
+		// Object collision handling
+		switch o := obj.(type) {
+		case *maps.Empty:
+			dmg -= (3 + (s.difficulty >> 1)) // reduce power for each space traveled
+		case *maps.Wall:
+			msg = fmt.Sprintf(msg, "wall")
+			bonusDmg := 0
+			if DEBUG {
+				bonusDmg = 100000
+			}
+			// Enough damage to destroy the wall?
+			if (dmg+bonusDmg >= 50+s.difficulty) && s.maps.CurrentLevel() < maps.MaxVolcano && !s.maps.OuterWall(current) {
+				msg = fmt.Sprintf(msg + "  The wall crumbles")
+				s.maps.Swap(current, &maps.Empty{})
+			} else {
+				cleanup()
+			}
+			s.Log(msg)
+			return false
+		case *monster.Monster:
+			s.Log(fmt.Sprintf(msg, s.monsterName(o)))
+			dealt, dead := s.damageMonster(dmg, o, current)
+			if dead {
+				obj = nil
+			}
+
+			dmg -= dealt
+		default:
+			// TODO probably panic here
+			dmg -= (3 + (s.difficulty >> 1)) // reduce power for each space traveled
+		}
+
+		return true
+	}
+}
+
+// omniDirect deals damange to all adjacent coordinates to the character
+func (s *State) omniDirect(spell *items.Spell, dmg int, msg string) {
+	for _, c := range s.maps.AdjacentCoords(s.C.Location()) {
+		obj := s.maps.At(c)
+		switch o := obj.(type) {
+		case *monster.Monster:
+			s.Log(fmt.Sprintf(msg, s.monsterName(o)))
+			s.damageMonster(dmg, o, c)
+		}
+	}
+}
+
+func (s *State) directedTeleport() func(types.Direction) bool {
+	if s.C.Cond.EffectActive(conditions.Confusion) { // Do nothing if confused
+		return nil
+	}
+
+	return func(d types.Direction) bool {
+		monLoc := types.Move(s.C.Location(), d)
+		obj := s.maps.At(monLoc)
+		switch mon := obj.(type) {
+		case *monster.Monster:
+			m := s.maps.Swap(monLoc, mon.Displaced)
+			// spawn monster somewhere else in the dungeon
+			newLoc := s.maps.RandomDisplaceableCoordinate()
+			mon.Displaced = s.maps.Swap(newLoc, m)
+		default:
+			s.Log("There wasn't anything there!")
+		}
+		return false
+	}
+}
+
+// directedPolymorph attempts to polymorph a monster in a given direction
+func (s *State) directedPolymorph() func(types.Direction) bool {
+	if s.C.Cond.EffectActive(conditions.Confusion) { // Do nothing if confused
+		return nil
+	}
+
+	return func(d types.Direction) bool {
+		monLoc := types.Move(s.C.Location(), d)
+		obj := s.maps.At(monLoc)
+		switch obj.(type) {
+		case *monster.Monster:
+			mon := monster.New(monster.Random())
+			mon.Visible(true)
+			s.maps.Swap(monLoc, mon)
+		default:
+			s.Log("There wasn't anything there!")
+		}
+		return false
+	}
+}
+
+// directedHit attempts to damange a monster in a given direction
+func (s *State) directedHit(spell *items.Spell, dmg int, msg string) func(types.Direction) bool {
+	if s.C.Cond.EffectActive(conditions.Confusion) { // Do nothing if confused
+		return nil
+	}
+
+	// TODO handle if spell affects the monster
+
+	return func(d types.Direction) bool {
+		monLoc := types.Move(s.C.Location(), d)
+		obj := s.maps.At(monLoc)
+		switch o := obj.(type) {
+		case *monster.Monster:
+			if msg != "" {
+				s.Log(fmt.Sprintf(msg, s.monsterName(o)))
+			}
+			s.damageMonster(dmg, o, monLoc)
+		case *items.Mirror:
+			// TODO handle hitting a mirror
+		default:
+			s.Log("There wasn't anything there!")
+		}
+		return false
+	}
+}
+
+// wieldingLance returns true if the character is wielding the lance of death
+func (s *State) wieldingLance() bool {
+	if w, ok := s.C.Wielding().(*items.WeaponClass); ok {
+		if w.Type == items.LanceOfDeath {
+			return true
+		}
+	}
+
+	return false
+}
+
+func (s *State) damageMonster(dmg int, m *monster.Monster, loc types.Coordinate) (int, bool) {
+	dealt, dead := m.Damage(dmg)
+	if dead {
+		// TODO handle gaining exp for killing a monster
+		s.maps.Swap(loc, m.Displaced)
+		s.Log(fmt.Sprintf("The %s died!", s.monsterName(m)))
+	}
+
+	return dealt, dead
+}
+
+// monsterName returns the name of the monster, handles if the character is blind
+func (s *State) monsterName(m *monster.Monster) string {
+	if s.C.Cond.EffectActive(conditions.Blindness) {
+		return "monster"
+	}
+
+	return m.Name()
 }

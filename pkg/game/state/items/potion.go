@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"math/rand"
 
-	"github.com/golang/glog"
+	log "github.com/sirupsen/logrus"
 	"github.com/thorfour/larn/pkg/game/state/conditions"
 	"github.com/thorfour/larn/pkg/game/state/stats"
 )
@@ -288,7 +288,7 @@ func (p *Potion) Quaff(s *stats.Stats, a *conditions.ActiveConditions) ([]string
 		a.Refresh(conditions.SeeInvisible, rand.Intn(1000)+401, nil)
 		l = append(l, "You feel your vision sharpen")
 	default:
-		glog.Error("unknown potion consumed: %v", p.ID)
+		log.WithField("id", p.ID).Error("unknown potion consumed")
 	}
 
 	return l, p.ID

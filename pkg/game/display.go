@@ -3,8 +3,8 @@ package game
 import (
 	"fmt"
 
-	"github.com/golang/glog"
 	termbox "github.com/nsf/termbox-go"
+	log "github.com/sirupsen/logrus"
 	"github.com/thorfour/larn/pkg/game/state"
 	"github.com/thorfour/larn/pkg/io"
 )
@@ -44,7 +44,10 @@ func infoBarGrid(s *state.State) [][]io.Runeable {
 // overlay starts overlaying a map at the begging of the original map
 func overlay(original, overlay [][]io.Runeable) [][]io.Runeable {
 	if len(overlay) > len(original) {
-		glog.Errorf("Overlay is longer than original %v > %v", len(overlay), len(original))
+		log.WithFields(log.Fields{
+			"overlay":  len(overlay),
+			"original": len(original),
+		}).Error("overlay is longer than origional")
 		return original
 	}
 	for i := range overlay {
@@ -67,7 +70,6 @@ func cat(maps ...[][]io.Runeable) [][]io.Runeable {
 
 // statusLog returns the status log that's displayed on the bottom
 func statusLog(s *state.State) [][]io.Runeable {
-	glog.V(6).Infof("StatusLog: %v", s.StatLog[:logLength])
 	// Convert the status log to runes
 	return convert(s.StatLog[:logLength])
 }

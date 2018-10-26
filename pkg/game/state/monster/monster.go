@@ -47,15 +47,16 @@ func (m *Monster) Fg() termbox.Attribute { return termbox.ColorDefault }
 func (m *Monster) Visible(v bool) { m.Visibility = v }
 
 // Damage implements the Monster interface
-func (m *Monster) Damage(dmg int) bool {
+func (m *Monster) Damage(dmg int) (int, bool) {
 	if dmg >= m.Info.Hitpoints { // check if damage would drop hp to 0
+		dealt := m.Info.Hitpoints
 		m.Info.Hitpoints = 0
-		return true
+		return dealt, true
 	}
 
 	// Deal damage
 	m.Info.Hitpoints -= dmg
-	return false
+	return dmg, false
 }
 
 // Name returns the name of the monster

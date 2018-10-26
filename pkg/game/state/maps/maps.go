@@ -2,6 +2,7 @@ package maps
 
 import (
 	"math"
+	"math/rand"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/thorfour/larn/pkg/game/state/character"
@@ -286,4 +287,18 @@ func (m *Maps) OuterWall(c types.Coordinate) bool {
 	}
 
 	return c.X == 0 || c.X == width-1 || c.Y == 0 || c.Y == height-1
+}
+
+// RandomDisplaceableCoordinate returns a coordinate with a displaceable object anywhere in the current maze
+func (m *Maps) RandomDisplaceableCoordinate() types.Coordinate {
+
+	// randomly select a coordinate in the maze
+	c := types.Coordinate{X: rand.Intn(width), Y: rand.Intn(height)}
+	for { // continue selecting new coordinates until a displaceable coordinate is found
+		if _, ok := m.At(c).(Displaceable); ok {
+			return c
+		}
+
+		c = types.Coordinate{X: rand.Intn(width), Y: rand.Intn(height)}
+	}
 }

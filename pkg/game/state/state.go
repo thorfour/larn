@@ -361,7 +361,8 @@ func (s *State) Cast(spell string) (func(types.Direction) bool, error) {
 		s.C.Cond.Add(conditions.HoldMonsters, rand.Intn(9)+1+int(s.C.Stats.Level), nil)
 	case "stp": // time stop
 		s.C.Cond.Add(conditions.TimeStop, rand.Intn(19)+1+(int(s.C.Stats.Level)<<1), nil)
-	case "tel":
+	case "tel": // teleport away
+		return s.directedTeleport(), nil
 	case "mfi": // magic fire
 		s.omniDirect(sp, 35+rand.Intn(9)+1+int(s.C.Stats.Level), "The %s cringes from the flame")
 		//----------------------------------------------------------------------------
@@ -921,6 +922,27 @@ func (s *State) omniDirect(spell *items.Spell, dmg int, msg string) {
 			s.Log(fmt.Sprintf(msg, s.monsterName(o)))
 			s.damageMonster(dmg, o, c)
 		}
+	}
+}
+
+func (s *State) directedTeleport() func(types.Direction) bool {
+	if s.C.Cond.EffectActive(conditions.Confusion) { // Do nothing if confused
+		return nil
+	}
+
+	return func(d types.Direction) bool {
+		monLoc := types.Move(s.C.Location(), d)
+		obj := s.maps.At(monLoc)
+		switch mon := obj.(type) {
+		case *monster.Monster:
+			m := s.maps.Swap(monLoc, mon.Displaced)
+			// spawn monster somewhere else in the dungeon
+			newLoc := s.maps.RandomDisplaceableCoordinate()
+			mon.Displaced = s.maps.Swap(newLoc, m)
+		default:
+			s.Log("There wasn't anything there!")
+		}
+		return false
 	}
 }
 

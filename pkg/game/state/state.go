@@ -337,8 +337,21 @@ func (s *State) Cast(spell string) (func(types.Direction) bool, error) {
 			s.C.Stats.Intelligence--
 		}
 		s.C.Cond.Add(conditions.GlobeOfInvul, 200, func() { s.C.Stats.Ac -= 10 })
-	case "flo":
-	case "fgr":
+	case "flo": // flood
+		s.omniDirect(sp, 32+int(s.C.Stats.Level), "The %s struggles for air in your flood!")
+	case "fgr": // finger of death
+		if rand.Intn(150) == 63 {
+			s.Log("Your heart stopped!")
+			s.C.Stats.Hp = 0
+			// TODO character died
+			return nil, nil
+		}
+
+		if int(s.C.Stats.Wisdom) > rand.Intn(10)+11 {
+			return s.directedHit(sp, 2000, "The %s's heart stopped"), nil
+		}
+
+		s.Log("It didn't work")
 		//----------------------------------------------------------------------------
 		//                            LEVEL 5 SPELLS
 		//----------------------------------------------------------------------------

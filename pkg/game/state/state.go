@@ -305,7 +305,8 @@ func (s *State) Cast(spell string) (func(types.Direction) bool, error) {
 		s.C.Cond.Refresh(conditions.Cancellation, 5+int(s.C.Stats.Level), nil)
 	case "has": // haste self
 		s.C.Cond.Refresh(conditions.HasteSelf, 7+int(s.C.Stats.Level), nil)
-	case "ckl":
+	case "ckl": // cloud kill
+		s.omniDirect(sp, 31+rand.Intn(10), "The %s gasps for air")
 	case "vpr": // vaporize rock
 		s.maps.VaporizeAdjacent(s.C)
 		//----------------------------------------------------------------------------
@@ -882,6 +883,17 @@ func (s *State) projectile(spell *items.Spell, dmg int, msg string, c rune) func
 		}
 
 		return true
+	}
+}
+
+func (s *State) omniDirect(spell *items.Spell, dmg int, msg string) {
+	for _, c := range s.maps.AdjacentCoords(s.C.Location()) {
+		obj := s.maps.At(c)
+		switch o := obj.(type) {
+		case *monster.Monster:
+			s.Log(fmt.Sprintf(msg, s.monsterName(o)))
+			s.damageMonster(dmg, o, c)
+		}
 	}
 }
 

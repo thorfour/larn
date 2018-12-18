@@ -193,7 +193,7 @@ func (s *State) Read(e rune) error {
 }
 
 // Cast casts the requested spell. May return a callback function
-func (s *State) Cast(spell string) (func(types.Direction) bool, error) {
+func (s *State) Cast(spell string) (interface{}, error) {
 	defer s.update()
 	var sp *items.Spell
 	if !DEBUG {
@@ -253,7 +253,7 @@ func (s *State) Cast(spell string) (func(types.Direction) bool, error) {
 		}
 		s.C.Cond.Add(conditions.SpellOfStrength, 150+rand.Intn(100), func() { s.C.Stats.Str -= 3 })
 	case "enl": // enlightenment
-		s.maps.TouchAllInteriorCoordinates(func(obj io.Runeable) {
+		s.maps.TouchAllInteriorCoordinates(func(obj io.Runeable, x, y int) {
 			if _, ok := obj.(types.Visibility); ok {
 				obj.(types.Visibility).Visible(true)
 			}
@@ -369,7 +369,8 @@ func (s *State) Cast(spell string) (func(types.Direction) bool, error) {
 		//                            LEVEL 6 SPELLS
 		//----------------------------------------------------------------------------
 	case "sph":
-	case "gen":
+	case "gen": // genocide monster
+		return s.genocide, nil
 	case "sum": // summon demon
 		if rand.Intn(100) > 30 {
 			return s.directedHit(sp, 150, "The demon strikes at the %s"), nil
@@ -796,7 +797,7 @@ func (s *State) Quaff(e rune) (func() bool, error) {
 		if s.C.Cond.EffectActive(conditions.Blindness) {
 			return nil, nil
 		}
-		s.maps.TouchAllInteriorCoordinates(func(obj io.Runeable) {
+		s.maps.TouchAllInteriorCoordinates(func(obj io.Runeable, x, y int) {
 			switch obj.(type) {
 			case items.Gemstone:
 				if _, ok := obj.(types.Visibility); ok {
@@ -813,7 +814,7 @@ func (s *State) Quaff(e rune) (func() bool, error) {
 		if s.C.Cond.EffectActive(conditions.Blindness) {
 			return nil, nil
 		}
-		s.maps.TouchAllInteriorCoordinates(func(obj io.Runeable) {
+		s.maps.TouchAllInteriorCoordinates(func(obj io.Runeable, x, y int) {
 			if _, ok := obj.(monster.Interface); ok {
 				if _, ok := obj.(types.Visibility); ok {
 					obj.(types.Visibility).Visible(true)
@@ -825,7 +826,7 @@ func (s *State) Quaff(e rune) (func() bool, error) {
 		if s.C.Cond.EffectActive(conditions.Blindness) {
 			return nil, nil
 		}
-		s.maps.TouchAllInteriorCoordinates(func(obj io.Runeable) {
+		s.maps.TouchAllInteriorCoordinates(func(obj io.Runeable, x, y int) {
 			switch obj.(type) {
 			case items.Gemstone:
 			case items.Gold:
@@ -837,7 +838,7 @@ func (s *State) Quaff(e rune) (func() bool, error) {
 			}
 		})
 	case items.Forgetfulness:
-		s.maps.TouchAllInteriorCoordinates(func(obj io.Runeable) {
+		s.maps.TouchAllInteriorCoordinates(func(obj io.Runeable, x, y int) {
 			if _, ok := obj.(types.Visibility); ok {
 				obj.(types.Visibility).Visible(false)
 			}
@@ -1032,4 +1033,27 @@ func (s *State) monsterName(m *monster.Monster) string {
 	}
 
 	return m.Name()
+}
+
+func (s *State) genocide(m rune) {
+	i := monster.IDFromRune(m)
+	if i == monster.BadMonsterID {
+		s.Log("You sense failure!")
+		return
+	}
+
+	s.Log(fmt.Sprintf("There will be no more %s's", monster.NameFromID(i)))
+	s.maps.TouchAllInteriorCoordinates(func(obj io.Runeable, x, y int) {
+		if mon, ok := obj.(monster.Interface); ok {
+			if mon.ID() == i {
+				s.maps.RemoveAt(types.Coordinate{X: x, Y: y})
+			}
+		}
+	})
+
+	// Mark monster type as genocided
+	monster.Genocided(i)
+
+	delete(s.C.Stats.KnownSpells, "gen") // forget the spell
+	s.C.Stats.Intelligence--
 }

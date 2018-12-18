@@ -406,7 +406,12 @@ func (g *Game) cast() func(termbox.Event) {
 				// Obtian the direction the player would like to cast it, before using the callback to render
 				// the animation
 				if callback != nil {
-					g.inputHandler = g.directionalSpellHandler(callback)
+					switch cb := callback.(type) {
+					case func(types.Direction) bool:
+						g.inputHandler = g.directionalSpellHandler(cb)
+					case func(rune):
+						g.inputHandler = g.genocideMonsterHandler(cb)
+					}
 				} else {
 					g.inputHandler = g.defaultHandler
 					g.render(display(g.currentState))
@@ -509,4 +514,18 @@ func (g *Game) directionalSpellHandler(cb func(types.Direction) bool) func(termb
 		g.render(display(g.currentState))
 		g.inputHandler = g.defaultHandler
 	}
+}
+
+func (g *Game) genocideMonsterHandler(cb func(rune)) func(termbox.Event) {
+
+	g.currentState.Log("Genocide what monster? ")
+	g.render(display(g.currentState))
+
+	// Capture single char to represent monster
+	return func(e termbox.Event) {
+		cb(e.Ch)
+		g.render(display(g.currentState))
+		g.inputHandler = g.defaultHandler
+	}
+
 }

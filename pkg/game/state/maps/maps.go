@@ -259,10 +259,20 @@ func (m *Maps) NewEmptyTile() Empty {
 }
 
 // TouchAllInteriorCoordinates walks the maps internal coordinats, and executes the given function on them
-func (m *Maps) TouchAllInteriorCoordinates(f func(io.Runeable)) {
+func (m *Maps) TouchAllInteriorCoordinates(f func(io.Runeable, int, int)) {
 	for x := 1; x < width-1; x++ {
 		for y := 1; y < height-1; y++ {
-			f(m.CurrentMap()[y][x])
+			f(m.CurrentMap()[y][x], x, y)
+		}
+	}
+}
+
+// TouchAllInteriorCoordinatesOnAllMaps is the same as TouchAllInteriorCoordinates except it operates on all maps not just current
+func (m *Maps) TouchAllInteriorCoordinatesOnAllMaps(f func(io.Runeable, int, int)) {
+	// TODO THOR
+	for x := 1; x < width-1; x++ {
+		for y := 1; y < height-1; y++ {
+			f(m.CurrentMap()[y][x], x, y)
 		}
 	}
 }

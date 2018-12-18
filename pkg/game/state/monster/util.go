@@ -2,6 +2,9 @@ package monster
 
 import "math/rand"
 
+// BadMonsterID represents a monster id that is invalid
+const BadMonsterID = -1
+
 const (
 	_ = iota
 	Bat
@@ -192,6 +195,16 @@ var monsterData = map[int]MonsterType{
 
 // NameFromID returns the monsters name from a monster ID
 func NameFromID(id int) string { return monsterData[id].Name }
+
+// IDFromRune returns the id of a monster given its rune
+func IDFromRune(r rune) int {
+	for id, d := range monsterData {
+		if d.MonsterRune == r {
+			return id
+		}
+	}
+	return BadMonsterID
+}
 
 // Genocided returns true if the monster has been genocided
 func Genocided(id int) bool { return monsterData[id].Genocided == 1 }

@@ -370,8 +370,17 @@ func (s *State) Cast(spell string) (func(types.Direction) bool, error) {
 		//----------------------------------------------------------------------------
 	case "sph":
 	case "gen":
-	case "sum":
-	case "wtw":
+	case "sum": // summon demon
+		if rand.Intn(100) > 30 {
+			return s.directedHit(sp, 150, "The demon strikes at the %s"), nil
+		}
+		if rand.Intn(100) > 15 {
+			s.Log("Nothing seems to have happened")
+			return nil, nil
+		}
+		s.Log("The demon turned on you and vanished!")
+		s.C.Damage(rand.Intn(40) + 30) // TODO add cause of death "killed by demon"
+	case "wtw": // walk through walls
 		s.C.Cond.Add(conditions.WalkThroughWalls, rand.Intn(10)+5, nil)
 	case "alt":
 	case "per":

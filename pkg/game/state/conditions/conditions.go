@@ -39,6 +39,8 @@ const (
 	HasteSelf
 	// ScareMonster makes them scared of you
 	ScareMonster
+	// WalkThroughWalls allows the player to move through walls
+	WalkThroughWalls
 )
 
 // ActiveConditions represents all active conditions a character might have

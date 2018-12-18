@@ -372,6 +372,7 @@ func (s *State) Cast(spell string) (func(types.Direction) bool, error) {
 	case "gen":
 	case "sum":
 	case "wtw":
+		s.C.Cond.Add(conditions.WalkThroughWalls, rand.Intn(10)+5, nil)
 	case "alt":
 	case "per":
 	default:

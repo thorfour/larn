@@ -1,10 +1,11 @@
 package conditions
 
-type condition int
+// Condition is an effect that's applied to the character
+type Condition int
 
 const (
 	// Blindness means the player no longer reveals objects when encountering them
-	Blindness condition = iota
+	Blindness Condition = iota
 	// Confusion character is confuesd
 	Confusion
 	// Heroic status
@@ -41,22 +42,26 @@ const (
 	ScareMonster
 	// WalkThroughWalls allows the player to move through walls
 	WalkThroughWalls
+	// Awareness allows the user to see invisible
+	Awareness
+	// UndeadProtection gives the user protection from the undead
+	UndeadProtection
 )
 
 // ActiveConditions represents all active conditions a character might have
 type ActiveConditions struct {
-	active map[condition]func(int)
+	active map[Condition]func(int)
 }
 
 // New returns a new active conditions struct
 func New() *ActiveConditions {
 	a := new(ActiveConditions)
-	a.active = make(map[condition]func(int))
+	a.active = make(map[Condition]func(int))
 	return a
 }
 
 // EffectActive returns true if the given condition is active
-func (a *ActiveConditions) EffectActive(c condition) bool {
+func (a *ActiveConditions) EffectActive(c Condition) bool {
 	_, ok := a.active[c]
 	return ok
 }
@@ -69,12 +74,17 @@ func (a *ActiveConditions) DecayAll() {
 }
 
 // Decay calls the decay function on a single condition
-func (a *ActiveConditions) Decay(c condition) {
+func (a *ActiveConditions) Decay(c Condition) {
 	a.active[c](0)
 }
 
+// MakePermanent adds a condition without a decay function
+func (a *ActiveConditions) MakePermanent(c Condition) {
+	a.active[c] = func(_ int) {}
+}
+
 // Refresh adds time onto a given condition, adds a new condition if the condition doesn't exist
-func (a *ActiveConditions) Refresh(c condition, n int, decay func()) {
+func (a *ActiveConditions) Refresh(c Condition, n int, decay func()) {
 	if _, ok := a.active[c]; ok {
 		a.active[c](n)
 		return
@@ -85,12 +95,12 @@ func (a *ActiveConditions) Refresh(c condition, n int, decay func()) {
 }
 
 // Remove an active condition
-func (a ActiveConditions) Remove(c condition) {
+func (a ActiveConditions) Remove(c Condition) {
 	delete(a.active, c)
 }
 
 // Add an active condition with the given decay function
-func (a ActiveConditions) Add(c condition, dur int, decay func()) {
+func (a ActiveConditions) Add(c Condition, dur int, decay func()) {
 	a.active[c] = func(refresh int) {
 		if refresh != 0 { // refresh instead of decay
 			dur += refresh

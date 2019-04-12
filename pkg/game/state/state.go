@@ -384,7 +384,42 @@ func (s *State) Cast(spell string) (interface{}, error) {
 	case "wtw": // walk through walls
 		s.C.Cond.Add(conditions.WalkThroughWalls, rand.Intn(10)+5, nil)
 	case "alt":
-	case "per":
+	case "per": // permanence
+		// Look at current conditions that are affected by permanence and remove their decay func
+		permanence := []conditions.Condition{
+			conditions.HasteSelf,
+			conditions.Heroic,
+			conditions.AltPro, // what is this?
+			conditions.SpellOfProtection,
+			conditions.Dexterity,
+			conditions.Strength,
+			conditions.GiantStrength,
+			conditions.Charm,
+			conditions.Invisiblity,
+			conditions.Cancellation,
+			conditions.AggravateMonsters,
+			conditions.ScareMonster,
+			conditions.Stealth,
+			conditions.Awareness,
+			conditions.HoldMonsters,
+			conditions.HasteMonsters
+			conditions.FireResistance,
+			conditions.Globe,
+			conditions.SpiritProtection,
+			conditions.UndeadProtection,
+			conditions.HalfDamage,
+			conditions.SeeInvisible,
+			conditions.Itching,
+			conditions.Clumsiness,
+			conditions.WalkThroughWalls,
+		}
+		for _, c := range permanence {
+			if s.C.Cond.EffectActive(c) {
+				s.C.Cond.MakePermanent(c)
+			}
+		}
+		s.C.Stats.Intelligence--
+		delete(s.C.Stats.KnownSpells, "per") // forget the spell
 	default:
 		return nil, ErrDidntWork
 	}

@@ -402,7 +402,7 @@ func (s *State) Cast(spell string) (interface{}, error) {
 			conditions.Stealth,
 			conditions.Awareness,
 			conditions.HoldMonsters,
-			conditions.HasteMonsters
+			conditions.HasteMonsters,
 			conditions.FireResistance,
 			conditions.Globe,
 			conditions.SpiritProtection,

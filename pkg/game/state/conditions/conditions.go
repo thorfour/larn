@@ -46,6 +46,28 @@ const (
 	Awareness
 	// UndeadProtection gives the user protection from the undead
 	UndeadProtection
+	// Dexterity increases user dexterity
+	Dexterity
+	// AltPro what does this do? TODO
+	AltPro
+	// Strength increases user strength
+	Strength
+	// Charm increases user charm
+	Charm
+	// AggravateMonsters aggravates monsters in the users area
+	AggravateMonsters
+	// Stealth makes the user not cause monsters to move
+	Stealth
+	// HasteMonsters increases monster speed within the area
+	HasteMonsters
+	// Globe of protection ? TODO
+	Globe
+	// SpiritProtection protection against spirit monsters
+	SpiritProtection
+	// Itching forces user to take off all armor
+	Itching
+	// Clumsiness TODO what does this do?
+	Clumsiness
 )
 
 // ActiveConditions represents all active conditions a character might have

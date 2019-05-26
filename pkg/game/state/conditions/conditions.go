@@ -132,7 +132,7 @@ func (a ActiveConditions) Add(c Condition, dur int, decay func()) {
 		dur--
 		if dur == 0 {
 			if decay != nil {
-				decay() // execure the decay func
+				decay() // execute the decay func
 			}
 			a.Remove(c)
 		}

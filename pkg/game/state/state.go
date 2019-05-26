@@ -382,7 +382,12 @@ func (s *State) Cast(spell string) (interface{}, error) {
 		s.Log("The demon turned on you and vanished!")
 		s.C.Damage(rand.Intn(40) + 30) // TODO add cause of death "killed by demon"
 	case "wtw": // walk through walls
-		s.C.Cond.Add(conditions.WalkThroughWalls, rand.Intn(10)+5, nil)
+		s.C.Cond.Add(conditions.WalkThroughWalls, rand.Intn(10)+5, func() {
+			if _, ok := s.C.Displaced.(*maps.Wall); ok { // if player is in a wall when spell decays, they die
+				s.Log("Trapped in solid rock") // TODO trapped in solid rock is supposed to be the death log
+				s.C.Stats.Hp = 0
+			}
+		})
 	case "alt":
 	case "per": // permanence
 		// Look at current conditions that are affected by permanence and remove their decay func

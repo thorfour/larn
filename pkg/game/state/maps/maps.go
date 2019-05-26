@@ -6,6 +6,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 	"github.com/thorfour/larn/pkg/game/state/character"
+	"github.com/thorfour/larn/pkg/game/state/conditions"
 	"github.com/thorfour/larn/pkg/game/state/monster"
 	"github.com/thorfour/larn/pkg/game/state/types"
 	"github.com/thorfour/larn/pkg/io"
@@ -144,6 +145,11 @@ func (m *Maps) validMove(d types.Direction, c *character.Character) bool {
 
 	// Ensure the character isn't going off the grid, tron
 	inBounds := m.ValidCoordinate(newLoc)
+
+	// If the player has walk through walls active they are allowed to displace anything
+	if c.Cond.EffectActive(conditions.WalkThroughWalls) {
+		return inBounds
+	}
 
 	// Ensure the character is going onto an empty location
 	isDisplaceable := false
